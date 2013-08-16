@@ -1,9 +1,10 @@
 /*global define */
 define(['jquery',
 		'underscore', 
-		'backbone'
+		'backbone',
+		'text!templates/sideBar.html'
 		], 				
-	function($, _, Backbone) {
+	function($, _, Backbone, SideBarTemplate) {
 	'use strict';
 	
 	var MetadataView = Backbone.View.extend({
@@ -12,9 +13,11 @@ define(['jquery',
 		
 		template: null,
 		
+		sideTemplate: _.template(SideBarTemplate),
+		
 		// Delegated events for creating new items, and clearing completed ones.
 		events: {
-
+			"click #publish": "publish"
 		},
 		
 		initialize: function () {
@@ -43,6 +46,7 @@ define(['jquery',
 							viewRef.showMessage(response);
 						} else {
 							viewRef.insertResourceMapLink(pid);
+							viewRef.insertSideBar(pid);
 						}
 						console.log('Loaded metadata, now fading in MetadataView');
 						viewRef.$el.fadeIn('slow');
@@ -84,8 +88,151 @@ define(['jquery',
 				
 		},
 		
-		showMessage: function(msg) {
-			this.$el.html('<section id="Notification"><div class="alert"><h4>Oops!</h4>' + msg + '</div></section>');
+		// this will insert the DOI publish button
+		insertSideBar: function(pid) {
+			
+			// see if the user is authorized to update this object
+			var authServiceUrl = appModel.get('authServiceUrl');
+
+			// look up the SystemMetadata
+			var metaServiceUrl = appModel.get('metaServiceUrl');
+
+			// systemMetadata to render
+			var identifier = null;
+			var formatId = null;
+			var size = null;
+			var checksum = null;
+			var rightsHolder = null;
+			var submitter = null;
+			
+			var viewRef = this;
+			
+			// get the /meta for the pid
+			$.get(
+				metaServiceUrl + pid,
+				function(data, textStatus, xhr) {
+					
+					// the response should have all the elements we want
+					identifier = $(data).find("identifier").text();
+					console.log('identifier: ' + identifier);
+					formatId = $(data).find("formatId").text();
+					size = $(data).find("size").text();
+					checksum = $(data).find("checksum").text();
+					rightsHolder = $(data).find("rightsHolder").text();
+					submitter = $(data).find("submitter").text();
+
+					if (identifier) {
+						
+						var populateTemplate = function(auth) {
+							// TODO: include SystemMetadata details
+							viewRef.$el.find("#Metadata").prepend(
+								viewRef.sideTemplate({
+									isAuthorized: auth,
+									identifier: identifier,
+									formatId: formatId,
+									size: size,
+									checksum: checksum,
+									rightsHolder: rightsHolder,
+									submitter: submitter
+								})
+							);
+						};
+						
+						// are we authorized to publish?
+						$.ajax(
+								{
+									url: authServiceUrl + pid + "?action=changePermission",
+									success: function(data, textStatus, xhr) {
+										populateTemplate(true);
+									},
+									error: function(xhr, textStatus, errorThrown) {
+										populateTemplate(false);
+									}
+							
+								}
+							);
+					}
+					
+				}
+			);
+				
+		},
+		
+		publish: function(event) {
+			
+			var publishServiceUrl = appModel.get('publishServiceUrl');
+
+			var pid = $(event.target).attr("pid");
+			var ret = confirm("Are you sure you want to publish " + pid + " with a DOI?");
+			
+			// show the progressbar
+			this.showProgressBar();
+			
+			if (ret) {
+				var identifier = null;
+				var viewRef = this;
+				$.ajax({
+						url: publishServiceUrl + pid,
+						type: "PUT",
+						success: function(data, textStatus, xhr) {
+							// the response should have new identifier in it
+							identifier = $(data).find("identifier").text();
+							console.log('identifier: ' + identifier);
+							if (identifier) {
+								
+								var msg = "Published package '" + identifier + "'";
+								viewRef.showMessage(msg, false, "alert-success");
+								
+								// navigate to the new view after a few seconds
+								setTimeout(
+										function() {
+											// avoid a double fade out/in
+											viewRef.$el.html('');
+											viewRef.showProgressBar();
+											uiRouter.navigate("view/" + identifier, {trigger: true})
+										}, 
+										3000);
+							}
+						},
+						error: function(xhr, textStatus, errorThrown) {
+							// show the error message, but stay on the same page
+							var msg = $(xhr.responseText).find("description").text();
+							viewRef.showMessage(msg, true, "alert-error");
+						}
+					}
+				);
+				
+			}
+		},
+		
+		showMessage: function(msg, prepend, alertType) {
+			this.hideProgressBar();
+			var alertClass = "alert";
+			if (alertType) {
+				alertClass += " " + alertType;
+			}
+			var content = '<section id="Notification"><div class="' + alertClass + '"><h4>' + msg + '</h4></div></section>';
+			if (prepend) {
+				this.$el.prepend(content);
+			} else {
+				this.$el.html(content);
+			}
+
+		},
+		
+		showProgressBar: function() {
+			this.hideProgressBar();
+			this.scrollToTop();
+			this.$el.prepend('<section id="Notification"><div class="progress progress-striped active"><div class="bar" style="width: 100%"></div></div></section>');
+		},
+		
+		hideProgressBar: function() {
+			$("#Notification").remove();
+		},
+		
+		scrollToTop: function() {
+			$("html, body").animate({ scrollTop: 0 }, "slow");
+			return false;
 		},
 		
 		onClose: function () {			

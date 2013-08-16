@@ -5,9 +5,10 @@ define(['jquery',
 				'views/SearchResultView',
 				'text!templates/search.html',
 				'text!templates/statCounts.html',
+				'text!templates/pager.html',
 				'text!templates/resultsItem.html'
 				], 				
-	function($, _, Backbone, SearchResultView, CatalogTemplate, CountTemplate, ResultItemTemplate) {
+	function($, _, Backbone, SearchResultView, CatalogTemplate, CountTemplate, PagerTemplate, ResultItemTemplate) {
 	'use strict';
 	
 	var DataCatalogView = Backbone.View.extend({
@@ -17,6 +18,8 @@ define(['jquery',
 		template: _.template(CatalogTemplate),
 		
 		statsTemplate: _.template(CountTemplate),
+		
+		pagerTemplate: _.template(PagerTemplate),
 
 		resultTemplate: _.template(ResultItemTemplate),
 		
@@ -29,7 +32,10 @@ define(['jquery',
 			'click #results_next': 'nextpage',
 			'click #results_prev_bottom': 'prevpage',
 			'click #results_next_bottom': 'nextpage',
-			'click #search_btn_side': 'triggerSearch'
+			'click .pagerLink': 'navigateToPage',
+			'click #search_btn_side': 'triggerSearch',
+			'keypress #search_txt_side': 'triggerOnEnter',
+			'change #sortOrder': 'triggerSearch'
 		},
 		
 		initialize: function () {
@@ -40,6 +46,11 @@ define(['jquery',
 			// alert the model that a search should be performed
 			var searchTerm = $("#search_txt_side").val();
 			appModel.set('searchTerm', searchTerm);
+			
+			var sortOrder = $("#sortOrder").val();
+			appModel.set('sortOrder', sortOrder);
+			
+			// trigger the search
 			appModel.trigger('search');
 			
 			// make sure the browser knows where we are
@@ -47,6 +58,11 @@ define(['jquery',
 			
 			// ...but don't want to follow links
 			return false;
+		},
+		
+		triggerOnEnter: function(e) {
+			if (e.keyCode != 13) return;
+			this.triggerSearch();
 		},
 				
 		// Render the main view and/or re-render subviews. Don't call .html() here
@@ -60,7 +76,8 @@ define(['jquery',
 			
 			var cel = this.template(
 					{
-						searchTerm: appModel.get('searchTerm')
+						searchTerm: appModel.get('searchTerm'),
+						sortOrder: appModel.get('sortOrder')
 					}
 			);
 			this.$el.html(cel);
@@ -90,7 +107,8 @@ define(['jquery',
 		showResults: function () {
 
 			var search = appModel.get('searchTerm');
-
+			var sortOrder = appModel.get('sortOrder');
+			
 			var resultTitle = 'Search Results';
 			if (search) {
 				resultTitle += ' - ' + search; 
@@ -98,7 +116,7 @@ define(['jquery',
 			this.removeAll();
 			this.$pagehead.html(resultTitle);
 			appSearchResults.setrows(25);
-			appSearchResults.setSort("dateUploaded+desc");
+			appSearchResults.setSort(sortOrder);
 			appSearchResults.setfields("id,title,origin,pubDate,dateUploaded,abstract,resourceMap");
 			appSearchResults.query('formatType:METADATA+-obsoletedBy:*+' + search);
 			this.$resultsview.fadeIn();
@@ -106,7 +124,12 @@ define(['jquery',
 			this.updateSearchBox();
 			// update links
 			this.$(".popular-search-link").removeClass("sidebar-item-selected");
-			this.$("#popular-search-" + search).addClass("sidebar-item-selected");
+			try {
+				this.$("#popular-search-" + search).addClass("sidebar-item-selected");
+			} catch (ex) {
+				// syntax in search term is probably to blame
+				console.log(ex.message + " - could not set selected state for: " + "#popular-search-" + search);
+			}
 			//this.$("#mostaccessed_link").removeClass("sidebar-item-selected");
 			//this.$("#featureddata_link").removeClass("sidebar-item-selected");
 			
@@ -114,24 +137,20 @@ define(['jquery',
 			return false;
 		},
 		
+		// TODO: handle compound searches like most recent+keyword (and others in the future)
 		showRecent: function () {
 
-			// clear the search term
+			// get the current search term (TODO: anyhting with it?)
 			var currentSearchTerm = appModel.get('searchTerm');
-			appModel.set('searchTerm', '');
 			
 			// search last month
 			var dateQuery = "dateUploaded: [NOW-1MONTH/DAY TO *]";
-
-			this.removeAll();
-			this.$pagehead.html('Most Recent');
-			appSearchResults.setrows(25);
-			appSearchResults.setSort("dateUploaded+desc");
-			appSearchResults.setfields("id,title,origin,pubDate,dateUploaded,abstract,resourceMap");
-			appSearchResults.query("formatType:METADATA+-obsoletedBy:*+" + dateQuery);
-			this.$resultsview.fadeIn();
-			this.updateStats();
-			this.updateSearchBox();
+			
+			// replace current search term with date query
+			appModel.set('searchTerm', dateQuery);
+			
+			// show the results
+			this.showResults();
 			
 			// update links
 			this.$(".popular-search-link").removeClass("sidebar-item-selected");
@@ -150,6 +169,31 @@ define(['jquery',
 						start : appSearchResults.header.get("start") + 1,
 						end : appSearchResults.header.get("start") + appSearchResults.length,
 						numFound : appSearchResults.header.get("numFound")
+					})
+				);
+			}
+			
+			// piggy back here
+			this.updatePager();
+
+		},
+		
+		updatePager : function() {
+			if (appSearchResults.header != null) {
+				var pageCount = Math.ceil(appSearchResults.header.get("numFound") / appSearchResults.header.get("rows"));
+				var pages = new Array(pageCount);
+				// mark current page correctly, avoid NaN
+				var currentPage = -1;
+				try {
+					currentPage = Math.floor((appSearchResults.header.get("start") / appSearchResults.header.get("numFound")) * pageCount);
+				} catch (ex) {
+					console.log(ex.message);
+				}
+				this.$resultspager = this.$('#resultspager');
+				this.$resultspager.html(
+					this.pagerTemplate({
+						pages: pages,
+						currentPage: currentPage
 					})
 				);
 			}
@@ -173,6 +217,14 @@ define(['jquery',
 		prevpage: function () {
 			this.removeAll();
 			appSearchResults.prevpage();
+			this.$resultsview.show();
+			this.updateStats();
+		},
+		
+		navigateToPage: function(event) {
+			var page = $(event.target).attr("page");
+			this.removeAll();
+			appSearchResults.toPage(page);
 			this.$resultsview.show();
 			this.updateStats();
 		},
