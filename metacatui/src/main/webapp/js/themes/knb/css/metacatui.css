@@ -1816,8 +1816,8 @@ box-shadow:         -2px 0px 10px 0px rgba(50, 50, 50, 0.55);
     }
     
     .pagination .sort-by{
-    	min-width: 150px;
-    	max-width: 165px;
+    	min-width: 160px;
+    	max-width: 180px;
     	float: right;
     	margin-right: 10px;
     }
@@ -1854,7 +1854,7 @@ box-shadow:         -2px 0px 10px 0px rgba(50, 50, 50, 0.55);
     /*-- Results List Rows--*/
     
     .mapMode .search-results{
-    	margin-top: 100px;
+    	margin-top: 109px;
     	width: 100%;
     	float: right;
     	background-color: #FFFFFF;
@@ -1895,7 +1895,7 @@ box-shadow:         -2px 0px 10px 0px rgba(50, 50, 50, 0.55);
   }
     
     .result-row > .result-citation{
-    	width: 76%;
+    	width: 72%;
     }
     
     .result-row > .expand{

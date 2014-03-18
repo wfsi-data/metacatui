@@ -1350,7 +1350,7 @@ Bold 700
  		right: 10px;
  		margin-top: 5px;
 		color: #FFF;
-		height: 18px;
+		height: 27px;
 		z-index: 1;
     }
  	
@@ -1377,7 +1377,7 @@ Bold 700
    
    /*-- Results rows --*/
    #results{
-   		margin-top: 33px;
+   		margin-top: 42px;
    		width: 100%;
    		overflow-x: hidden;
    		float: right;
@@ -1676,7 +1676,7 @@ Bold 700
 	}
 	
 	.pagination .sort-by{
-		width: 167px;
+		width: 180px;
 		float: right;
 		margin-right: 10px;
 	}
