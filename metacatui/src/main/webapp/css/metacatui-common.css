@@ -1341,7 +1341,8 @@ textarea.token{
  	font-size: 13px;
  	width: auto;
 }
-ul.checkbox-list{
+.filter-contain .checkbox-list {
+    margin-left: 0px;
  	list-style: none;
 }
 .checkbox-list > li > input{

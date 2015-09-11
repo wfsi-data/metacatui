@@ -779,7 +779,9 @@ Bold 700
 
 /* METADATA VIEW CSS
 -------------------------------------------------- */
-		
+	#Content.no-stylesheet.container > .breadcrumb {
+    	width: calc(100% - 40px);
+	}
 	#Metadata > a[href="#data"]{
 		display: block;
 		margin-bottom: 20px;
