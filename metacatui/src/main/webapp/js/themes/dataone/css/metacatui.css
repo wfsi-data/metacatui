@@ -515,6 +515,10 @@ table th.btn-container .btn{
     .nav li.right{
     	float: right;
     }
+    .navbar-upper .nav .logo,
+     .navbar-upper .nav .logo-aside{
+    	float: left;
+    }
     .nav .logo > img{
     	height: 36px;
     }
