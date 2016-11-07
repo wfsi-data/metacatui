@@ -52,11 +52,11 @@ define(['jquery', 'underscore', 'backbone', 'models/SolrResult'],
 				exclude: [{
 					field: "obsoletedBy",
 					value: "*"
-				},
+				}/*,
 				{
 					field: "datasource",
-					value: "urn:node:TDAR"
-				}]
+					value: "urn:node:ARCTIC"
+				}*/]
 			}
 		},
 		
