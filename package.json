@@ -1,0 +1,29 @@
+{
+  "name": "metacatui",
+  "version": "1.0.0",
+  "description": "- **Author**: Matthew B. Jones, Chris Jones, Ben Leinfelder, Lauren Walker, Bryce Mecum ([NCEAS](http://www.nceas.ucsb.edu)) - **License**: [Apache 2](http://opensource.org/licenses/Apache-2.0) - [Package source code on Github](https://github.com/NCEAS/metacatUI) - [**Submit Bugs and feature requests**](https://projects.ecoinformatics.org/ecoinfo/projects/metacatui/) - [Task Board](https://waffle.io/NCEAS/metacatui) - Discussion list: metacat-dev@ecoinformatics.org",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/NCEAS/metacatui.git"
+  },
+  "author": "",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/NCEAS/metacatui/issues"
+  },
+  "homepage": "https://github.com/NCEAS/metacatui#readme",
+  "devDependencies": {
+    "eslint": "^4.10.0",
+    "eslint-config-airbnb-base": "^12.1.0",
+    "eslint-config-standard": "^10.2.1",
+    "eslint-plugin-import": "^2.8.0",
+    "eslint-plugin-node": "^5.2.1",
+    "eslint-plugin-promise": "^3.6.0",
+    "eslint-plugin-standard": "^3.0.1"
+  },
+  "dependencies": {}
+}
