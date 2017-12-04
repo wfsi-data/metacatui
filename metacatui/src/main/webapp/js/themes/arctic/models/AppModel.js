@@ -33,7 +33,10 @@ define(['jquery', 'underscore', 'backbone'],
 			maxDownloadSize: 3000000000,
 
 			// set this variable to true, if the content being published is moderated by the data team.
-			contentIsModerated: true,
+            contentIsModerated: true,
+
+            // Flag which, when set, will let the UI know that we wish to show Whole Tale features.
+            showWholeTaleFeatures: false,
 			
 			/*
 			 * emlEditorRequiredFields is a hash map of all the required fields in the EML Editor.
