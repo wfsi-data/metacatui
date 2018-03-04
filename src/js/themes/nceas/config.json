@@ -1,0 +1,15 @@
+{
+    "themeName": "nceas",
+    "themeTitle" = "NCEAS Data Catalog",
+    "moduleMap": {
+        "*": {
+            "templates/navbar.html": "themes/nceas/templates/navbar.html",
+            "templates/footer.html": "themes/nceas/templates/footer.html",
+            "templates/loginHeader.html": "themes/nceas/templates/loginHeader.html",
+            "templates/registryFields.html": "themes/nceas/templates/registryFields.html",
+            "models/AppModel": "themes/nceas/models/AppModel.js",
+            "models/RegistryModel": "themes/nceas/models/RegistryModel.js",
+            "routers/router": "themes/nceas/routers/router.js"
+        }
+    }
+}﻿

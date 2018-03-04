@@ -1,0 +1,19 @@
+{
+    "themeName": "dataone",
+    "themeTitle": "DataONE Data Catalog",
+    "moduleMap": {
+        "*": {
+            "templates/navbar.html": "themes/dataone/templates/navbar.html",
+            "templates/footer.html": "themes/dataone/templates/footer.html",
+            "templates/about.html": "themes/dataone/templates/about.html",
+            "templates/alert.html": "themes/dataone/templates/alert.html",
+            "templates/dataSource.html": "themes/dataone/templates/dataSource.html",
+            "templates/login.html": "themes/dataone/templates/login.html",
+            "templates/resultsItem.html": "themes/dataone/templates/resultsItem.html",
+            "templates/noResults.html": "themes/dataone/templates/noResults.html",
+            "models/AppModel": "js/themes/dataone/models/AppModel.js",
+            "models/Search": "js/themes/dataone/models/Search.js",
+            "routers/router": "js/themes/dataone/routers/router.js"
+        }
+    }
+}
