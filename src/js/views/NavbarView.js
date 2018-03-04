@@ -69,7 +69,8 @@ define(['jquery', 'underscore', 'backbone', 'views/SignInView', 'text!templates/
 				//Randomly choose the next background image
 				var bgNum = Math.ceil(Math.random() * imgCnt);
 				
-				$(imageEl).css('background-image', "url('./js/themes/" + MetacatUI.theme + "/img/backgrounds/bg" + bgNum + ".jpg')");
+				$(imageEl).css('background-image', "url('./js/themes/" + 
+                MetacatUI.theme.get("themeName") + "/img/backgrounds/bg" + bgNum + ".jpg')");
 			}
 		},
 		

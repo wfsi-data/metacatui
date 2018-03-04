@@ -1,4 +1,4 @@
-/*global define */
+ /*global define */
 define(['jquery', 'underscore', 'backbone'],
 	function($, _, Backbone) {
 	'use strict';
@@ -9,13 +9,13 @@ define(['jquery', 'underscore', 'backbone'],
 		// This model contains all of the attributes for the Application
 		defaults: {
 			headerType: 'default',
-			title: MetacatUI.themeTitle || "Metacat Data Catalog",
+			title: MetacatUI.theme.get("themeTitle"),
 
 			emailContact: "support@arcticdata.io",
 
 			googleAnalyticsKey: null,
 
-			nodeId: null,
+			nodeId: "urn:node:mnTestARCTIC",
 
 			searchMode: MetacatUI.mapKey ? 'map' : 'list',
 			searchHistory: [],
@@ -92,7 +92,7 @@ define(['jquery', 'underscore', 'backbone'],
 			signInUrlOrcid: null,
 			//signInUrlLdap: null,
 			tokenUrl: null,
-			setPublicAccess: false, // Set to true to force public read access on newly created objects
+			setPublicAccess: true, // Set to true to force public read access on newly created objects
 			mdqUrl: "https://quality.nceas.ucsb.edu/quality/"
 
 		},

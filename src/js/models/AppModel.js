@@ -9,7 +9,7 @@ define(['jquery', 'underscore', 'backbone'],
 		// This model contains all of the attributes for the Application
 		defaults: {
 			headerType: 'default',
-			title: MetacatUI.themeTitle || "Metacat Data Catalog",
+			title: MetacatUI.theme.get("themeTitle"),
 
 			emailContact: "knb-help@nceas.ucsb.edu",
 

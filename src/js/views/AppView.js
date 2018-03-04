@@ -15,7 +15,7 @@ define(['jquery',
 	
 	var app = app || {};
 	
-	var theme = document.getElementById("loader").getAttribute("data-theme");
+	var theme = MetacatUI.theme.get("themeName");
 		
 	// Our overall **AppView** is the top-level piece of UI.
 	var AppView = Backbone.View.extend({
@@ -56,8 +56,8 @@ define(['jquery',
 
 			// set up the head - make sure to prepend, otherwise the CSS may be out of order!			
 			$("head").prepend(this.appHeadTemplate({
-				theme: MetacatUI.theme, 
-				themeTitle: MetacatUI.themeTitle,
+				theme: MetacatUI.theme.get("themeName"), 
+				themeTitle: MetacatUI.theme.get("themeTitle"),
 				googleAnalyticsKey: MetacatUI.appModel.get("googleAnalyticsKey")
 				}));
 									
