@@ -39,6 +39,7 @@ require.config({
     jqueryform: '../components/jquery.form',
     underscore: '../components/underscore-min',
     backbone: '../components/backbone-min',
+    localforage: '../components/localforage-1.7.2',
     bootstrap: '../components/bootstrap.min',
     text: '../components/require-text',
     jws: '../components/jws-3.2.min',
