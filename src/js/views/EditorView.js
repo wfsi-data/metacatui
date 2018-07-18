@@ -446,6 +446,7 @@ define(['underscore',
             if ( typeof MetacatUI.rootDataPackage.packageModel !== "undefined" ) {
                 this.stopListening(MetacatUI.rootDataPackage.packageModel, "change:changed");
                 this.listenTo(MetacatUI.rootDataPackage.packageModel, "change:changed", this.toggleControls);
+                this.listenTo(MetacatUI.rootDataPackage.packageModel, "change:changed", this.saveDraft);
                 this.listenTo(MetacatUI.rootDataPackage.packageModel, "change:changed", function(event) {
                     if (MetacatUI.rootDataPackage.packageModel.get("changed") ) {
                         // Put this metadata model in the queue when the package has been changed
@@ -493,6 +494,13 @@ define(['underscore',
           MetacatUI.rootDataPackage.save();
         },
 
+        /*
+         * Respond to change events and save a local draft of the entire package
+         */
+        saveDraft: function(event) {
+            MetacatUI.rootDataPackage.saveDraft();
+        },
+         
         /*
          * When the data package collection saves successfully, tell the user
          */
