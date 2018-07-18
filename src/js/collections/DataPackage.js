@@ -1,9 +1,9 @@
 ﻿/* global define */
 "use strict";
 
-define(['jquery', 'underscore', 'backbone', 'rdflib', "uuid", "md5",
+define(['jquery', 'underscore', 'backbone', 'localforage', 'rdflib', "uuid", "md5",
         'models/DataONEObject', 'models/metadata/ScienceMetadata', 'models/metadata/eml211/EML211'],
-    function($, _, Backbone, rdf, uuid, md5, DataONEObject, ScienceMetadata, EML211) {
+    function($, _, Backbone, LocalForage, rdf, uuid, md5, DataONEObject, ScienceMetadata, EML211) {
 
       /*
        A DataPackage represents a hierarchical collection of
@@ -83,8 +83,11 @@ define(['jquery', 'underscore', 'backbone', 'rdflib', "uuid", "md5",
         // Constructor: Initialize a new DataPackage
         initialize: function(models, options) {
             if(typeof options == "undefined")
-              var options = {};
-
+            var options = {};
+            
+            // Create the offline storage controller for saving and retrieving drafts
+            this.drafts = new LocalForage();
+            
             // Create an rdflib reference
             this.rdf = rdf;
 
@@ -1169,6 +1172,35 @@ define(['jquery', 'underscore', 'backbone', 'rdflib', "uuid", "md5",
           $.ajax(_.extend(requestSettings, MetacatUI.appUserModel.createAjaxSettings()));
         },
 
+        /*
+         * Save an offline draft of the package and its members. A drafts of each 
+         * object is saved as key/value pairs in the offline store. The key is the 
+         * object id, and the value is the model itself. LocalForage prioritizes saves
+         * to IndexedDB, then WebSQL, then localStorage, depending on the browser
+         * capabilities and age.
+         */
+        saveDraft: function() {
+            
+            // First save each member model
+            _.each(this.models, function(model) {
+                this.drafts.setItem(model.get("id"), model, this.handleDraftSaved);
+            }, this);
+            
+            // Then save the package model
+            this.drafts.setItem(this.packageModel.get("id"), 
+                this.packageModel, this.handleDraftSaved);
+            
+            // Then save the collection
+            this.drafts.setItem(this.get("id"), this, this.handleDraftSaved);
+        },
+        
+        /*
+         * Handle offline draft save events
+         */
+        handleDraftSaved: function(event) {
+            console.log("Saved draft: " + event);
+        },
+        
         /*
          * When a data package member updates, we evaluate it for its formatid,
          * and update it appropriately if it is not a data object only
