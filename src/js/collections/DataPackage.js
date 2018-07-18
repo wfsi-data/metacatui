@@ -86,7 +86,7 @@ define(['jquery', 'underscore', 'backbone', 'localforage', 'rdflib', "uuid", "md
             var options = {};
             
             // Create the offline storage controller for saving and retrieving drafts
-            this.drafts = new LocalForage();
+            this.drafts = LocalForage;
             
             // Create an rdflib reference
             this.rdf = rdf;
