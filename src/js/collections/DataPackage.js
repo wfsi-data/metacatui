@@ -1175,7 +1175,7 @@ define(['jquery', 'underscore', 'backbone', 'localforage', 'rdflib', "uuid", "md
         /*
          * Save an offline draft of the package and its members. A drafts of each 
          * object is saved as key/value pairs in the offline store. The key is the 
-         * object id, and the value is the model itself. LocalForage prioritizes saves
+         * object id, and the value is the model details. LocalForage prioritizes saves
          * to IndexedDB, then WebSQL, then localStorage, depending on the browser
          * capabilities and age.
          */
@@ -1183,21 +1183,39 @@ define(['jquery', 'underscore', 'backbone', 'localforage', 'rdflib', "uuid", "md
             
             // First save each member model
             _.each(this.models, function(model) {
-                this.drafts.setItem(model.get("id"), model, this.handleDraftSaved);
+                if ( model.get ) {
+                    switch(model.get("type")) {
+                        case "Metadata":
+                            this.drafts.setItem(model.get("id"), 
+                            {type: "Metadata",
+                             systemMetadata: model.serializeSysMeta(),
+                             object: model.serialize()
+                            }, this.handleDraftSaved);
+                            break;
+                        case "Data":
+                            this.drafts.setItem(model.get("id"), 
+                                {type: "Data",
+                                 systemMetadata: model.serializeSysMeta(),
+                                 object: model.get("uploadFile")
+                                }, this.handleDraftSaved);
+                        break;
+                    }
+                }
+
             }, this);
             
-            // Then save the package model
-            this.drafts.setItem(this.packageModel.get("id"), 
-                this.packageModel, this.handleDraftSaved);
-            
             // Then save the collection
-            this.drafts.setItem(this.get("id"), this, this.handleDraftSaved);
+            this.drafts.setItem(this.id, 
+                {type: "Resource",
+                 systemMetadata: this.packageModel.serializeSysMeta(),
+                 object: this.serialize()
+                }, this.handleDraftSaved);
         },
         
         /*
          * Handle offline draft save events
          */
-        handleDraftSaved: function(event) {
+        handleDraftSaved: function(results) {
             console.log("Saved draft: " + event);
         },
         
