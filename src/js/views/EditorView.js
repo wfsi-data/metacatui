@@ -446,7 +446,6 @@ define(['underscore',
             if ( typeof MetacatUI.rootDataPackage.packageModel !== "undefined" ) {
                 this.stopListening(MetacatUI.rootDataPackage.packageModel, "change:changed");
                 this.listenTo(MetacatUI.rootDataPackage.packageModel, "change:changed", this.toggleControls);
-                this.listenTo(MetacatUI.rootDataPackage.packageModel, "change:changed", this.saveDraft);
                 this.listenTo(MetacatUI.rootDataPackage.packageModel, "change:changed", function(event) {
                     if (MetacatUI.rootDataPackage.packageModel.get("changed") ) {
                         // Put this metadata model in the queue when the package has been changed
@@ -498,7 +497,11 @@ define(['underscore',
          * Respond to change events and save a local draft of the entire package
          */
         saveDraft: function(event) {
-            MetacatUI.rootDataPackage.saveDraft();
+            if ( typeof MetacatUI.rootDataPackage.saveDraft === "function" ) {
+                MetacatUI.rootDataPackage.saveDraft(event);
+            } else {
+                console.log("MetacatUI.rootDataPackage is not initialized yet. Skip draft save.");
+            }
         },
          
         /*
