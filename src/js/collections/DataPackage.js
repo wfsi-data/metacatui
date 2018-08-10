@@ -116,6 +116,7 @@ define(['jquery', 'underscore', 'backbone', 'localforage', 'rdflib', "uuid", "md
 
             this.on("add", this.handleAdd);
             this.on("add", this.triggerComplete);
+            this.on("update", this.saveDraft);
             this.on("successSaving", this.updateRelationships);
 
             return this;
@@ -333,6 +334,36 @@ define(['jquery', 'underscore', 'backbone', 'localforage', 'rdflib', "uuid", "md
               return Backbone.Collection.prototype.fetch.call(this, fetchOptions);
           },
 
+          /*
+           * Overload the Backbone.Collection.remove() method, also removing 
+           * from the offline store.
+           */
+          remove: function(models, options) {
+              // Ensure we have an array
+              if ( ! Array.isArray(models) ) {
+                  models = [models];
+              }
+              // Remove each model from local storage
+              _.each(models, function(model) {
+                  if ( typeof model === "string" ) {
+                      this.drafts.removeItem(model, this.handleRemoveItem);
+                  } else {
+                      if (model.get && model.get("id") ) {
+                          this.drafts.removeItem(model.get("id"), this.handleRemoveOfflineItem);
+                      }
+                  }
+              }, this);
+              // Then finally call super()
+              return this.constructor.__super__.remove.apply(models, options);
+          },
+          
+          /*
+           * An event callback used when calling LocalForage.removeItem()
+           */
+          handleRemoveOfflineItem: function(event) {
+              // console.log("Removed an item from local storage: " + JSON.stringify(event));
+          },
+          
           /*
            * Deserialize a Package from OAI-ORE RDF XML
            */
@@ -1180,7 +1211,6 @@ define(['jquery', 'underscore', 'backbone', 'localforage', 'rdflib', "uuid", "md
          * capabilities and age.
          */
         saveDraft: function() {
-            
             // First save each member model
             _.each(this.models, function(model) {
                 if ( model.get ) {
@@ -1188,6 +1218,7 @@ define(['jquery', 'underscore', 'backbone', 'localforage', 'rdflib', "uuid", "md
                         case "Metadata":
                             this.drafts.setItem(model.get("id"), 
                             {type: "Metadata",
+                             timestamp: new Date().toISOString(),
                              systemMetadata: model.serializeSysMeta(),
                              object: model.serialize()
                             }, this.handleDraftSaved);
@@ -1195,10 +1226,11 @@ define(['jquery', 'underscore', 'backbone', 'localforage', 'rdflib', "uuid", "md
                         case "Data":
                             this.drafts.setItem(model.get("id"), 
                                 {type: "Data",
+                                 timestamp: new Date().toISOString(),
                                  systemMetadata: model.serializeSysMeta(),
                                  object: model.get("uploadFile")
                                 }, this.handleDraftSaved);
-                        break;
+                            break;
                     }
                 }
 
@@ -1207,6 +1239,7 @@ define(['jquery', 'underscore', 'backbone', 'localforage', 'rdflib', "uuid", "md
             // Then save the collection
             this.drafts.setItem(this.id, 
                 {type: "Resource",
+                 timestamp: new Date().toISOString(),
                  systemMetadata: this.packageModel.serializeSysMeta(),
                  object: this.serialize()
                 }, this.handleDraftSaved);
@@ -1216,7 +1249,7 @@ define(['jquery', 'underscore', 'backbone', 'localforage', 'rdflib', "uuid", "md
          * Handle offline draft save events
          */
         handleDraftSaved: function(results) {
-            console.log("Saved draft: " + event);
+            console.log("Saved draft: " + JSON.stringify(event, null, 4));
         },
         
         /*
