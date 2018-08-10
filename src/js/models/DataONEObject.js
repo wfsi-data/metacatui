@@ -1062,8 +1062,15 @@ define(['jquery', 'underscore', 'backbone', 'uuid', 'collections/ObjectFormats',
              and set the hasContentChanges flag on content changes only
            */
           handleChange: function(model, options) {
-            if(!model) var model = this;
+                console.log("DataONEObject.handleChange() called.");
+                if (!model) {
+                    var model = this;
+                }
 
+                // Save the draft change if there is a collection
+                if ( this.collection && this.collection.saveDraft ) {
+                    this.collection.saveDraft();
+                }
               var sysMetaAttrs = ["serialVersion", "identifier", "formatId", "size", "checksum",
                   "checksumAlgorithm", "submitter", "rightsHolder", "accessPolicy", "replicationAllowed",
                   "replicationPolicy", "obsoletes", "obsoletedBy", "archived", "dateUploaded", "dateSysMetadataModified",
