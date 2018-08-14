@@ -42,7 +42,7 @@ Architecture
 ------------
 
 While we see benefits in splitting the architecture into multiple libraries (metacaui and each supported science metadata language), pragmatically there are tight dependencies among the models.  Therefore, we'll keep the classes in one library, but will divide the functionality into separate model and view classes.
-The EML class is a specialization of the generic ScienceMetadata class in the MetacatUI module.  We intend to support other specializations in the future (ISO 19139, FGDC CSDGM, etc.) 
+The EML211 class is a specialization of the generic ScienceMetadata class in the MetacatUI module.  We intend to support other specializations in the future (ISO 19139, FGDC CSDGM, etc.) 
 
 Class Diagrams
 --------------
@@ -56,30 +56,34 @@ Overview
     !include plantuml-styles.txt
     
     package metacatui {
-      class DataPackage {
-      }
-      
-      class DataONEObject {
-      }
-      
-      class ScienceMetadata {
-      }
-      
-      class DataPackageView {
-      }
-      
-      class EML {
-      }
-      
-      class EMLViewer {
-      }
+        class DataPackage <<Backbone.Collection>> {
+        }
+        
+        class NestedModel <<Backbone.Model>>  {
+        
+        }
+        class DataONEObject {
+        }
+        
+        class ScienceMetadata {
+        }
+        
+        class DataPackageView <<Backbone.View>> {
+        }
+        
+        class EML211 <<Backbone.Collection>> {
+        }
+        
+        class EditorView <<Backbone.View>> {
+        }
     }
       
     DataPackage --o DataONEObject : collectionOf
     DataPackage <.left. DataPackageView : listensTo
+    DataONEObject -right-|> NestedModel : subclassOf
     DataONEObject <|-down- ScienceMetadata : "    subclassOf"
-    ScienceMetadata <|-down- EML : "    subclassOf"
-    EML <.left. EMLViewer : listensTo
+    ScienceMetadata <|-down- EML211 : "    subclassOf"
+    EML211 <.left. EditorView : listensTo
   @enduml
   
 .. image:: images/editor-design.png
@@ -105,11 +109,11 @@ Implementation Decisions
 
 - The EML.isEditable property will control whether or not the editor is enabled in the EMLView.
 
-- We’ll model the EML modules as minimally as needed, using complex types as needed, like EMLParty.
+- We’ll model the EML211 modules as minimally as needed, using complex types as needed, like EMLParty.
 
 - For now, for we will postpone modeling eml-text, eml-entity modules, and won’t support the maintenance tree.
 
-- Instead of modeling EML with its four submodules (dataset, software, citation, protocol, for now we’re keeping the model simple and only supporting EMLDataset.
+- Instead of modeling EML211 with its four submodules (dataset, software, citation, protocol, for now we’re keeping the model simple and only supporting EMLDataset.
 
 - We won’t support the references tag in `/eml/dataset`.
 
