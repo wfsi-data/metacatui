@@ -100,7 +100,12 @@ define(['jquery', 'underscore', 'backbone'],
 			signInUrlOrcid: null,
 			//signInUrlLdap: null,
 			tokenUrl: null,
-			mdqUrl: "https://quality.nceas.ucsb.edu/quality/",
+            
+            //mdqBaseUrl: "http://localhost:8080/quality",
+            mdqBaseUrl: "http://docker-ucsb-1.test.dataone.org:30080/quality",
+            mdqSuiteId: "arctic.data.center.suite.1",
+            mdqRunsUrl: null,
+            mdqSuitesUrl: null,
 
 			// Metrics endpoint url
 			metricsUrl: null,
@@ -145,6 +150,10 @@ define(['jquery', 'underscore', 'backbone'],
 			this.set('registryServiceUrl', this.get('baseUrl') + this.get('context') + '/cgi-bin/register-dataset.cgi');
 			this.set('ldapwebServiceUrl', this.get('baseUrl') + this.get('context') + '/cgi-bin/ldapweb.cgi');
 			this.set('metacatServiceUrl', this.get('baseUrl') + this.get('context') + '/metacat');
+            
+            // Metadata quality report services
+            this.set('mdqSuitesServiceUrl', this.get("mdqBaseUrl") + "/suites/");
+            this.set('mdqRunsServiceUrl', this.get('mdqBaseUrl') + "/runs/");
 
 			//Set the NSF Award API proxy
 			if(typeof this.get("grantsUrl") != "undefined")

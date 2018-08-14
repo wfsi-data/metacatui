@@ -104,7 +104,12 @@ define(['jquery', 'underscore', 'backbone'],
 			accountsMapsUrl: null,
 			groupsUrl: null,
 			portalUrl: null,
-			mdqUrl: "https://quality.nceas.ucsb.edu/quality/",
+            
+            //mdqBaseUrl: "http://localhost:8080/quality",
+            mdqBaseUrl: "http://docker-ucsb-1.test.dataone.org:30080/quality",
+            mdqSuiteId: "arctic.data.center.suite.1",
+            mdqRunsUrl: null,
+            mdqSuitesUrl: null,
 
 			// Metrics endpoint url
 			metricsUrl: null,
@@ -150,6 +155,10 @@ define(['jquery', 'underscore', 'backbone'],
 			this.set('metacatServiceUrl', this.get('baseUrl') + this.get('context') + '/metacat');
 			//The package service
 			this.set('packageServiceUrl', this.get('baseUrl') + this.get('context') + this.get('d1Service') + '/packages/application%2Fbagit-097/');
+            
+            // Metadata quality report services
+            this.set('mdqSuitesServiceUrl', this.get("mdqBaseUrl") + "/suites/");
+            this.set('mdqRunsServiceUrl', this.get('mdqBaseUrl') + "/runs/");
 
 			if(typeof this.get("grantsUrl") !== "undefined")
 				this.set("grantsUrl", "https://api.nsf.gov/services/v1/awards.json");

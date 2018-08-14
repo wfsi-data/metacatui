@@ -956,7 +956,7 @@ define(['jquery',
 			var controlsContainer = this.controlsTemplate({
 					citation: $(this.citationContainer).text(),
 					url: window.location,
-					mdqUrl: MetacatUI.appModel.get("mdqUrl"),
+					mdqUrl: MetacatUI.appModel.get("mdqRunsServiceUrl"),
 					model: this.model.toJSON()
 				});
 

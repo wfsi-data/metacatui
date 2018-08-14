@@ -70,8 +70,11 @@ define(['jquery', 'underscore', 'backbone'],
 			signInUrlOrcid: null,
 			//signInUrlLdap: null,
 			tokenUrl: null,
-			mdqUrl: null,
-
+            //  mdqBaseUrl: "http://localhost:8080/quality",
+            mdqBaseUrl: "http://docker-ucsb-1.test.dataone.org:30080/quality",
+            mdqSuiteId: "knb.suite.1",
+            mdqRunsUrl: null,
+            mdqSuitesUrl: null,
 
 			// Metrics endpoint url
 			metricsUrl: null,
@@ -111,6 +114,10 @@ define(['jquery', 'underscore', 'backbone'],
 			//this.set('objectServiceUrl',    this.get('baseUrl')  + this.get('d1Service') + '/object/');
 			this.set('resolveServiceUrl', this.get('d1CNBaseUrl')  + this.get('d1Service') + '/resolve/');
 			this.set('nodeServiceUrl',    this.get('baseUrl')  + this.get('d1Service') + '/node');
+            
+            // Metadata quality report services
+            this.set('mdqSuitesServiceUrl', this.get("mdqBaseUrl") + "/suites/");
+            this.set('mdqRunsServiceUrl', this.get('mdqBaseUrl') + "/runs/");
 
 			//The logs index
 			if(typeof this.get("d1LogServiceUrl") !== "undefined"){

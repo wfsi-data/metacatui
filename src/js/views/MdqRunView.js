@@ -13,8 +13,6 @@ define(['jquery', 'underscore', 'backbone', 'd3', 'DonutChart', 'views/CitationV
 			"change #suiteId" : "switchSuite"
 		},
 
-		suitesUrl: MetacatUI.appModel.get("mdqUrl") + "suites/",
-
 		url: null,
 
 		pid: null,
@@ -49,53 +47,14 @@ define(['jquery', 'underscore', 'backbone', 'd3', 'DonutChart', 'views/CitationV
 			if (!this.suiteId) {
 				this.suiteId = "arctic.data.center.suite.1";
 			}
-			this.url = this.suitesUrl + this.suiteId + "/run";
+            
+			//this.url = this.mdqRunsServiceUrl + "/" + this.suiteId + "/" + this.pid;
 
 			var viewRef = this;
 
 			if (this.pid) {
-
 				this.showLoading();
-								
-				// fetch SystemMetadata		
-				var xhr = new XMLHttpRequest();
-				xhr.onreadystatechange = function() {
-				    if (this.readyState == 4 && this.status == 200){
-				        //this.response is what you're looking for
-				        var sysMetaBlob = this.response;
-				        
-				        // fetch the metadata contents by the pid
-						var xhr = new XMLHttpRequest();
-						xhr.onreadystatechange = function() {
-						    if (this.readyState == 4 && this.status == 200){
-						        //this.response is what you're looking for
-						        var documentBlob = this.response;
-						        // send to MDQ as blob
-								var formData = new FormData();
-								formData.append('document', documentBlob);
-								formData.append('systemMetadata', sysMetaBlob);
-								viewRef.showResults(formData);
-						    }
-						}
-						var url = MetacatUI.appModel.get("objectServiceUrl") + viewRef.pid;
-						xhr.open('GET', url);
-						xhr.responseType = 'blob';
-						xhr.withCredentials = true;
-						xhr.setRequestHeader("Authorization", "Bearer " + MetacatUI.appUserModel.get("token"));
-						xhr.send();
-		
-						//Render a Citation View for the page header
-						var citationView = new CitationView({ pid: viewRef.pid });
-						citationView.render();
-						viewRef.citationView = citationView;
-				    }
-				}
-				var url = MetacatUI.appModel.get("metaServiceUrl") + this.pid;
-				xhr.open('GET', url);
-				xhr.responseType = 'blob';
-				xhr.withCredentials = true;
-				xhr.setRequestHeader("Authorization", "Bearer " + MetacatUI.appUserModel.get("token"));
-				xhr.send();
+                this.fetchReport();
 				
 			} else {
 				this.$el.html(this.template({}));
@@ -104,8 +63,13 @@ define(['jquery', 'underscore', 'backbone', 'd3', 'DonutChart', 'views/CitationV
 		},
 
 		showLoading: function() {
-			this.$el.html(this.loadingTemplate({ msg: "Running quality report..."}));
+			this.$el.html(this.loadingTemplate({ msg: "Retreiving quality report..."}));
 		},
+        
+        hideLoading: function() {
+            if(this.$loading)  this.$loading.remove();
+            if(this.$detached) this.$el.html(this.$detached);
+        },
 
 		showCitation: function(){
 			if(!this.citationView) return false;
@@ -150,51 +114,155 @@ define(['jquery', 'underscore', 'backbone', 'd3', 'DonutChart', 'views/CitationV
 
 			var formData = new FormData($(form)[0]);
 
-			this.showResults(formData);
+			this.fetchReport(formData);
 
 			return false;
 
 		},
+        
+        
+        // Fetch a quality report from the quality server and display it.
+        sendReportRequest: function(formData) {
+            var viewRef = this;
 
-		// do the work of sending the data and rendering the results
-		showResults: function(formData) {
-			var viewRef = this;
+            try {
+                var suitesUrl = MetacatUI.appModel.get("mdqSuitesServiceUrl") + MetacatUI.appModel.get("mdqSuiteId") + "/run";
+                console.log("quality suites url: " + suitesUrl);
+                var args = {
+                    url: suitesUrl,
+                    cache: false,
+                    data: formData,
+                    contentType: false, //"multipart/form-data",
+                    processData: false,
+                    type: 'POST',
+                    success: function(data, textStatus, jqXHR) {  
+                        console.log("Sent quality report generation request");
+                        viewRef.hideLoading();
+                        var msgText = "A quality report is not yet available for this dataset, so";
+                        msgText += " one will be generated automatically. Please try again later.";
+                        MetacatUI.uiRouter.navigate("#view" + "/" + viewRef.pid, {trigger: true});
+                        var message = $(document.createElement("div")).append($(document.createElement("span")).text(msgText));
+                        MetacatUI.appView.showAlert(message, "alert-success", "body", 10000, {remove: true});
+                    },
+                    error: function(jqXHR, textStatus, errorThrown) {
+                        viewRef.hideLoading();
+                        var msgText = "A quality report is not yet available for this dataset, and";
+                        msgText += " there was a problem attempting to generate one automatically: "; 
+                        msgText += errorThrown;
+                        MetacatUI.uiRouter.navigate("#view" + "/" + viewRef.pid, {trigger: true});
+                        var message = $(document.createElement("div")).append($(document.createElement("span")).text(msgText));
+                        MetacatUI.appView.showAlert(message, "alert-errors", "body", null, {remove: true});
+                        console.log("Error sending quality report generation request: " + errorThrown);
+                    }
+                };
+                console.log("Sending quality suites request");
+                $.ajax(args);
+            } catch (error) {
+                console.log(error.stack);
+            }
+        },
+        
+        // Send a request to generate a quality report.
+        prepareReportRequest: function() {
+            var viewRef = this;
 
-			try {
-				var args = {
-						url: this.url,
-						cache: false,
-						data: formData,
-					    contentType: false, //"multipart/form-data",
-					    processData: false,
-					    type: 'POST',
-						success: function(data, textStatus, xhr) {
-							var groupedResults = viewRef.groupResults(data.result);
-							var groupedByType = viewRef.groupByType(data.result);
+            // fetch SystemMetadata		
+            var xhr = new XMLHttpRequest();
+            xhr.onreadystatechange = function() {
+                if (this.readyState == 4 && this.status == 200){
+                    //this.response contains the returned system metadata
+                    var sysMetaBlob = this.response;
+                    
+                    // fetch the metadata contents by the pid
+                    var xhr = new XMLHttpRequest();
+                    xhr.onreadystatechange = function() {
+                        if (this.readyState == 4 && this.status == 200){
+                            // this.response contains the fetched D1 object data (metadata)
+                            var documentBlob = this.response;
+                            console.log("Got sysmeta, obj, now send new report request...");
+                            // send to MDQ as blob
+                            var formData = new FormData();
+                            formData.append('document', documentBlob);
+                            formData.append('systemMetadata', sysMetaBlob);
+                            viewRef.sendReportRequest(formData);    
+                        }
+                    }
+                    console.log("Getting metadata object for pid: " + viewRef.pid);
+                    var url = MetacatUI.appModel.get("objectServiceUrl") + viewRef.pid;
+                    xhr.open('GET', url);
+                    xhr.responseType = 'blob';
+                    xhr.withCredentials = true;
+                    xhr.setRequestHeader("Authorization", "Bearer " + MetacatUI.appUserModel.get("token"));
+                    xhr.send();
+    
+                    //Render a Citation View for the page header
+                    var citationView = new CitationView({ pid: viewRef.pid });
+                    citationView.render();
+                    viewRef.citationView = citationView;
+                } 
+            }
+            console.log("Getting sysmeta for pid: " + viewRef.pid);
+            var url = MetacatUI.appModel.get("metaServiceUrl") + this.pid;
+            xhr.open('GET', url);
+            xhr.responseType = 'blob';
+            xhr.withCredentials = true;
+            xhr.setRequestHeader("Authorization", "Bearer " + MetacatUI.appUserModel.get("token"));
+            xhr.send();
+        },
+        
+        
+    	// Fetch a quality report from the quality server and display it.
+        fetchReport: function() {
+        	var viewRef = this;
 
-							data = _.extend(data,
-									{
-										objectIdentifier: viewRef.pid,
-										suiteId: viewRef.suiteId,
-										groupedResults: groupedResults,
-										groupedByType: groupedByType
-									});
+        	try {
+        		var qualityUrl = MetacatUI.appModel.get("mdqRunsServiceUrl") + MetacatUI.appModel.get("mdqSuiteId") + "/" + viewRef.pid;
+                console.log("quality url: " + qualityUrl);
+        		var args = {
+        			url: qualityUrl,
+        			cache: false,
+        			contentType: false, //"multipart/form-data",
+        			processData: false,
+        			type: 'GET',
+                    //headers: { 'Access-Control-Allow-Origin': 'http://localhost:8081' },
+                    headers: { 'Accept': 'application/json'},
+        			success: function(data, textStatus, xhr) {
+                        // Inspect the results to see if a quality report was returned.
+                        // If not, then submit a request to the quality engine to create the
+                        // quality report for this pid/suiteId, and inform the user of this.
+                        if(!data.result) {
+                            console.log("hey have to submit a quality report request.");
+                        } else {
+                            var groupedResults = viewRef.groupResults(data.result);
+                            var groupedByType = viewRef.groupByType(data.result);
 
-							viewRef.$el.html(viewRef.template(data));
-							viewRef.drawScoreChart(data.result, groupedResults);
-							viewRef.showAvailableSuites();
-							viewRef.showCitation();
-							viewRef.show();
-							//Initialize all popover elements
-							viewRef.$('.popover-this').popover();
-						}
-				};
-				$.ajax(args);
-			} catch (error) {
-				console.log(error.stack);
-			}
-		},
+                            data = _.extend(data,
+                                {
+                                    objectIdentifier: viewRef.pid,
+                                    suiteId: viewRef.suiteId,
+                                    groupedResults: groupedResults,
+                                    groupedByType: groupedByType
+                                });
 
+                            viewRef.$el.html(viewRef.template(data));
+                            viewRef.drawScoreChart(data.result, groupedResults);
+                            viewRef.showAvailableSuites();
+                            viewRef.showCitation();
+                            viewRef.show();
+                            //Initialize all popover elements
+                            viewRef.$('.popover-this').popover();
+        				} 
+                    },
+                    error: function(data) {
+                        viewRef.prepareReportRequest();
+                    }
+        		};
+        		$.ajax(args);
+        	} catch (error) {
+        		console.log(error.stack);
+        	}
+        },
+        
 		groupResults: function(results) {
 			var groupedResults = _.groupBy(results, function(result) {
 				var color;
