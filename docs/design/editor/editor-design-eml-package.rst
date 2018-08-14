@@ -8,7 +8,7 @@
   
 
      package metacatui {
-       class EML <<Backbone.Model>> {
+       class EML211 <<NestedModel>> {
          + isEditable : Boolean
          + alternateIdentifier : String [*]
          + shortName : String
@@ -41,17 +41,10 @@
          + removeEntity() : String
        }
        
-       note top of EML
-         For now, we model the EML
-         dataset module only. We'll refactor
-         to support the software, citation, and
-         protocol modules as needed.
-       end note
-       
        class EMLViewer <<Backbone.View>> {
        }
        
-       class EMLKeyword <<Backbone.Model>> {
+       class EMLKeyword <<NestedModel>> {
          + keyword : String
          + type : String
          + keywordThesaurus : String
@@ -60,7 +53,7 @@
          + toXML() : String
        }
        
-       class EMLOnlineDist <<Backbone.Model>> {
+       class EMLOnlineDist <<NestedModel>> {
          + url : String
          + urlFunction : String (information or download)
          + onlineDescription : String
@@ -68,7 +61,7 @@
          + toXML() : String
        }
        
-       class EMLOfflineDist <<Backbone.Model>> {
+       class EMLOfflineDist <<NestedModel>> {
          + mediumName : String
          + mediumVolume : String
          + mediumFormat : String
@@ -86,7 +79,7 @@
          + toXML() : String
        }
        
-       class TemporalCoverage <<Backbone.Model>> {
+       class TemporalCoverage <<NestedModel>> {
          + beginDate : String
          + beginTime : String
          + endDate : String
@@ -96,15 +89,7 @@
          + toXML() : String
        }
        
-       note bottom
-         We will first only support
-         Gregorian dates. We'll change
-         the property types from String
-         to a subclass when we support
-         alternative time scales.
-       end note
-       
-       class Taxon <<Backbone.Model>> {
+       class Taxon <<NestedModel>> {
          + parentId : String
          + taxonomicRank : String
          + taxonomicValue : String
@@ -113,8 +98,8 @@
          + parse() : Taxon
          + toXML() : String
        }
-                
-       class EMLParty <<Backbone.Model>> {
+        
+       class EMLParty <<NestedModel>> {
          + givenName : String
          + surName : String
          + organizationName : String
@@ -134,7 +119,7 @@
          + toXML() : String
        }
        
-       class EMLMethods <<Backbone.Model>> {
+       class EMLMethods <<NestedModel>> {
        	 + methodSteps : { title : String, paragraph : String [*] } [*]
        	 + studyExtent : { title : String, paragraph : String [*] } [*]
        	 + samplingDescription : { title : String, paragraph : String [*] } [*]
@@ -142,7 +127,7 @@
          + toXML() : String
        }
        
-       class EMLProject <<Backbone.Model>> {
+       class EMLProject <<NestedModel>> {
          + title : String
          + funding : String 
          + personnel : EMLParty [*]
@@ -150,55 +135,72 @@
          + toXML() : String
        }
        
-       class EMLDataTable {
+       class EMLEntity {
+           xmlID: String
+           alternateIdentifier: [String]
+           entityName: String
+           entityDescription: String
+           physical: [EMLPhysical]
+           physicalMD5Checksum: String
+           physicalSize: number
+           physicalObjectName: String
+           coverage: [EML{Geo|Taxon|Temporal}Coverage]
+           methods: EMLMethod
+           additionalInfo: [EMLText]
+           attributeList: [EMLAttribute]
+           constraint: [EMLConstraint]
+           references: String
+           downloadID: String
+           formatName: String
+           nodeOrder: [String]
+           parentModel: NestedModel
+           dataONEObject: DataONEObject
+           objectXML: String
+           objectDOM: DOM
        }
        
-       class EMLSpatialRaster {
+       class EMLDataTable <<NestedModel>> {
+           type : String
+           caseSensitive : String
+           numberOfRecords : String
        }
        
-       class EMLSpatialVector {
+       class EMLSpatialRaster <<NestedModel>> {
        }
        
-       class EMLStoredProcedure {
+       class EMLSpatialVector <<NestedModel>> {
        }
        
-       class EMLView {
+       class EMLStoredProcedure <<NestedModel>> {
        }
        
-       class EMLOtherEntity {
-         id : String
-         alternateIdentifier : String
-         entityName : String
-         entityDescription : String [*]
-         'physical : EMLPhysical
-         
+       class EMLView <<NestedModel>> {
        }
        
-       note bottom
-         We minimally support the otherEntity class at first, 
-         and will eventually support it fully, along with
-         the EML DataTable, SpatialRaster, SpatialVector, 
-         StoredProcedure, and View classes. 
-       end note
-       
+       class EMLOtherEntity <<NestedModel>> {
+            type: String
+            entityType: String
+            nodeOrder: [String]
+       }
      }
      
-     EML *-- EMLParty : "hasModule"
-     EML *-- EMLMethods : hasModule
-     EML *-- EMLProject : hasModule
-     EML *-- GeographicCoverage : "hasModule"
-     EML *-- TemporalCoverage : "hasModule"
-     EML *-- Taxon : "hasModule"
-     EML *-- EMLOnlineDist : hasModule
-     EML *-- EMLOfflineDist : hasModule
-     EML *-- EMLKeyword : hasModule
-     EML *-- EMLDataTable : hasModule
-     EML *-- EMLSpatialRaster : hasModule
-     EML *-- EMLSpatialVector : hasModule
-     EML *-- EMLStoredProcedure : hasModule
-     EML *-- EMLView : hasModule
-     EML *-- EMLOtherEntity : hasModule
-     EML <.right. EMLViewer : listensTo
+     EML211 *-- EMLParty : "hasModule"
+     EML211 *-- EMLMethods : hasModule
+     EML211 *-- EMLProject : hasModule
+     EML211 *-- GeographicCoverage : "hasModule"
+     EML211 *-- TemporalCoverage : "hasModule"
+     EML211 *-- Taxon : "hasModule"
+     EML211 *-- EMLOnlineDist : hasModule
+     EML211 *-- EMLOfflineDist : hasModule
+     EML211 *-- EMLKeyword : hasModule
+     EML211 *-right- EMLEntity : hasModule
+     EMLEntity <|-down- EMLDataTable : subclassOf
+     EMLEntity <|-down- EMLSpatialRaster : subclassOf
+     EMLEntity <|-down- EMLSpatialVector : subclassOf
+     EMLEntity <|-down- EMLStoredProcedure : subclassOf
+     EMLEntity <|-down- EMLView : subclassOf
+     EMLEntity <|-down- EMLOtherEntity : subclassOf
+     EML211 <.right. EMLViewer : listensTo
      
    @enduml
 
