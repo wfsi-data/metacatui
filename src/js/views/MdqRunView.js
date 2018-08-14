@@ -45,7 +45,7 @@ define(['jquery', 'underscore', 'backbone', 'd3', 'DonutChart', 'views/CitationV
 
 			// use the requested suite if provided
 			if (!this.suiteId) {
-				this.suiteId = "arctic.data.center.suite.1";
+				this.suiteId = MetacatUI.appUserModel.get("mdqSuiteId");
 			}
             
 			//this.url = this.mdqRunsServiceUrl + "/" + this.suiteId + "/" + this.pid;
