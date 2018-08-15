@@ -47,6 +47,7 @@ define(['jquery', 'underscore', 'backbone', 'd3', 'DonutChart', 'views/CitationV
 			if (!this.suiteId) {
 				this.suiteId = MetacatUI.appUserModel.get("mdqSuiteId");
 			}
+            console.log("current suiteId: " + this.suiteId);
             
 			//this.url = this.mdqRunsServiceUrl + "/" + this.suiteId + "/" + this.pid;
 
@@ -89,8 +90,9 @@ define(['jquery', 'underscore', 'backbone', 'd3', 'DonutChart', 'views/CitationV
 
 			try {
 				var args = {
-						url: this.suitesUrl,
+						url: MetacatUI.appModel.get("mdqSuitesServiceUrl"),
 					    type: 'GET',
+                        header: 'Accept: application/json',
 						success: function(data, textStatus, xhr) {
 							viewRef.$el.find('#suites').append(
 									viewRef.suitesTemplate(
@@ -102,6 +104,7 @@ define(['jquery', 'underscore', 'backbone', 'd3', 'DonutChart', 'views/CitationV
 							//$('.popover-this').popover();
 						}
 				};
+                console.log("suites url: " + MetacatUI.appModel.get("mdqSuitesServiceUrl"))
 				$.ajax(args);
 			} catch (error) {
 				console.log(error.stack);
@@ -151,7 +154,7 @@ define(['jquery', 'underscore', 'backbone', 'd3', 'DonutChart', 'views/CitationV
                         msgText += errorThrown;
                         MetacatUI.uiRouter.navigate("#view" + "/" + viewRef.pid, {trigger: true});
                         var message = $(document.createElement("div")).append($(document.createElement("span")).text(msgText));
-                        MetacatUI.appView.showAlert(message, "alert-errors", "body", null, {remove: true});
+                        MetacatUI.appView.showAlert(message, "alert-errors", "body", 10000, {remove: true});
                         console.log("Error sending quality report generation request: " + errorThrown);
                     }
                 };
@@ -216,7 +219,7 @@ define(['jquery', 'underscore', 'backbone', 'd3', 'DonutChart', 'views/CitationV
         	var viewRef = this;
 
         	try {
-        		var qualityUrl = MetacatUI.appModel.get("mdqRunsServiceUrl") + MetacatUI.appModel.get("mdqSuiteId") + "/" + viewRef.pid;
+        		var qualityUrl = MetacatUI.appModel.get("mdqRunsServiceUrl") + viewRef.suiteId + "/" + viewRef.pid;
                 console.log("quality url: " + qualityUrl);
         		var args = {
         			url: qualityUrl,
