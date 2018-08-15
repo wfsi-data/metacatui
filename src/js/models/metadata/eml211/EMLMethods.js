@@ -1,12 +1,11 @@
-/* global define */
-define(['jquery',
-		'underscore',
-		'backbone',
-		'models/DataONEObject',
-		'models/metadata/eml211/EMLText'],
-    function($, _, Backbone, DataONEObject, EMLText) {
+define(["jquery",
+		"underscore",
+		"model/NestedModel",
+		"models/DataONEObject",
+		"models/metadata/eml211/EMLText"],
+    function($, _, NestedModel, DataONEObject, EMLText) {
 
-	var EMLMethods = Backbone.Model.extend({
+	var EMLMethods = NestedModel.extend({
 
 		defaults: function(){
 			return {

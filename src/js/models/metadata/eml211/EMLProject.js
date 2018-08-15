@@ -1,8 +1,8 @@
-/* global define */
-define(['jquery', 'underscore', 'backbone', "models/DataONEObject", "models/metadata/eml211/EMLParty"],
-    function($, _, Backbone, DataONEObject, EMLParty) {
+define(["jquery", "underscore", "models/NestedModel", "models/DataONEObject",
+    "models/metadata/eml211/EMLParty"],
+    function($, _, NestedModel, DataONEObject, EMLParty) {
 
-	var EMLProject = Backbone.Model.extend({
+	var EMLProject = NestedModel.extend({
 
 		defaults: {
 			objectDOM: null,

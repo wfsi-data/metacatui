@@ -1,6 +1,6 @@
-define(["jquery", "underscore", "backbone",
+define(["jquery", "underscore", "models/NestedModel",
         "models/DataONEObject"],
-    function($, _, Backbone, DataONEObject) {
+    function($, _, NestedModel, DataONEObject) {
 
         /**
          * EMLNonNumericDomain represents the measurement scale of a nominal
@@ -9,7 +9,7 @@ define(["jquery", "underscore", "backbone",
          *
          * @see https://github.com/NCEAS/eml/blob/master/eml-attribute.xsd
          */
-        var EMLNonNumericDomain = Backbone.Model.extend({
+        var EMLNonNumericDomain = NestedModel.extend({
 
         	type: "EMLNonNumericDomain",
 

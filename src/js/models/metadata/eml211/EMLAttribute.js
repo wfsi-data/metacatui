@@ -1,7 +1,7 @@
-define(["jquery", "underscore", "backbone",
+define(["jquery", "underscore", "models/NestedModel",
         "models/metadata/eml211/EMLMeasurementScale",
         "models/DataONEObject"],
-    function($, _, Backbone, EMLMeasurementScale, DataONEObject) {
+    function($, _, NestedModel, EMLMeasurementScale, DataONEObject) {
 
         /*
          * EMLAttribute represents a data attribute within an entity, such as
@@ -9,7 +9,7 @@ define(["jquery", "underscore", "backbone",
          *
          * @see https://github.com/NCEAS/eml/blob/master/eml-attribute.xsd
          */
-        var EMLAttribute = Backbone.Model.extend({
+        var EMLAttribute = NestedModel.extend({
 
             /* Attributes of an EML attribute object */
             defaults: function(){

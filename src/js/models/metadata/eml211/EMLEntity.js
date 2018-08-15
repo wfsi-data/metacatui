@@ -1,6 +1,6 @@
-define(["jquery", "underscore", "backbone", "uuid", "models/DataONEObject",
+define(["jquery", "underscore", "models/NestedModel", "uuid", "models/DataONEObject",
         "models/metadata/eml211/EMLAttribute"],
-    function($, _, Backbone, uuid, DataONEObject, EMLAttribute) {
+    function($, _, NestedModel, uuid, DataONEObject, EMLAttribute) {
 
         /*
          * EMLEntity represents an abstract data entity, corresponding
@@ -10,7 +10,7 @@ define(["jquery", "underscore", "backbone", "uuid", "models/DataONEObject",
          *
          * @see https://github.com/NCEAS/eml/blob/master/eml-entity.xsd
          */
-        var EMLEntity = Backbone.Model.extend({
+        var EMLEntity = NestedModel.extend({
 
         	//The class name for this model
         	type: "EMLEntity",

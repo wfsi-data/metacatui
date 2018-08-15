@@ -1,14 +1,13 @@
-/* global define */
-define(['jquery', 'underscore', 'backbone', 'uuid', 'collections/ObjectFormats', 'md5'],
-    function($, _, Backbone, uuid, ObjectFormats, md5){
+define(["jquery", "underscore", "models/NestedModel", "uuid",
+    "collections/ObjectFormats", "md5"],
+    function($, _, NestedModel, uuid, ObjectFormats, md5){
 
         /*
          A DataONEObject represents a DataONE object that has a format
          type of DATA, METADATA, or RESOURCE.  It stores the system
          metadata attributes for the object at a minimum.
-         TODO: incorporate Backbone.UniqueModel
         */
-        var DataONEObject = Backbone.Model.extend({
+        var DataONEObject = NestedModel.extend({
 
           type: "DataONEObject",
           selectedInEditor: false, // Has this package member been selected and displayed in the provenance editor?
@@ -199,7 +198,7 @@ define(['jquery', 'underscore', 'backbone', 'uuid', 'collections/ObjectFormats',
           },
 
           /*
-           * Overload Backbone.Model.fetch, so that we can set custom options for each fetch() request
+           * Overload NestedModel.fetch, so that we can set custom options for each fetch() request
            */
           fetch: function(options){
 
@@ -256,8 +255,8 @@ define(['jquery', 'underscore', 'backbone', 'uuid', 'collections/ObjectFormats',
             //Add the authorization options
             fetchOptions = _.extend(fetchOptions, MetacatUI.appUserModel.createAjaxSettings());
 
-            //Call Backbone.Model.fetch to retrieve the info
-            return Backbone.Model.prototype.fetch.call(this, fetchOptions);
+            //Call NestedModel.fetch to retrieve the info
+            return NestedModel.prototype.fetch.call(this, fetchOptions);
 
           },
 
@@ -589,7 +588,7 @@ define(['jquery', 'underscore', 'backbone', 'uuid', 'collections/ObjectFormats',
               requestSettings = _.extend(requestSettings, MetacatUI.appUserModel.createAjaxSettings());
 
               //Send the Save request
-              Backbone.Model.prototype.save.call(this, null, requestSettings);
+              NestedModel.prototype.save.call(this, null, requestSettings);
         },
 
         /*

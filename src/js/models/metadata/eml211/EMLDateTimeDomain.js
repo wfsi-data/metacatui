@@ -1,6 +1,6 @@
-define(["jquery", "underscore", "backbone",
+define(["jquery", "underscore", "models/NestedModel",
         "models/DataONEObject"],
-    function($, _, Backbone, DataONEObject) {
+    function($, _, NestedModel, DataONEObject) {
 
         /*
          * EMLDateTimeDomain represents the measurement scale of a date/time
@@ -8,7 +8,7 @@ define(["jquery", "underscore", "backbone",
          *
          * @see https://github.com/NCEAS/eml/blob/master/eml-attribute.xsd
          */
-        var EMLDateTimeDomain = Backbone.Model.extend({
+        var EMLDateTimeDomain = NestedModel.extend({
 
         	type: "EMLDateTimeDomain",
 
