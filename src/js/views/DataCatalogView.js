@@ -7,7 +7,6 @@ define(['jquery',
 				'collections/SolrResults',
 				'models/Search',
 				'models/Stats',
-				'models/NodeModel',
 				'views/SearchResultView',
 				'text!templates/search.html',
 				'text!templates/statCounts.html',
@@ -18,7 +17,7 @@ define(['jquery',
 				'gmaps',
 				'nGeohash'
 				], 				
-	function($, $ui, _, Backbone, Bioportal, SearchResults, SearchModel, StatsModel, NodeModel, SearchResultView, CatalogTemplate, CountTemplate, PagerTemplate, MainContentTemplate, CurrentFilterTemplate, LoadingTemplate, gmaps, nGeohash) {
+	function($, $ui, _, Backbone, Bioportal, SearchResults, SearchModel, StatsModel, SearchResultView, CatalogTemplate, CountTemplate, PagerTemplate, MainContentTemplate, CurrentFilterTemplate, LoadingTemplate, gmaps, nGeohash) {
 	'use strict';
 	
 	var DataCatalogView = Backbone.View.extend({
@@ -32,7 +31,6 @@ define(['jquery',
 		searchModel: null,		
 		searchResults: null,
 		statsModel: new StatsModel(),
-		nodeModel: new NodeModel(),
 		
 		//Templates
 		template: _.template(CatalogTemplate),		
@@ -253,7 +251,6 @@ define(['jquery',
 			// Insert the Linked Data into the header of the page.
 			if (MetacatUI.appModel.get("isJSONLDEnabled")) {
 				var elJSON = this.generateJSONLD();
-				console.log(elJSON);
 				this.insertJSONLD(elJSON);
 			}
 
@@ -311,9 +308,9 @@ define(['jquery',
 			var model = this.model;
 
 			// Find the MN info from the CN Node list
-			var  members = this.nodeModel.get("members")
+			var  members = MetacatUI.nodeModel.get("members")
 			for (var i = 0; i < members.length; i++) {
-				if(members[i].identifier == this.nodeModel.get("currentMemberNode")) {
+				if(members[i].identifier == MetacatUI.nodeModel.get("currentMemberNode")) {
 					var nodeModelObject = members[i];
 				}
 			}
@@ -325,6 +322,7 @@ define(['jquery',
 					"gdx": "https://geodex.org/voc/"
 				},
 				"@type": "DataCatalog",
+				"foundingDate": "",
 				"address": {
 					"@type": "PostalAddress",
 					"streetAddress": "1 University of New Mexico",
@@ -340,7 +338,47 @@ define(['jquery',
 					"email" : "",
 					"url": "https://www.dataone.org/contact",
 					"contactType" : "customer support"
-				}
+				},
+				"potentialAction": {
+					"@id": "https://search.dataone.org/data",
+					"@type": "SearchAction",
+					"target": "https://search.dataone.org/data",
+					"query-input": {
+						"@type": "PropertyValueSpecification",
+						"valueRequired": true,
+						"valueName": "query_string"
+					}
+				},
+				"mainContentOfPage": [
+					{
+						"@type": "SiteNavigationElement",
+						"position": 1,
+						"name": "Search",
+						"description": "Search the DataONE catalog.",
+						"url": "https://search.dataone.org/data"
+					},
+					{
+						"@type": "SiteNavigationElement",
+						"position": 2,
+						"name": "Contribute Data",
+						"description": "Contribute metadata and data to DataONE",
+						"url": "https://www.dataone.org/contribute-data"
+					},
+					{
+						"@type": "SiteNavigationElement",
+						"position": 3,
+						"name": "About Us",
+						"description": "Learn about DataONE.",
+						"url": "https://www.dataone.org/about"
+					},
+					{
+						"@type": "SiteNavigationElement",
+						"position": 4,
+						"name": "Contact Us",
+						"description": "Get in touch with the DataONE team.",
+						"url": "https://www.dataone.org/contact"
+					}
+				]
 			};
 
 			if(nodeModelObject) {
@@ -376,7 +414,6 @@ define(['jquery',
 						var xmlResponse = $.parseXML(data) || null;
 						if(!xmlResponse) return;
 						else {
-							console.log(xmlResponse);
 
 							if ($(xmlResponse).find("description")) {
 								elJSON["description"] = $(xmlResponse).find("description").text()
