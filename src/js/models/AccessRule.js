@@ -1,11 +1,10 @@
-/*global define */
-define(['jquery', 'underscore', 'backbone'], 				
-	function($, _, Backbone) {
-	'use strict';
+define(["jquery", "underscore", "models/NestedModel"],
+	function($, _, NestedModel) {
+	"use strict";
 	
 	// Access Rule Model 
 	// ------------------
-	var AccessRule = Backbone.Model.extend({
+	var AccessRule = NestedModel.extend({
 		
 		defaults: {
 			subject: null,

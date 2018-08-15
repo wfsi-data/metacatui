@@ -1,8 +1,8 @@
-define(["jquery", "underscore", "backbone",
+define(["jquery", "underscore", "models/NestedModel",
     "models/metadata/eml211/EMLNonNumericDomain",
     "models/metadata/eml211/EMLNumericDomain",
-        "models/metadata/eml211/EMLDateTimeDomain"],
-    function($, _, Backbone, EMLNonNumericDomain, EMLNumericDomain, EMLDateTimeDomain) {
+    "models/metadata/eml211/EMLDateTimeDomain"],
+    function($, _, NestedModel, EMLNonNumericDomain, EMLNumericDomain, EMLDateTimeDomain) {
 
         /*
          * EMLMeasurementScale is a measurement scale factory that returns
@@ -10,7 +10,7 @@ define(["jquery", "underscore", "backbone",
          * EMLNumericDomain, or EMLDateTimeDomain, depending on the
          * domain name found in the given measurementScaleXML
          */
-        var EMLMeasurementScale = Backbone.Model.extend({},
+        var EMLMeasurementScale = NestedModel.extend({},
 
         {
             /*

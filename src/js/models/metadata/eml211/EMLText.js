@@ -1,8 +1,7 @@
-/* global define */
-define(['jquery', 'underscore', 'backbone', 'models/DataONEObject'],
-    function($, _, Backbone, DataONEObject) {
+define(["jquery", "underscore", "models/NestedModel", "models/DataONEObject"],
+    function($, _, NestedModel, DataONEObject) {
 
-  var EMLText = Backbone.Model.extend({
+  var EMLText = NestedModel.extend({
 
     type: "EMLText",
 

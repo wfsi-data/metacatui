@@ -1,11 +1,9 @@
-"use strict";
-
-define(["jquery", "underscore", "backbone"], function($, _, Backbone) {
-
+define(["jquery", "underscore", "models/NestedModel"], function($, _, NestedModel) {
+    "use strict";
     /*
      * An EMLUnit represents a single unit defined in the EML Unit Dictionary
      */
-    var EMLUnit = Backbone.Model.extend({
+    var EMLUnit = NestedModel.extend({
 
         /* The default unit fields */
         defaults: function() {

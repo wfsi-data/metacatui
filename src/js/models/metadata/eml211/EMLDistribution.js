@@ -1,8 +1,7 @@
-/* global define */
-define(['jquery', 'underscore', 'backbone', 'models/DataONEObject'],
-    function($, _, Backbone, DataONEObject) {
+define(["jquery", "underscore", "models/NestedModel", "models/DataONEObject"],
+    function($, _, NestedModel, DataONEObject) {
 
-	var EMLDistribution = Backbone.Model.extend({
+	var EMLDistribution = NestedModel.extend({
 
 		defaults: {
 			objectXML: null,
