@@ -104,8 +104,8 @@ define(['jquery', 'underscore', 'backbone'],
             //mdqBaseUrl: "http://localhost:8080/quality",
             mdqBaseUrl: "http://docker-ucsb-1.test.dataone.org:30080/quality",
             mdqSuiteId: "arctic.data.center.suite.1",
-            mdqRunsUrl: null,
-            mdqSuitesUrl: null,
+            mdqRunsServiceUrl: null,
+            mdqSuitesServiceUrl: null,
 
 			// Metrics endpoint url
 			metricsUrl: null,
