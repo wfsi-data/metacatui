@@ -13,7 +13,7 @@ define(['underscore', 'jquery', 'backbone', 'models/metadata/eml211/EMLTaxonCove
 		'text!templates/metadata/taxonomicClassificationRow.html'], 
     function(_, $, Backbone, EMLTaxonCoverage, TaxonomicClassificationTable, TaxonomicClassificationRow){
 	
-	var EMLTaxonView = Backbone.Model.extend({
+	var EMLTaxonView = Backbone.View.extend({
 		
 		className: "row-fluid taxonomic-coverage",
 		
