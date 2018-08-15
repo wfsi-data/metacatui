@@ -35,7 +35,9 @@ define(['jquery', 'underscore', 'backbone', 'd3', 'DonutChart', 'views/CitationV
 			var select = $(event.target);
 
 			var suiteId = $(select).val();
-
+            
+            console.log("setting suiteId to : " + suiteId);
+            //MetacatUI.appModel.set("mdqSuiteId", suiteId);
 			MetacatUI.uiRouter.navigate("quality/s=" + suiteId + "/" + this.pid, {trigger: true});
 
 			return false;
@@ -43,10 +45,10 @@ define(['jquery', 'underscore', 'backbone', 'd3', 'DonutChart', 'views/CitationV
 
 		render: function () {
 
-			// use the requested suite if provided
-			if (!this.suiteId) {
-				this.suiteId = MetacatUI.appUserModel.get("mdqSuiteId");
-			}
+			// use the default suite id 
+            if (!this.suiteId) {
+                this.suiteId = MetacatUI.appModel.get("mdqSuiteId");
+            }
             console.log("current suiteId: " + this.suiteId);
             
 			//this.url = this.mdqRunsServiceUrl + "/" + this.suiteId + "/" + this.pid;
@@ -129,7 +131,7 @@ define(['jquery', 'underscore', 'backbone', 'd3', 'DonutChart', 'views/CitationV
             var viewRef = this;
 
             try {
-                var suitesUrl = MetacatUI.appModel.get("mdqSuitesServiceUrl") + MetacatUI.appModel.get("mdqSuiteId") + "/run";
+                var suitesUrl = MetacatUI.appModel.get("mdqSuitesServiceUrl") + viewRef.suiteId + "/run";
                 console.log("quality suites url: " + suitesUrl);
                 var args = {
                     url: suitesUrl,
