@@ -1,6 +1,6 @@
 define(["jquery",
 		"underscore",
-		"model/NestedModel",
+		"models/NestedModel",
 		"models/DataONEObject",
 		"models/metadata/eml211/EMLText"],
     function($, _, NestedModel, DataONEObject, EMLText) {
