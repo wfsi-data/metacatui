@@ -52,7 +52,7 @@ define(["jquery", "underscore", "backbone"], function($, _, Backbone) {
                                 
                                 // Make a new event, labeled by the child name, and 
                                 // add the suffix if is defined
-                                event = prefix + ":" + name + (suffix ? suffix + ":" : "");
+                                event = prefix + ":" + name + (suffix ? ":" + suffix : "");
                                 
                                 // Now trigger the event for this parent object if not silenced
                                 if ( !silent ) {
@@ -65,7 +65,7 @@ define(["jquery", "underscore", "backbone"], function($, _, Backbone) {
             }, this);
             
             // Now call the super() Backbone.Model.set()
-            Backbone.Model.prototype.set.apply(key, val, options);
+            Backbone.Model.prototype.set.call(this, key, val, options);
         }
     });
     return NestedModel;
