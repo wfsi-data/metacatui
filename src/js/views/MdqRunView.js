@@ -36,8 +36,6 @@ define(['jquery', 'underscore', 'backbone', 'd3', 'DonutChart', 'views/CitationV
 
 			var suiteId = $(select).val();
             
-            console.log("setting suiteId to : " + suiteId);
-            //MetacatUI.appModel.set("mdqSuiteId", suiteId);
 			MetacatUI.uiRouter.navigate("quality/s=" + suiteId + "/" + this.pid, {trigger: true});
 
 			return false;
@@ -49,7 +47,6 @@ define(['jquery', 'underscore', 'backbone', 'd3', 'DonutChart', 'views/CitationV
             if (!this.suiteId) {
                 this.suiteId = MetacatUI.appModel.get("mdqSuiteId");
             }
-            console.log("current suiteId: " + this.suiteId);
             
 			//this.url = this.mdqRunsServiceUrl + "/" + this.suiteId + "/" + this.pid;
 
@@ -106,7 +103,6 @@ define(['jquery', 'underscore', 'backbone', 'd3', 'DonutChart', 'views/CitationV
 							//$('.popover-this').popover();
 						}
 				};
-                console.log("suites url: " + MetacatUI.appModel.get("mdqSuitesServiceUrl"))
 				$.ajax(args);
 			} catch (error) {
 				console.log(error.stack);
@@ -132,7 +128,7 @@ define(['jquery', 'underscore', 'backbone', 'd3', 'DonutChart', 'views/CitationV
 
             try {
                 var suitesUrl = MetacatUI.appModel.get("mdqSuitesServiceUrl") + viewRef.suiteId + "/run";
-                console.log("quality suites url: " + suitesUrl);
+                console.debug("quality suites url: " + suitesUrl);
                 var args = {
                     url: suitesUrl,
                     cache: false,
@@ -141,7 +137,7 @@ define(['jquery', 'underscore', 'backbone', 'd3', 'DonutChart', 'views/CitationV
                     processData: false,
                     type: 'POST',
                     success: function(data, textStatus, jqXHR) {  
-                        console.log("Sent quality report generation request");
+                        console.debug("Sent quality report generation request");
                         viewRef.hideLoading();
                         var msgText = "A quality report is not yet available for this dataset, so";
                         msgText += " one will be generated automatically. Please try again later.";
@@ -150,6 +146,7 @@ define(['jquery', 'underscore', 'backbone', 'd3', 'DonutChart', 'views/CitationV
                         MetacatUI.appView.showAlert(message, "alert-success", "body", 10000, {remove: true});
                     },
                     error: function(jqXHR, textStatus, errorThrown) {
+                        console.debug("Error sending quality report generation request: " + errorThrown);
                         viewRef.hideLoading();
                         var msgText = "A quality report is not yet available for this dataset, and";
                         msgText += " there was a problem attempting to generate one automatically: "; 
@@ -157,10 +154,9 @@ define(['jquery', 'underscore', 'backbone', 'd3', 'DonutChart', 'views/CitationV
                         MetacatUI.uiRouter.navigate("#view" + "/" + viewRef.pid, {trigger: true});
                         var message = $(document.createElement("div")).append($(document.createElement("span")).text(msgText));
                         MetacatUI.appView.showAlert(message, "alert-errors", "body", 10000, {remove: true});
-                        console.log("Error sending quality report generation request: " + errorThrown);
                     }
                 };
-                console.log("Sending quality suites request");
+                console.debug("Sending quality suites request");
                 $.ajax(args);
             } catch (error) {
                 console.log(error.stack);
@@ -184,7 +180,6 @@ define(['jquery', 'underscore', 'backbone', 'd3', 'DonutChart', 'views/CitationV
                         if (this.readyState == 4 && this.status == 200){
                             // this.response contains the fetched D1 object data (metadata)
                             var documentBlob = this.response;
-                            console.log("Got sysmeta, obj, now send new report request...");
                             // send to MDQ as blob
                             var formData = new FormData();
                             formData.append('document', documentBlob);
@@ -192,7 +187,6 @@ define(['jquery', 'underscore', 'backbone', 'd3', 'DonutChart', 'views/CitationV
                             viewRef.sendReportRequest(formData);    
                         }
                     }
-                    console.log("Getting metadata object for pid: " + viewRef.pid);
                     var url = MetacatUI.appModel.get("objectServiceUrl") + viewRef.pid;
                     xhr.open('GET', url);
                     xhr.responseType = 'blob';
@@ -206,7 +200,6 @@ define(['jquery', 'underscore', 'backbone', 'd3', 'DonutChart', 'views/CitationV
                     viewRef.citationView = citationView;
                 } 
             }
-            console.log("Getting sysmeta for pid: " + viewRef.pid);
             var url = MetacatUI.appModel.get("metaServiceUrl") + this.pid;
             xhr.open('GET', url);
             xhr.responseType = 'blob';
@@ -222,7 +215,7 @@ define(['jquery', 'underscore', 'backbone', 'd3', 'DonutChart', 'views/CitationV
 
         	try {
         		var qualityUrl = MetacatUI.appModel.get("mdqRunsServiceUrl") + viewRef.suiteId + "/" + viewRef.pid;
-                console.log("quality url: " + qualityUrl);
+                console.debug("quality url: " + qualityUrl);
         		var args = {
         			url: qualityUrl,
         			cache: false,
@@ -235,28 +228,24 @@ define(['jquery', 'underscore', 'backbone', 'd3', 'DonutChart', 'views/CitationV
                         // Inspect the results to see if a quality report was returned.
                         // If not, then submit a request to the quality engine to create the
                         // quality report for this pid/suiteId, and inform the user of this.
-                        if(!data.result) {
-                            console.log("hey have to submit a quality report request.");
-                        } else {
-                            var groupedResults = viewRef.groupResults(data.result);
-                            var groupedByType = viewRef.groupByType(data.result);
+                        var groupedResults = viewRef.groupResults(data.result);
+                        var groupedByType = viewRef.groupByType(data.result);
 
-                            data = _.extend(data,
-                                {
-                                    objectIdentifier: viewRef.pid,
-                                    suiteId: viewRef.suiteId,
-                                    groupedResults: groupedResults,
-                                    groupedByType: groupedByType
-                                });
+                        data = _.extend(data,
+                            {
+                                objectIdentifier: viewRef.pid,
+                                suiteId: viewRef.suiteId,
+                                groupedResults: groupedResults,
+                                groupedByType: groupedByType
+                            });
 
-                            viewRef.$el.html(viewRef.template(data));
-                            viewRef.drawScoreChart(data.result, groupedResults);
-                            viewRef.showAvailableSuites();
-                            viewRef.showCitation();
-                            viewRef.show();
-                            //Initialize all popover elements
-                            viewRef.$('.popover-this').popover();
-        				} 
+                        viewRef.$el.html(viewRef.template(data));
+                        viewRef.drawScoreChart(data.result, groupedResults);
+                        viewRef.showAvailableSuites();
+                        viewRef.showCitation();
+                        viewRef.show();
+                        //Initialize all popover elements
+                        viewRef.$('.popover-this').popover();
                     },
                     error: function(data) {
                         viewRef.prepareReportRequest();
