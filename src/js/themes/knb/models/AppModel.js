@@ -105,10 +105,10 @@ define(['jquery', 'underscore', 'backbone'],
 			groupsUrl: null,
 			portalUrl: null,
             
-            //mdqBaseUrl: "http://localhost:8080/quality",
             mdqBaseUrl: "http://docker-ucsb-1.test.dataone.org:30080/quality",
             mdqRunsUrl: null,
             mdqSuitesUrl: null,
+            suiteId: "knb.suite.1",
 
 			// Metrics endpoint url
 			metricsUrl: null,
@@ -158,7 +158,7 @@ define(['jquery', 'underscore', 'backbone'],
             // Metadata quality report services
             this.set('mdqSuitesServiceUrl', this.get("mdqBaseUrl") + "/suites/");
             this.set('mdqRunsServiceUrl', this.get('mdqBaseUrl') + "/runs/");
-            this.set('mdqSuiteId', "knb.suite.1");
+            this.set('mdqSuiteId', this.get("suiteId"));
 
 			if(typeof this.get("grantsUrl") !== "undefined")
 				this.set("grantsUrl", "https://api.nsf.gov/services/v1/awards.json");

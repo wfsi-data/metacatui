@@ -101,10 +101,10 @@ define(['jquery', 'underscore', 'backbone'],
 			//signInUrlLdap: null,
 			tokenUrl: null,
             
-            //mdqBaseUrl: "http://localhost:8080/quality",
             mdqBaseUrl: "http://docker-ucsb-1.test.dataone.org:30080/quality",
             mdqRunsServiceUrl: null,
             mdqSuitesServiceUrl: null,
+            suiteId: "arctic.data.center.suite.1",
 
 			// Metrics endpoint url
 			metricsUrl: null,
@@ -153,7 +153,7 @@ define(['jquery', 'underscore', 'backbone'],
             // Metadata quality report services
             this.set('mdqSuitesServiceUrl', this.get("mdqBaseUrl") + "/suites/");
             this.set('mdqRunsServiceUrl', this.get('mdqBaseUrl') + "/runs/");
-            this.set('mdqSuiteId', "arctic.data.center.suite.1");
+            this.set('mdqSuiteId', this.get("suiteId"));
 
 			//Set the NSF Award API proxy
 			if(typeof this.get("grantsUrl") != "undefined")
