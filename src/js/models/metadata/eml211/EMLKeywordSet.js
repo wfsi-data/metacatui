@@ -1,4 +1,4 @@
-define(["jquery", "underscore", "models/NestedModel"], "models/DataONEObject",
+define(["jquery", "underscore", "models/NestedModel", "models/DataONEObject"],
     function($, _, NestedModel, DataONEObject) {
 
 	var EMLKeywordSet = NestedModel.extend({
