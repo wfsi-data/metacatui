@@ -1258,13 +1258,6 @@ define(['jquery', 'underscore', 'backbone', 'localforage', 'rdflib', "uuid", "md
         },
         
         /*
-         * Handle offline draft save events
-         */
-        handleDraftSaved: function(results) {
-            console.log("Saved draft: " + JSON.stringify(results, null, 4));
-        },
-        
-        /*
          * When a data package member updates, we evaluate it for its formatid,
          * and update it appropriately if it is not a data object only
          */
