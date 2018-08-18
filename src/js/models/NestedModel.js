@@ -38,7 +38,7 @@ define(["jquery", "underscore", "backbone"], function($, _, Backbone) {
                 var model = val;
                 var event;
                 var copiedArgs;
-                if ( model instanceof Backbone.Model ) {
+                if ( model instanceof Backbone.Model && name != "parentModel") {
                     // Listen to all events for Backbone.Models
                     this.listenTo(model, "all", function(childEvent, arguments) {
                         // Determine if this is a change event
