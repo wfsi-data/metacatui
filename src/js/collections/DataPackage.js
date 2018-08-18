@@ -1218,18 +1218,26 @@ define(['jquery', 'underscore', 'backbone', 'localforage', 'rdflib', "uuid", "md
                         case "Metadata":
                             this.drafts.setItem(model.get("id"), 
                             {type: "Metadata",
-                             timestamp: new Date().toISOString(),
-                             systemMetadata: model.serializeSysMeta(),
-                             object: model.serialize()
-                            }, this.handleDraftSaved);
+                            timestamp: new Date().toISOString(),
+                            systemMetadata: model.serializeSysMeta(),
+                            object: model.serialize()
+                            }).then(function(value) {
+                                console.log("Saved draft.");
+                            }).catch(function(err) {
+                                console.log("Failed to save draft: " + err);
+                            });
                             break;
                         case "Data":
                             this.drafts.setItem(model.get("id"), 
                                 {type: "Data",
-                                 timestamp: new Date().toISOString(),
-                                 systemMetadata: model.serializeSysMeta(),
-                                 object: model.get("uploadFile")
-                                }, this.handleDraftSaved);
+                                timestamp: new Date().toISOString(),
+                                systemMetadata: model.serializeSysMeta(),
+                                object: model.get("uploadFile")
+                                }).then(function(value) {
+                                    console.log("Saved draft.");
+                                }).catch(function(err) {
+                                    console.log("Failed to save draft: " + err);
+                                });
                             break;
                     }
                 }
@@ -1242,14 +1250,18 @@ define(['jquery', 'underscore', 'backbone', 'localforage', 'rdflib', "uuid", "md
                  timestamp: new Date().toISOString(),
                  systemMetadata: this.packageModel.serializeSysMeta(),
                  object: this.serialize()
-                }, this.handleDraftSaved);
+             }).then(function(value) {
+                 console.log("Saved draft.");
+             }).catch(function(err) {
+                 console.log("Failed to save draft: " + err);
+             });
         },
         
         /*
          * Handle offline draft save events
          */
         handleDraftSaved: function(results) {
-            console.log("Saved draft: " + JSON.stringify(event, null, 4));
+            console.log("Saved draft: " + JSON.stringify(results, null, 4));
         },
         
         /*
@@ -2558,7 +2570,6 @@ define(['jquery', 'underscore', 'backbone', 'localforage', 'rdflib', "uuid", "md
 
                 //Mark this data package as changed
                 this.packageModel.set("changed", true);
-                this.packageModel.trigger("change:changed");
               }
 
             },
