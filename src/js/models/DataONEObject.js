@@ -1056,51 +1056,64 @@ define(["jquery", "underscore", "models/NestedModel", "uuid",
             return !(newSysMeta == oldSysMeta);
           },
 
-          /*
-             Set the changed flag on any system metadata or content attribute changes,
-             and set the hasContentChanges flag on content changes only
-           */
-          handleChange: function(model, options) {
-                console.log("DataONEObject.handleChange() called.");
-                if (!model) {
-                    var model = this;
+        /*
+         * Set the changed flag on any system metadata or content attribute changes,
+         * and set the hasContentChanges flag on content changes only
+         */
+        handleChange: function(event, model) {
+            console.log(event);
+            
+            // Handle only change events
+            if ( typeof event !== "string" ) {
+                return;
+            } else {
+                // Skip non-change events
+                if ( event.indexOf("change") != 0 ) {
+                    return;
                 }
+                // Skip "changed" events - these are redundant
+                if ( event.indexOf("change:changed") == 0 ) {
+                    return;
+                }
+            }
+            if ( !model ) {
+                var model = this;
+            }
 
-                // Save the draft change if there is a collection
+            var sysMetaAttrs = ["serialVersion", "identifier", "formatId", "size", "checksum",
+                "checksumAlgorithm", "submitter", "rightsHolder", "accessPolicy", "replicationAllowed",
+                "replicationPolicy", "obsoletes", "obsoletedBy", "archived", "dateUploaded", "dateSysMetadataModified",
+                "originMemberNode", "authoritativeMemberNode", "replica", "seriesId", "mediaType", "fileName"],
+                nonSysMetaNonContentAttrs = _.difference(model.get("originalAttrs"), sysMetaAttrs),
+                allChangedAttrs = Object.keys(model.changedAttributes()),
+                changedSysMetaOrContentAttrs = [], //sysmeta or content attributes that have changed
+                changedContentAttrs = []; // attributes from sub classes like ScienceMetadata or EML211 ...
+
+            // Get a list of all changed sysmeta and content attributes
+            changedSysMetaOrContentAttrs = _.difference(allChangedAttrs, nonSysMetaNonContentAttrs);
+            if ( changedSysMetaOrContentAttrs.length > 0 ) {
+                // For any sysmeta or content change, set the package dirty flag
+                if ( MetacatUI.rootDataPackage &&
+                    MetacatUI.rootDataPackage.packageModel &&
+                    ! MetacatUI.rootDataPackage.packageModel.get("changed") &&
+                    model.get("synced") ) {
+                        MetacatUI.rootDataPackage.packageModel.set("changed", true);
+                }
+                // And save the draft change if there is a collection
                 if ( this.collection && this.collection.saveDraft ) {
                     this.collection.saveDraft();
                 }
-              var sysMetaAttrs = ["serialVersion", "identifier", "formatId", "size", "checksum",
-                  "checksumAlgorithm", "submitter", "rightsHolder", "accessPolicy", "replicationAllowed",
-                  "replicationPolicy", "obsoletes", "obsoletedBy", "archived", "dateUploaded", "dateSysMetadataModified",
-                  "originMemberNode", "authoritativeMemberNode", "replica", "seriesId", "mediaType", "fileName"],
-                  nonSysMetaNonContentAttrs = _.difference(model.get("originalAttrs"), sysMetaAttrs),
-                  allChangedAttrs = Object.keys(model.changedAttributes()),
-                  changedSysMetaOrContentAttrs = [], //sysmeta or content attributes that have changed
-                  changedContentAttrs = []; // attributes from sub classes like ScienceMetadata or EML211 ...
 
-              // Get a list of all changed sysmeta and content attributes
-              changedSysMetaOrContentAttrs = _.difference(allChangedAttrs, nonSysMetaNonContentAttrs);
-              if ( changedSysMetaOrContentAttrs.length > 0 ) {
-                  // For any sysmeta or content change, set the package dirty flag
-                  if ( MetacatUI.rootDataPackage &&
-                       MetacatUI.rootDataPackage.packageModel &&
-                       ! MetacatUI.rootDataPackage.packageModel.get("changed") &&
-                       model.get("synced") ) {
+            }
 
-                      MetacatUI.rootDataPackage.packageModel.set("changed", true);
-                  }
-              }
+            // And get a list of all changed content attributes
+            changedContentAttrs = _.difference(changedSysMetaOrContentAttrs, sysMetaAttrs);
 
-              // And get a list of all changed content attributes
-              changedContentAttrs = _.difference(changedSysMetaOrContentAttrs, sysMetaAttrs);
-
-              if ( changedContentAttrs.length > 0 && !this.get("hasContentChanges") && model.get("synced") ) {
+            if ( changedContentAttrs.length > 0 && !this.get("hasContentChanges") && model.get("synced") ) {
                 this.set("hasContentChanges", true);
-                  this.updateUploadStatus(model, options);
+                    this.updateUploadStatus(model);
               }
-
-            },
+        },
 
             /* A DataONE object is new if dateUploaded is not null and synced is true */
 
@@ -1109,22 +1122,24 @@ define(["jquery", "underscore", "models/NestedModel", "uuid",
             return ( this.get("dateUploaded") === null  && this.get("synced") );
           },
 
-          /*
-           * Updates the upload status attribute on this model and marks the collection as changed
-           */
-          updateUploadStatus: function(){
+        /*
+         * Updates the upload status attribute on this model and marks the collection as changed
+         */
+        updateUploadStatus: function(){
 
-              //Add this item to the queue
-              if((this.get("uploadStatus") == "c") || (this.get("uploadStatus") == "e") || !this.get("uploadStatus")){
+            // Add this item to the queue
+            if((this.get("uploadStatus") == "c") || (this.get("uploadStatus") == "e") || 
+                !this.get("uploadStatus")) {
                 this.set("uploadStatus", "q");
-
-                //Mark each DataPackage collection this model is in as changed
-                _.each(this.get("collections"), function(collection){
-                  if(collection.packageModel)
-                    collection.packageModel.set("changed", true);
+                
+                // Mark each DataPackage collection this model is in as changed
+                _.each(this.get("collections"), function(collection) {
+                    if (collection.packageModel) {
+                        collection.packageModel.set("changed", true);
+                    }
                 }, this);
-              }
-          },
+            }
+        },
 
           /*
            * Updates the progress percentage when the model is getting uploaded
