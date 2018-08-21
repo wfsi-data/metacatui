@@ -16,7 +16,7 @@ define(['jquery',
 				'text!templates/loading.html',
 				'gmaps',
 				'nGeohash'
-				], 				
+				],
 	function($, $ui, _, Backbone, Bioportal, SearchResults, SearchModel, StatsModel, SearchResultView, CatalogTemplate, CountTemplate, PagerTemplate, MainContentTemplate, CurrentFilterTemplate, LoadingTemplate, gmaps, nGeohash) {
 	'use strict';
 	
@@ -31,7 +31,7 @@ define(['jquery',
 		searchModel: null,		
 		searchResults: null,
 		statsModel: new StatsModel(),
-		
+
 		//Templates
 		template: _.template(CatalogTemplate),		
 		statsTemplate: _.template(CountTemplate),		
