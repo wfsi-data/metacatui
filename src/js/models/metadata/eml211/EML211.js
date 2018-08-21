@@ -438,7 +438,8 @@ define(['jquery', 'underscore', 'backbone', 'uuid',
         //Get the EML document
         var xmlString   = this.get("objectXML"),
             eml         = $.parseHTML(xmlString),
-            datasetNode = $(eml).filter("eml\\:eml").find("dataset");
+            datasetNode = $(eml).filter("eml\\:eml").find("dataset"),
+            element;
 
         //Update the packageId on the eml node with the EML id
         $(eml).attr("packageId", this.get("id"));
@@ -499,14 +500,20 @@ define(['jquery', 'underscore', 'backbone', 'uuid',
 
         $(pubDateEl).text(pubDate);
 
-        this.getEMLPosition(eml, 'pubdate').after(pubDateEl);
+        element = this.getEMLPosition(eml, 'pubdate');
+        if ( element instanceof Element ) {
+            element.after(pubDateEl);
+        } else {
+            element = $(eml).find("dataset");
+            element.after(pubDateEl);
+        }
+
       }
 
       // Serialize the parts of EML that are eml-text modules
       var textFields = ["abstract", "additionalInfo"];
 
       _.each(textFields, function(field){
-
         var fieldName = this.nodeNameMap()[field] || field;
 
         // Get the EMLText model
@@ -518,23 +525,25 @@ define(['jquery', 'underscore', 'backbone', 'uuid',
 
         // Update the DOMs for each model
         _.each(emlTextModels, function(thisTextModel, i){
-          //Don't serialize falsey values
-          if(!thisTextModel) return;
-
-          var node;
-
-          //Get the existing node or create a new one
-          if(nodes.length < i+1){
-            node = document.createElement(fieldName);
-            this.getEMLPosition(eml, fieldName).after(node);
-
-          }
-          else {
-             node = nodes[i];
-          }
-
-          $(node).html( $(thisTextModel.updateDOM() ).html());
-
+            //Don't serialize falsey values
+            if (!thisTextModel) return;
+            
+            var node;
+            var element;
+            //Get the existing node or create a new one
+            if (nodes.length < i+1) {
+                node = document.createElement(fieldName);
+                element = this.getEMLPosition(eml, fieldName);
+                if ( element instanceof Element ) {
+                    element.after(node);
+                } else {
+                    element = $(eml).find("dataset");
+                    element.after(node);
+                }
+            } else {
+                node = nodes[i];
+            }
+            $(node).html( $(thisTextModel.updateDOM() ).html());
         }, this);
 
         // Remove the extra nodes
