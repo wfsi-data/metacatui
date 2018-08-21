@@ -1181,7 +1181,7 @@ define(['underscore', 'jquery', 'backbone',
 	     */
 	    updateLocations: function(e){
 	    	if(!e) return;
-
+            var copiedGeoArray;
 	    	e.preventDefault();
 
 	    	var viewEl = $(e.target).parents(".eml-geocoverage"),
@@ -1211,13 +1211,13 @@ define(['underscore', 'jquery', 'backbone',
 	    			currentCoverages = this.model.get("geoCoverage");
 
 	    		//Add this new geo coverage model to the parent EML model
-	    		if(Array.isArray(currentCoverages)){
-	    			if( !_.contains(currentCoverages, geoModel) ){
-	    				currentCoverages.push(geoModel);
-	    				this.model.trigger("change:geoCoverage");
+	    		if (Array.isArray(currentCoverages)) {
+                    copiedGeoArray = currentCoverages.slice();
+	    			if ( !_.contains(copiedGeoArray, geoModel) ) {
+	    				copiedGeoArray.push(geoModel);
+                        this.model.set("geoCoverage", copiedGeoArray);
 	    			}
-	    		}
-	    		else{
+	    		} else {
 	    			currentCoverages = [currentCoverages, geoModel];
 	    			this.model.set("geoCoverage", currentCoverages);
 	    		}
@@ -1305,10 +1305,11 @@ define(['underscore', 'jquery', 'backbone',
 	    	var category  = $(e.target).attr("data-category"),
 	    		currentValue = this.model.get(category),
 	    		textModel = $(e.target).data("model"),
-	    		value     = this.model.cleanXMLText($(e.target).val());
+	    		value     = this.model.cleanXMLText($(e.target).val()),
+                copiedTextArray;
 
 	    	//We can't update anything without a category
-	    	if(!category) return false;
+	    	if (!category) return false;
 
 	    	//Get the list of paragraphs - checking for carriage returns and line feeds
 	    	var paragraphsCR = value.split(String.fromCharCode(13));
@@ -1318,7 +1319,7 @@ define(['underscore', 'jquery', 'backbone',
 	    	var paragraphs = (paragraphsCR > paragraphsLF)? paragraphsCR : paragraphsLF;
 
 	    	//If this category isn't set yet, then create a new EMLText model
-	    	if(!textModel){
+	    	if (!textModel) {
 
 	    		//Get the current value for this category and create a new EMLText model
 	    		var newTextModel = new EMLText({ text: paragraphs, parentModel: this.model });
@@ -1327,46 +1328,36 @@ define(['underscore', 'jquery', 'backbone',
 	    		$(e.target).data({ "model" : newTextModel });
 
 	    		//Set the new EMLText model on the EML model
-	    		if(Array.isArray(currentValue)){
-	    			currentValue.push(newTextModel);
-	    			this.model.trigger("change:" + category);
-	    			this.model.trigger("change");
-	    		}
-	    		else{
+	    		if (Array.isArray(currentValue)) {
+                    copiedTextArray = currentValue.slice();
+	    			copiedTextArray.push(newTextModel);
+                    this.model.set(category, copiedTextArray);
+	    		} else {
 	    			this.model.set(category, newTextModel);
 	    		}
 
-	    	}
-	    	//Update the existing EMLText model
-	    	else{
+	    	} else {
+                // Update the existing EMLText model
 
-	    		//If there are no paragraphs or all the paragraphs are empty...
+	    		// If there are no paragraphs or all the paragraphs are empty...
 	    		if( !paragraphs.length || _.every(paragraphs, function(p){ return p.trim() == "" }) ){
 
 	    			//Remove this text model from the array of text models since it is empty
     				var newValue = _.without(currentValue, textModel);
     				this.model.set(category, newValue);
 
-	    		}
-	    		else{
-
+	    		} else {
 		    		textModel.set("text", paragraphs);
-		    		textModel.trigger("change:text");
 
-	    			//Is this text model set on the EML model?
+	    			// Is this text model set on the EML model?
 	    			if( Array.isArray(currentValue) && !_.contains(currentValue, textModel) ){
-
+                        copiedTextArray = currentValue.slice();
 	    				//Push this text model into the array of EMLText models
-	    				currentValue.push(textModel);
-	    				this.model.trigger("change:" + category);
-		    			this.model.trigger("change");
-
+	    				copiedTextArray.push(textModel);
+                        this.model.set(category, copiedTextArray);
 	    			}
-
 	    		}
-
 	    	}
-
 	    },
 
 	    /*
@@ -1432,7 +1423,8 @@ define(['underscore', 'jquery', 'backbone',
 	    	var category = $(e.target).attr("data-category"),
 	    		value    = this.model.cleanXMLText($(e.target).val()),
 	    		model    = $(e.target).data("model") || this.model;
-
+            var copiedArray;
+            
 	    	//We can't update anything without a category
 	    	if(!category) return false;
 
@@ -1441,26 +1433,23 @@ define(['underscore', 'jquery', 'backbone',
 
 	    	//Insert the new value into the array
 	    	if( Array.isArray(currentValue) ){
-
+                copiedArray = currentValue.slice();
 	    		//Find the position this text input is in
 	    		var position = $(e.target).parents("div.text-container").first().children("div").index($(e.target).parent());
 
 	    		//Set the value in that position in the array
-	    		currentValue[position] = value;
+	    		copiedArray[position] = value;
 
 	    		//Set the changed array on this model
-	    		model.set(category, currentValue);
-	    		model.trigger("change:" + category);
+	    		model.set(category, copiedArray);
 
 	    	}
 	    	//Update the model if the current value is a string
 	    	else if(typeof currentValue == "string"){
 	    		model.set(category, [value]);
-	    		model.trigger("change:" + category);
 	    	}
 	    	else if(!currentValue) {
 				model.set(category, [value]);
-				model.trigger("change:" + category);
 			}
 
     		//Add another blank text input
@@ -1481,7 +1470,6 @@ define(['underscore', 'jquery', 'backbone',
 	    	if(!e) return false;
 
 			this.model.set('pubDate', $(e.target).val().trim());
-			this.model.trigger("change");
 
 			// Trigger a change on the entire package
 			MetacatUI.rootDataPackage.packageModel.set("changed", true);
@@ -1808,7 +1796,6 @@ define(['underscore', 'jquery', 'backbone',
 
 			if (!(_.isEqual(collectedClassifications, model.get('taxonomicClassification')))) {
 				model.set('taxonomicClassification', collectedClassifications);
-				this.model.trigger("change");
 			}
 
 			// Handle adding new tables and rows
