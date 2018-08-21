@@ -574,11 +574,11 @@ define(["jquery", "underscore", "models/NestedModel", "models/DataONEObject"],
 			}
 
 			//XML id attribute
-			this.createID();
-			//if(this.get("xmlID"))
-				$(objectDOM).attr("id", this.get("xmlID"));
-			//else
-			//	$(objectDOM).removeAttr("id");
+            if ( ! this.get("xmlID") ) {
+                this.createID();
+            }
+			$(objectDOM).attr("id", this.get("xmlID"));
+
 
 			// Remove empty (zero-length or whitespace-only) nodes
 			$(objectDOM).find("*").filter(function() { return $.trim(this.innerHTML) === ""; } ).remove();
