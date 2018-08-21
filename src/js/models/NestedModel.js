@@ -32,35 +32,76 @@ define(["jquery", "underscore", "backbone"], function($, _, Backbone) {
             options || (options = {});
             silent = options.silent;
             
-            // Test if each attribute value is a Backbone.Model
-            _.each(attrs, function(val, attr) {
+            // Test if each attribute value is a Backbone Model or an array of Backbone Models
+            _.each(attrs, function(value, attr) {
                 var name = attr;
-                var model = val;
+                var nameExcludesParentModel = (name.indexOf("parentModel") != 0);
+                var nameExcludesDataONEObject = (name.indexOf("dataONEObject") != 0);
+                var nameExcludesPersonnel = (name.indexOf("personnel") != 0);
+                var model;
+                var models;
                 var event;
                 var copiedArgs;
-                if ( model instanceof Backbone.Model && name != "parentModel") {
-                    // Listen to all events for Backbone.Models
-                    this.listenTo(model, "all", function(childEvent, arguments) {
-                        // Determine if this is a change event
-                        if ( childEvent.indexOf(prefix) === 0 ) {
-                            // Get the remainder of the event text for property changes
-                            if ( childEvent.length > prefix.length ) {
-                                suffix = childEvent.substring(prefix.length + 1);
-                                if ( suffix.indexOf(":") === 0 ) {
-                                    suffix = suffix.substring(suffix.indexOf(":") + 1).trim();
+                if ( Array.isArray(value) ) {
+                    models = value;
+                    _.each(models, function(model) {
+                        if ( model instanceof Backbone.Model && 
+                            nameExcludesParentModel && 
+                            nameExcludesDataONEObject &&
+                            nameExcludesPersonnel) {
+                            // Listen to all events for Backbone.Models
+                            this.listenTo(model, "all", function(childEvent, arguments) {
+                                // Determine if this is a change event
+                                if ( childEvent.indexOf(prefix) === 0 ) {
+                                    // Get the remainder of the event text for property changes
+                                    if ( childEvent.length > prefix.length ) {
+                                        suffix = childEvent.substring(prefix.length + 1);
+                                        if ( suffix.indexOf(":") === 0 ) {
+                                            suffix = suffix.substring(suffix.indexOf(":") + 1).trim();
+                                        }
+                                        
+                                        // Make a new event, labeled by the child name, and 
+                                        // add the suffix if is defined
+                                        event = prefix + ":" + name + (suffix ? ":" + suffix : "");
+                                        
+                                        // Now trigger the event for this parent object if not silenced
+                                        if ( !silent ) {
+                                            this.trigger.apply(this, [event].concat(arguments));
+                                        }
+                                    }
                                 }
-                                
-                                // Make a new event, labeled by the child name, and 
-                                // add the suffix if is defined
-                                event = prefix + ":" + name + (suffix ? ":" + suffix : "");
-                                
-                                // Now trigger the event for this parent object if not silenced
-                                if ( !silent ) {
-                                    this.trigger.apply(this, [event].concat(arguments));
+                            });
+                        }
+                    }, this);
+                } else {
+                    model = value;
+                    if ( model instanceof Backbone.Model && 
+                        nameExcludesParentModel && 
+                        nameExcludesDataONEObject &&
+                        nameExcludesPersonnel) {
+                        // Listen to all events for Backbone.Models
+                        this.listenTo(model, "all", function(childEvent, arguments) {
+                            // Determine if this is a change event
+                            if ( childEvent.indexOf(prefix) === 0 ) {
+                                // Get the remainder of the event text for property changes
+                                if ( childEvent.length > prefix.length ) {
+                                    suffix = childEvent.substring(prefix.length + 1);
+                                    if ( suffix.indexOf(":") === 0 ) {
+                                        suffix = suffix.substring(suffix.indexOf(":") + 1).trim();
+                                    }
+                                    
+                                    // Make a new event, labeled by the child name, and 
+                                    // add the suffix if is defined
+                                    event = prefix + ":" + name + (suffix ? ":" + suffix : "");
+                                    
+                                    // Now trigger the event for this parent object if not silenced
+                                    if ( !silent ) {
+                                        this.trigger.apply(this, [event].concat(arguments));
+                                    }
                                 }
                             }
-                        }
-                    });
+                        });
+                    }
                 }
             }, this);
             
