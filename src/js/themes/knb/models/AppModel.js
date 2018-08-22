@@ -105,7 +105,7 @@ define(['jquery', 'underscore', 'backbone'],
 			groupsUrl: null,
 			portalUrl: null,
             
-            mdqBaseUrl: "http://docker-ucsb-1.test.dataone.org:30080/quality",
+            mdqBaseUrl: "https://docker-ucsb-1.dataone.org:30443/quality",
             mdqRunsUrl: null,
             mdqSuitesUrl: null,
             suiteId: "knb.suite.1",

@@ -101,7 +101,7 @@ define(['jquery', 'underscore', 'backbone'],
 			//signInUrlLdap: null,
 			tokenUrl: null,
             
-            mdqBaseUrl: "http://docker-ucsb-1.test.dataone.org:30080/quality",
+            mdqBaseUrl: "https://docker-ucsb-1.dataone.org:30443/quality",
             mdqRunsServiceUrl: null,
             mdqSuitesServiceUrl: null,
             suiteId: "arctic.data.center.suite.1",
