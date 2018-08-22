@@ -7,7 +7,7 @@
   
     package metacatui {
       together {
-        class MediaType {
+        class MediaType <<NestedModel>> {
           + name : String
           + properties : String [*]
         }
@@ -17,7 +17,7 @@
           K/V pairs with a known delimiter
         end note
         
-        class Replica <<Backbone.Model>> {
+        class Replica <<NestedModel>> {
           + replicaMemberNode : String
           + replicationStatus : String
           + replicaVerified : String
@@ -26,7 +26,7 @@
           + toXML() : String
         }
         
-        class ReplicationPolicy <<Backbone.Model>> {
+        class ReplicationPolicy <<NestedModel>> {
           + preferredMemberNodes : String [*]
           + blockedMemberNodes : String [*]
           + replicationAllowed : Boolean
@@ -36,7 +36,7 @@
           + toXML() : String
         }
         
-        class AccessRule <<Backbone.Model>> {
+        class AccessRule <<NestedModel>> {
           + subject : String [*]
           + permission : String [*]
           + allow : Boolean
@@ -47,7 +47,7 @@
         
       }
              
-      class QualityGuideResults <<Backbone.Model>> {
+      class QualityGuideResults <<NestedModel>> {
       }
       
       note bottom
@@ -136,7 +136,7 @@
         sem_comment : String [*]
       }
       
-      class DataONEObject <<Backbone.UniqueModel>> {
+      class DataONEObject <<NestedModel>> {
         + serialVersion : String
         + id : String
         + formatId : String
