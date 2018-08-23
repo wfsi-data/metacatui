@@ -113,7 +113,6 @@ define(["jquery", "underscore", "models/NestedModel", "models/DataONEObject",
 						personnel.push(newPersonnel);
 						$(objectDOM).append(newPersonnel.updateDOM());
 					}, this);
-					this.trigger("change:personnel");
 				} else {
 
 					_.each(this.get("personnel"), function(party){
