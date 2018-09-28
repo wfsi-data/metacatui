@@ -19,6 +19,7 @@ define(['jquery', 'underscore', 'backbone', 'd3', 'DonutChart', 'views/CitationV
 		loadingTemplate: _.template(LoadingTemplate),
 		template: _.template(MdqRunTemplate),
 		suitesTemplate: _.template(SuitesTemplate),
+        breadcrumbContainer: "#breadcrumb-container",
 
 		initialize: function () {
 
@@ -32,7 +33,7 @@ define(['jquery', 'underscore', 'backbone', 'd3', 'DonutChart', 'views/CitationV
             
 			//this.url = this.mdqRunsServiceUrl + "/" + this.suiteId + "/" + this.pid;
 			var viewRef = this;
-
+            
 			if (this.pid) {
               this.showLoading();
               // Fetch a quality report from the quality server and display it.
@@ -60,6 +61,7 @@ define(['jquery', 'underscore', 'backbone', 'd3', 'DonutChart', 'views/CitationV
                 };
 
                 viewRef.$el.html(viewRef.template(data));
+                viewRef.insertBreadcrumbs();
                 viewRef.drawScoreChart(qualityReport.models, groupedResults);
                 //viewRef.showAvailableSuites()  ;
                 viewRef.showCitation();
@@ -69,6 +71,7 @@ define(['jquery', 'underscore', 'backbone', 'd3', 'DonutChart', 'views/CitationV
               });
 			} else {
 				this.$el.html(this.template({}));
+                viewRef.insertBreadcrumbs();
 			}
 		},
 
@@ -129,8 +132,48 @@ define(['jquery', 'underscore', 'backbone', 'd3', 'DonutChart', 'views/CitationV
 							}
 						});
 			this.$('.format-charts-data').html(donut.render().el);
-		}
-
+		},
+        
+    	insertBreadcrumbs: function(){
+    		var breadcrumbs = $(document.createElement("ol"))
+    					      .addClass("breadcrumb")
+    					      .append($(document.createElement("li"))
+    					    		  .addClass("home")
+    					    		  .append($(document.createElement("a"))
+    					    				  .attr("href", MetacatUI.root)
+    					    				  .addClass("home")
+    					    				  .text("Home")))
+    	    				  .append($(document.createElement("li"))
+    	    						  .addClass("search")
+    					    		  .append($(document.createElement("a"))
+    					    				  .attr("href", MetacatUI.root + "/data" + ((MetacatUI.appModel.get("page") > 0)? ("/page/" + (parseInt(MetacatUI.appModel.get("page"))+1)) : ""))
+    					    				  .addClass("search")
+    					    				  .text("Search")))
+    	    				  .append($(document.createElement("li"))
+    					    		  .append($(document.createElement("a"))
+    					    				  .attr("href", MetacatUI.root + "/view/" + this.pid)
+    					    				  .addClass("inactive")
+    					    				  .text("Metadata")))
+                                         .append($(document.createElement("li"))
+                                            .append($(document.createElement("a"))
+                                            .attr("href", MetacatUI.root + "/quality/" + this.pid)
+                                            .addClass("inactive")
+                                            .text("Quality Report")));
+                                            
+            // if(MetacatUI.uiRouter.lastRoute() == "quality"){
+            //     $(breadcrumbs).prepend($(document.createElement("a"))
+            //     .attr("href", MetacatUI.root + "/quality/page/" + ((MetacatUI.appModel.get("page") > 0)? (parseInt(MetacatUI.appModel.get("page"))+1) : ""))
+            //     .attr("title", "Back")
+            //     .addClass("back")
+            //     .text(" Back to metadata")
+            //     .prepend($(document.createElement("i"))
+            //     .addClass("icon-angle-left")));
+            // 
+            //     //$(breadcrumbs).find("a.metadata").addClass("inactive");
+            // }
+                            
+    		this.$(this.breadcrumbContainer).html(breadcrumbs);
+    	},
 	});
 	return MdqRunView;
 });

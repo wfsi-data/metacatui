@@ -71,6 +71,60 @@ define(['jquery', 'underscore', 'backbone', 'rdflib', "uuid", "md5",
           return Backbone.Collection.prototype.fetch.call(collectionRef, fetchOptions);
         }
       },
+      
+//       sync: function (method, collection, options) {
+//         var collectionRef = this;
+//      switch (method) {
+//     case 'delete':
+//     case 'read':
+//     case 'update':
+//       // handle update ...
+//     case 'create':
+//       var suitesUrl = MetacatUI.appModel.get("mdqSuitesServiceUrl") + collectionRef.suiteId + "/run";
+//       console.debug("quality suites url: " + suitesUrl);
+//       var args = {
+//         url: suitesUrl,
+//         cache: false,
+//         data: formData,
+//         contentType: false, //"multipart/form-data",
+//         processData: false,
+//         type: 'POST',
+//         success: function (data, textStatus, jqXHR) {
+//           console.debug("Sent quality report generation request");
+//           collectionRef.hideLoading();
+//           var msgText = "A quality report is not yet available for this dataset, so";
+//           msgText += " one will be generated automatically. Please try again later.";
+//           MetacatUI.uiRouter.navigate("#view" + "/" + collectionRef.pid, {
+//             trigger: true
+//           });
+//           var message = $(document.createElement("div")).append($(document.createElement("span")).text(msgText));
+//           //MetacatUI.appView.showAlert(message, "alert-success", "body", 10000, {
+//           //  remove: true
+//           //});
+//         },
+//         error: function (jqXHR, textStatus, errorThrown) {
+//           console.debug("Error sending quality report generation request: " + errorThrown);
+//           //viewRef.hideLoading();
+//           var msgText = "A quality report is not yet available for this dataset, and";
+//           msgText += " there was a problem attempting to generate one automatically: ";
+//           msgText += errorThrown;
+//           MetacatUI.uiRouter.navigate("#view" + "/" + collectionRef.pid, {
+//             trigger: true
+//           });
+//           var message = $(document.createElement("div")).append($(document.createElement("span")).text(msgText));
+//           //MetacatUI.appView.showAlert(message, "alert-errors", "body", 10000, {
+//           //  remove: true
+//           //});
+//         }
+//       };
+// 
+//       //options.url = '/api/orders/cancelOrder';
+//       return Backbone.sync(method, model, options);
+//       //handle create ...
+//   }
+//   return Backbone.Collection.prototype.sync.call(this, fetchOptions);
+// },   
+
 
       groupResults: function (results) {
         var total = results.length;
