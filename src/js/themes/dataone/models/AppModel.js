@@ -74,6 +74,7 @@ define(['jquery', 'underscore', 'backbone'],
             mdqRunsUrl: null,
             mdqSuitesUrl: null,
             suiteId: "knb.suite.1",
+            suiteId: "dataone.suite.1",
 
 			// Metrics endpoint url
 			metricsUrl: null,
