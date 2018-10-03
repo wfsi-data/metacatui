@@ -608,7 +608,6 @@ define(["jquery", "underscore", "models/NestedModel", "uuid",
             type: "GET",
             success: function(data, textStatus, xhr) {
               model.set("isAuthorized", true);
-              model.trigger("change:isAuthorized");
             },
             error: function(xhr, textStatus, errorThrown) {
               model.set("isAuthorized", false);
@@ -1010,8 +1009,6 @@ define(["jquery", "underscore", "models/NestedModel", "uuid",
                     }
                 }
             }, this);
-
-            this.trigger("change:id")
 
             //Update the obsoletes and obsoletedBy
             this.set("obsoletes", oldPid);
