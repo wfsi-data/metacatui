@@ -203,15 +203,21 @@ define(['underscore', 'jquery', 'backbone', 'models/metadata/eml211/EMLParty',
         	},
 
         	updateAddress: function(e){
+                var copiedAddresses;
+                var address = {};
+                var changedAttr;
+                
         		if (!e) return false;
-
+                
         		// Get the address part that was changed
-        		var changedAttr = $(e.target).attr("data-attribute");
+        		changedAttr = $(e.target).attr("data-attribute");
         		if (!changedAttr) return false;
 
         		// TODO: Allow multiple addresses - right now we only support editing the first address
-        		var address = this.model.get("address")[0] || {},
-        			currentValue = address[changedAttr];
+                if ( Array.isArray(this.model.get("address")) ) {
+                    address = this.model.get("address").slice(0, 1);
+                }
+                currentValue = address[changedAttr];
 
                 // Get the parent EML model and the value from the input element
                 var emlModel = this.model.getParentEML(),
@@ -238,8 +244,11 @@ define(['underscore', 'jquery', 'backbone', 'models/metadata/eml211/EMLParty',
 
         		// Update the model
     			var allAddresses = this.model.get("address");
-    			allAddresses[0] = address;
-    			this.model.set("address", allAddresses);
+                if ( Array.isArray(allAddresses) ) {
+                    copiedAddresses = allAddresses.slice();
+                }
+    			copiedAddresses[0] = address;
+    			this.model.set("address", copiedAddresses);
 
                 // If this EMLParty model has been removed from the parent EML model,
                 // then add it back
@@ -248,10 +257,6 @@ define(['underscore', 'jquery', 'backbone', 'models/metadata/eml211/EMLParty',
                     this.model.get("parentModel").addParty(this.model);
                     this.model.set("removed", false);
                 }
-
-    			// Manually trigger the change event since it's an object
-        		this.model.trigger("change:address");
-        		this.model.trigger("change");
 
         		this.model.trickleUpChange();
         	},

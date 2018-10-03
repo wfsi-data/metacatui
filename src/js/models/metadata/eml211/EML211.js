@@ -1381,15 +1381,17 @@ define(['jquery', 'underscore', 'backbone', 'uuid',
       addEntity: function(emlEntity, position) {
         //Get the current list of entities
         var currentEntities = this.get("entities");
-
-        if( typeof position == "undefined" || position == -1)
-          currentEntities.push(emlEntity);
-        else
-          //Add the entity model to the entity array
-          currentEntities.splice(position, 0, emlEntity);
-
-        this.trigger("change:entities");
-
+        var copiedEntities;
+        if ( Array.isArray(currentEntities) ) {
+            copiedEntities = currentEntities.slice();
+        }
+        if ( typeof position == "undefined" || position == -1) {
+            copiedEntities.push(emlEntity);
+        } else {
+            //Add the entity model to the entity array
+            currentEntities.splice(position, 0, emlEntity);
+        }
+        this.set("entities", copiedEntities);
         this.trickleUpChange();
 
         return this;
@@ -1574,25 +1576,29 @@ define(['jquery', 'underscore', 'backbone', 'uuid',
       addParty: function(partyModel, position){
 
         //If the EMLParty model is empty, don't add it to the EML211 model
-        if(partyModel.isEmpty())
-          return false;
+        if (partyModel.isEmpty()) {
+            return false;
+        }
 
         //Get the role of this EMLParty
         var role = partyModel.get("type") || "associatedParty";
-
-        //If this model already contains this EMLParty, then exit
-        if( _.contains(this.get(role), partyModel) )
-          return false;
-
-        if( typeof position == "undefined" ){
-          this.get(role).push(partyModel);
+        var currentParties = this.get(role);
+        var copiedParties;
+        if ( Array.isArray(currentParties) ) {
+            copiedParties = currentParties.slice();
         }
-        else {
-          this.get(role).splice(position, 0, partyModel);
+        // If this model already contains this EMLParty, then exit
+        if ( _.contains(copiedParties, partyModel) ) {
+            return false;
         }
 
-        this.trigger("change:" + role);
-
+        if ( typeof position === "undefined" ) {
+          copiedParties.push(partyModel);
+        } else {
+          copiedParties.splice(position, 0, partyModel);
+        }
+        this.set(role, copiedParties);
+        
         return true;
       },
 
