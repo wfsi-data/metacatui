@@ -2567,6 +2567,13 @@ address.email-container:before{
 #quality-score, #quality-chart{
 	display: none;
 }
+
+.quality-report-view #suiteId {
+    position: relative;
+    margin-top: 10px;
+    margin-bottom: 10px;
+}
+
 /******************************************
 ** Stats ***
 ******************************************/

@@ -37,13 +37,13 @@
 	<div id="mdqDonut" class="format-charts-data"></div>		
 	
 	<div id="mdqTypeSummary">			
-		<div id="suites"></div>			
+		<div id="suiteId"><strong>Quality Suite:</strong> <%= suiteId %></div>
 		
 		<%
 		var types = _.keys(groupedByType);
 		_.each(types, function(type) {
 			var results = groupedByType[type];
-			var total = checkCount;
+			var total = results.length;
 			var success = 0;
 			_.each(results, function(result) {
 				if (result.get("status") == "SUCCESS") {
@@ -75,7 +75,7 @@
 			total = total - groupedResults.BLUE.length;
 		}
 		
-	%>	
+	    %>	
 	<ul class="list-group">
 		<% if (groupedResults.GREEN) { %>
 		
