@@ -73,7 +73,6 @@ define(['jquery', 'underscore', 'backbone'],
             mdqBaseUrl: "https://docker-ucsb-1.dataone.org:30443/quality",
             mdqRunsUrl: null,
             mdqSuitesUrl: null,
-            suiteId: "knb.suite.1",
             suiteId: "dataone.suite.1",
 
 			// Metrics endpoint url
