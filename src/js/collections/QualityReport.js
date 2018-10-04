@@ -124,10 +124,6 @@ define(['jquery', 'underscore', 'backbone', 'rdflib', "uuid", "md5",
           groupedResults.RED = [];
         }
 
-        if (groupedResults.BLUE) {
-          total = total - groupedResults.BLUE.length;
-        }
-
         return groupedResults;
       },
 
@@ -141,10 +137,10 @@ define(['jquery', 'underscore', 'backbone', 'rdflib', "uuid", "md5",
             // orange or blue
             return "removeMe";
           }
-          if (status == "FAILURE" && check.level == "OPTIONAL") {
-            // orange
-            return "removeMe";
-          }
+          // if (status == "FAILURE" && check.level == "OPTIONAL") {
+          //   // orange
+          //   return "removeMe";
+          // }
 
           return check.type || "uncategorized";
         });
