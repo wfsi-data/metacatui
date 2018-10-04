@@ -1,6 +1,10 @@
+<article class="quality-report-view">
 <% if (typeof objectIdentifier === 'undefined') { %>
-
 	<div class="panel panel-default">
+        <div id="report-alert-container"></div>
+        <div id="breadcrumb-container"></div>
+		<div class="heading"></div>
+		<div class="body"></div>
 	</div>		
 
 <% } %>
@@ -10,6 +14,8 @@
 <% if (typeof groupedResults !== 'undefined') { %>
 
 <header class="page-header">
+    <div id="report-alert-container"></div>
+    <div id="breadcrumb-container"></div>
 	<h1>Metadata Quality Report</h1>
 	<cite id="mdqCitation"></cite>
 </header>
@@ -74,7 +80,7 @@
 				<h4>
 					<i class="icon icon-caret-right"></i>
 					<i class="icon icon-caret-down"></i>
-					Passed <%=groupedResults.GREEN.length%> checks out of <%= total %>. Good job!
+					Passed <%=groupedResults.GREEN.length%> checks out of <%= checkCount %>. Good job!
 				</h4>				
 			</li>
 			
@@ -285,3 +291,4 @@
 
 <% } %>
 </div>
+</article>

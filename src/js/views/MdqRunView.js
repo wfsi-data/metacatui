@@ -18,7 +18,6 @@ define(['jquery', 'underscore', 'backbone', 'd3', 'DonutChart', 'views/CitationV
 		suiteId: null,
 		loadingTemplate: _.template(LoadingTemplate),
 		template: _.template(MdqRunTemplate),
-		suitesTemplate: _.template(SuitesTemplate),
         breadcrumbContainer: "#breadcrumb-container",
 
 		initialize: function () {
@@ -35,21 +34,35 @@ define(['jquery', 'underscore', 'backbone', 'd3', 'DonutChart', 'views/CitationV
 			var viewRef = this;
             
 			if (this.pid) {
-              this.showLoading();
               // Fetch a quality report from the quality server and display it.
               var viewRef = this;
               var qualityUrl = MetacatUI.appModel.get("mdqRunsServiceUrl") + viewRef.suiteId + "/" + viewRef.pid;
               var qualityReport = new QualityReport([], {url:qualityUrl, pid: viewRef.pid});
               qualityReport.fetch({url:qualityUrl});
                 
-              this.listenToOnce(qualityReport, "fetchComplete", function() {
-                  // Inspect the results to see if a quality report was returned.
-                  // If not, then submit a request to the quality engine to create the
-                  // quality report for this pid/suiteId, and inform the user of this.
+              this.listenToOnce(qualityReport, "fetchError", function() {
+                // Inspect the results to see if a quality report was returned.
+                // If not, then submit a request to the quality engine to create the
+                // quality report for this pid/suiteId, and inform the user of this.
 
+                viewRef.hideLoading();
+                this.$el.html(this.template({}));
+                var msgText;
+                if(qualityReport.fetchResponse.status == 404) {
+                  msgText = "Error retrieving the quality report for this dataset: Not found";
+                } else {
+                  msgText = "Error retrieving the quality report for this dataset: " + qualityReport.fetchResponse.status 
+                            + qualityReport.fetchResponse.statusText;
+                }
+                var message = $(document.createElement("div")).append($(document.createElement("span")).text(msgText));
+                MetacatUI.uiRouter.navigate("view/" + qualityReport.id, { trigger: true, replace: true });
+                MetacatUI.appView.showAlert(message, "alert-success", MetacatUI.appView.currentView.$("alert-container"), 10000, { remove: true });
+              }),
+
+              this.listenToOnce(qualityReport, "fetchComplete", function() {
+                this.showLoading();
                 var groupedResults = qualityReport.groupResults(qualityReport.models);
                 var groupedByType = qualityReport.groupByType(qualityReport.models);
-                //var data = _.extend(qualityReport.data,
                 var data = {
                       objectIdentifier: qualityReport.id,
                       suiteId: qualityReport.suiteId,
@@ -63,10 +76,8 @@ define(['jquery', 'underscore', 'backbone', 'd3', 'DonutChart', 'views/CitationV
                 viewRef.$el.html(viewRef.template(data));
                 viewRef.insertBreadcrumbs();
                 viewRef.drawScoreChart(qualityReport.models, groupedResults);
-                //viewRef.showAvailableSuites()  ;
                 viewRef.showCitation();
                 viewRef.show();
-                //Initialize all popover elements
                 viewRef.$('.popover-this').popover();
               });
 			} else {
@@ -150,28 +161,16 @@ define(['jquery', 'underscore', 'backbone', 'd3', 'DonutChart', 'views/CitationV
     					    				  .addClass("search")
     					    				  .text("Search")))
     	    				  .append($(document.createElement("li"))
-    					    		  .append($(document.createElement("a"))
+    					                      .append($(document.createElement("a"))
     					    				  .attr("href", MetacatUI.root + "/view/" + this.pid)
     					    				  .addClass("inactive")
     					    				  .text("Metadata")))
-                                         .append($(document.createElement("li"))
-                                            .append($(document.createElement("a"))
-                                            .attr("href", MetacatUI.root + "/quality/" + this.pid)
-                                            .addClass("inactive")
-                                            .text("Quality Report")));
-                                            
-            // if(MetacatUI.uiRouter.lastRoute() == "quality"){
-            //     $(breadcrumbs).prepend($(document.createElement("a"))
-            //     .attr("href", MetacatUI.root + "/quality/page/" + ((MetacatUI.appModel.get("page") > 0)? (parseInt(MetacatUI.appModel.get("page"))+1) : ""))
-            //     .attr("title", "Back")
-            //     .addClass("back")
-            //     .text(" Back to metadata")
-            //     .prepend($(document.createElement("i"))
-            //     .addClass("icon-angle-left")));
-            // 
-            //     //$(breadcrumbs).find("a.metadata").addClass("inactive");
-            // }
-                            
+                              .append($(document.createElement("li"))
+                                    .append($(document.createElement("a"))
+                                    .attr("href", MetacatUI.root + "/quality/" + this.pid)
+                                    .addClass("inactive")
+                                    .text("Quality Report")));
+                                    
     		this.$(this.breadcrumbContainer).html(breadcrumbs);
     	},
 	});
