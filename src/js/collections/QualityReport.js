@@ -14,9 +14,6 @@ define(['jquery', 'underscore', 'backbone', 'rdflib', "uuid", "md5",
       //The name of this type of collection
       type: "QualityReport",
 
-      // The package identifier
-      suiteId: MetacatUI.appModel.get("suiteId"),
-
       initialize: function (models, options) {
         if (typeof options == "undefined")
           var options = {};
@@ -124,9 +121,9 @@ define(['jquery', 'underscore', 'backbone', 'rdflib', "uuid", "md5",
           groupedResults.RED = [];
         }
 
-        if (groupedResults.BLUE) {
-          total = total - groupedResults.BLUE.length;
-        }
+        //if (groupedResults.BLUE) {
+        //  total = total - groupedResults.BLUE.length;
+        //}
 
         return groupedResults;
       },
