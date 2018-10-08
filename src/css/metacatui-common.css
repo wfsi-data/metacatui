@@ -2570,6 +2570,7 @@ address.email-container:before{
 
 .quality-report-view #suiteId {
     position: relative;
+    width: auto;
     margin-top: 10px;
     margin-bottom: 10px;
 }
