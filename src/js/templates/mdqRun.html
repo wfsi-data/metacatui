@@ -33,9 +33,26 @@
 	
 	<div id="mdqDonut" class="format-charts-data"></div>		
 	
-	<div id="mdqTypeSummary">			
-		<div id="suiteId"><strong>Quality Suite:</strong> <%= suiteId %></div>
-		
+	<div id="mdqTypeSummary">
+        
+		<div id="suites">
+            <p>
+                <strong>Quality suite: </strong> 
+                <select id="suiteId" name="suiteId">
+	                <%
+                    var zipped = _.zip(suiteIdList, suiteLabels);
+		                _.each(zipped, function(pair) {
+                            var id = pair[0];
+                            var label = pair[1];
+	                %>
+	                <option <% if (id == suiteId) { print("selected='selected'") } %> value="<%= id %>"><%= label %></option>
+	                <%
+		                });
+	                %>
+                </select>
+            </p>
+        </div>
+            
 		<%
 		var types = _.keys(groupedByType);
 		_.each(types, function(type) {

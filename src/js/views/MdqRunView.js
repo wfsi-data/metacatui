@@ -10,25 +10,44 @@ define(['jquery', 'underscore', 'backbone', 'd3', 'DonutChart', 'views/CitationV
 
 		events: {
 			//"click input[type='submit']"	:	"submitForm"
-			//"change #suiteId" : "switchSuite"
+			"change #suiteId" : "switchSuite"
 		},
 
 		url: null,
 		pid: null,
+        // The currently selected/requested suite
 		suiteId: null,
+        // The list of all potential suites for this theme
+        suiteIdList: [],
 		loadingTemplate: _.template(LoadingTemplate),
 		template: _.template(MdqRunTemplate),
+        //suitesTemplate: _.template(SuitesTemplate),
         breadcrumbContainer: "#breadcrumb-container",
 
 		initialize: function () {
 
 		},
 
+        switchSuite: function(event) {
+            var select = $(event.target);
+            var suiteId = $(select).val();
+            MetacatUI.uiRouter.navigate("quality/s=" + suiteId + "/" + this.pid, {trigger: false});
+            this.suiteId = suiteId;
+            this.render();
+            return false;
+        },
+        
 		render: function () {
-			// use the default suite id 
+			// The suite use for rendering can initially be set via the theme AppModel.
+            // If a suite id is request via the metacatui route, then we have to display that
+            // suite, and in addition have to display all possible suites for this theme in
+            // a selection list, if the user wants to view a different one.
             if (!this.suiteId) {
-                this.suiteId = MetacatUI.appModel.get("mdqSuiteId");
+               this.suiteId = MetacatUI.appModel.get("mdqSuiteIds")[0];
             }
+            
+            this.suiteIdList = MetacatUI.appModel.get("mdqSuiteIds");
+            this.suiteLabels = MetacatUI.appModel.get("mdqSuiteLabels");
             
 			//this.url = this.mdqRunsServiceUrl + "/" + this.suiteId + "/" + this.pid;
 			var viewRef = this;
@@ -38,6 +57,7 @@ define(['jquery', 'underscore', 'backbone', 'd3', 'DonutChart', 'views/CitationV
               var viewRef = this;
               var qualityUrl = MetacatUI.appModel.get("mdqRunsServiceUrl") + viewRef.suiteId + "/" + viewRef.pid;
               var qualityReport = new QualityReport([], {url:qualityUrl, pid: viewRef.pid});
+              
               qualityReport.fetch({url:qualityUrl});
                 
               this.listenToOnce(qualityReport, "fetchError", function() {
@@ -63,9 +83,12 @@ define(['jquery', 'underscore', 'backbone', 'd3', 'DonutChart', 'views/CitationV
                 this.showLoading();
                 var groupedResults = qualityReport.groupResults(qualityReport.models);
                 var groupedByType = qualityReport.groupByType(qualityReport.models);
+                
                 var data = {
                       objectIdentifier: qualityReport.id,
-                      suiteId: qualityReport.suiteId,
+                      suiteId: viewRef.suiteId,
+                      suiteIdList: viewRef.suiteIdList,
+                      suiteLabels: viewRef.suiteLabels,
                       groupedResults: groupedResults,
                       groupedByType: groupedByType,
                       timestamp: _.now(),
@@ -106,7 +129,7 @@ define(['jquery', 'underscore', 'backbone', 'd3', 'DonutChart', 'views/CitationV
 			this.$el.hide();
 			this.$el.fadeIn({duration: "slow"});
 		},
-
+        
 		drawScoreChart: function(results, groupedResults){
 
 			var dataCount = results.length;
