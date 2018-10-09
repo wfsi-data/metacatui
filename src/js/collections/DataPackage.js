@@ -131,8 +131,16 @@ define(['jquery', 'underscore', 'backbone', 'localforage', 'rdflib', "uuid", "md
                   (encodeURIComponent(this.packageModel.get("oldPid")) || encodeURIComponent(this.packageModel.get("seriesid")));
             }
             else{
-                return MetacatUI.appModel.get("objectServiceUrl") +
-                    (encodeURIComponent(this.packageModel.get("id")) || encodeURIComponent(this.packageModel.get("seriesid")));
+              //URL encode the id or seriesId
+              var encodedId = encodeURIComponent(this.packageModel.get("id")) || encodeURIComponent(this.packageModel.get("seriesid"));
+                //Use the object service URL if it is available (when pointing to a MN)
+                if(MetacatUI.appModel.get("objectServiceUrl")){
+                  return MetacatUI.appModel.get("objectServiceUrl") + encodedId;
+                }
+                //Otherwise, use the resolve service URL (when pointing to a CN)
+                else{
+                  return MetacatUI.appModel.get("resolveServiceUrl") + encodedId;
+                }
             }
           },
 

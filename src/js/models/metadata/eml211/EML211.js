@@ -1728,6 +1728,9 @@ define(['jquery', 'underscore', 'backbone', 'uuid',
       },
 
       trickleUpChange: function(){
+        if( !MetacatUI.rootDataPackage || !MetacatUI.rootDataPackage.packageModel )
+          return;
+
         //Mark the package as changed
         MetacatUI.rootDataPackage.packageModel.set("changed", true);
       }

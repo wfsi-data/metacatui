@@ -9,7 +9,6 @@ define(['jquery',
 		'collections/DataPackage',
 		'models/DataONEObject',
 		'models/PackageModel',
-		'models/NodeModel',
 		'models/SolrResult',
 		'models/metadata/ScienceMetadata',
         'models/MetricsModel',
@@ -38,7 +37,7 @@ define(['jquery',
 		'uuid',
 		'views/MetricView'
 		],
-	function($, $ui, _, Backbone, gmaps, fancybox, Clipboard, DataPackage, DataONEObject, Package, NodeModel, SolrResult, ScienceMetadata,
+	function($, $ui, _, Backbone, gmaps, fancybox, Clipboard, DataPackage, DataONEObject, Package, SolrResult, ScienceMetadata,
 			 MetricsModel, DownloadButtonView, ProvChart, MetadataIndex, ExpandCollapseList, ProvStatement, PackageTable,
 			 AnnotatorView, CitationView, MetadataTemplate, DataSourceTemplate, PublishDoiTemplate,
 			 VersionTemplate, LoadingTemplate, ControlsTemplate, UsageTemplate,
@@ -53,8 +52,7 @@ define(['jquery',
 
 		pid: null,
 		seriesId: null,
-        saveProvPending: false,
-		nodeModel: new NodeModel(),
+		saveProvPending: false,
 
 		model: new SolrResult(),
 		packageModels: new Array(),
@@ -98,6 +96,7 @@ define(['jquery',
 			"click     .preview" 	     : "previewData",
 			"click     #save-metadata-prov" : "saveProv",
 		},
+
 
 		initialize: function (options) {
 			if((options === undefined) || (!options)) var options = {};
@@ -165,7 +164,7 @@ define(['jquery',
 
 			this.listenToOnce(model, "sync", function(){
 
-				if(this.model.get("formatType") == "METADATA"){
+				if(this.model.get("formatType") == "METADATA" || !this.model.get("formatType")){
 					this.model = model;
 					this.renderMetadata();
 				}
@@ -216,8 +215,6 @@ define(['jquery',
 			this.$(this.tableContainer).html(this.loadingTemplate({
 					msg: "Retrieving data set details..."
 				}));
-
-
 
 			//Insert the breadcrumbs
 			this.insertBreadcrumbs();
@@ -1024,8 +1021,11 @@ define(['jquery',
 
 		// Inserting the Metric Stats
 		insertMetricsControls: function() {
-            var metricsModel = new MetricsModel({pid: this.pid})
-            metricsModel.fetch()
+			var pid_list = [];
+			pid_list.push(this.pid);
+			var metricsModel = new MetricsModel({pid_list: pid_list});
+			metricsModel.fetch();
+			this.metricsModel = metricsModel;
 
 			var self = this;
 			// Retreive the model from the server for the given PID
@@ -1076,6 +1076,7 @@ define(['jquery',
 
 			self.$(self.tableContainer).before(metrics);
 		},
+
 
         // Check if the DataPackage provenance parsing has completed.
         checkForProv: function() {

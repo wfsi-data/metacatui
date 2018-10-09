@@ -1,12 +1,13 @@
 /*global define */
-define(['jquery', 'underscore', 'backbone'],
-    function($, _, Backbone) {
+define(['jquery', 'underscore', 'backbone', 'views/MetricModalView'],
+    function($, _, Backbone, MetricModalView) {
     'use strict';
 
     var MetricView = Backbone.View.extend({
 
         tagName: 'a',
-        className: 'btn metrics ',
+        // id: 'metrics-button',
+        className: 'btn metrics',
         metricName: null,
         model: null,
 
@@ -18,7 +19,7 @@ define(['jquery', 'underscore', 'backbone'],
                             "</i> </span>"),
 
         events: {
-
+            "click" : "showMetricModal",
         },
 
         initialize: function(options){
@@ -48,6 +49,7 @@ define(['jquery', 'underscore', 'backbone'],
                 this.$el.addClass("tooltip-this")
                         .attr("data-placement", "top")
                         .attr("data-trigger", "hover")
+                        .attr("data-delay", "700")
                         .attr("data-container", "body");
                 if  (this.metricName == 'Citations') {
                     this.$el.attr("data-title", "For all the versions of this dataset, the number of times that all or part of this dataset was cited.");
@@ -66,40 +68,58 @@ define(['jquery', 'underscore', 'backbone'],
             return this;
         },
 
+
+        // Handling the Click function
+        // Displaying the metric modal on Click
+        showMetricModal: function(e) {
+            if (MetacatUI.appModel.get("displayMetricModals")) {
+                var modalView = new MetricModalView({metricName: this.metricName, metricsModel: this.model});
+                modalView.render();
+                modalView.show();
+            }
+        },
+
         renderResults: function() {
             var metric = this.metricName
             var results = this.model.get(metric.toLowerCase());
-
             // Check if the metric object exists in results obtained from the service 
             // If it does, get its total value else set the total count to 0
+
             if (typeof results !== 'undefined') {
                 var total = 0
                 if (results.length > 0) {
-                    var total = results.reduce(function(acc, val) { return acc + val; });
+                    
+                    if(metric == 'Citations') {
+                        total = results.reduce(function(acc, val) { return acc + val; });
+                        this.model.set('totalCitations', total);
+                    }
+                    if(metric == 'Views') {
+                        total = results.reduce(function(acc, val) { return acc + val; });
+                        this.model.set('totalViews', total);
+                    }
+                    if(metric == 'Downloads') {
+                        total = results.reduce(function(acc, val) { return acc + val; });
+                        this.model.set('totalDownloads', total);
+                    }
                 }
+                
+            } else {
                 if(metric == 'Citations') {
+                    total = 0;
                     this.model.set('totalCitations', total);
                 }
                 if(metric == 'Views') {
+                    total = 0;
                     this.model.set('totalViews', total);
                 }
                 if(metric == 'Downloads') {
+                    total = 0;
                     this.model.set('totalDownloads', total);
-                }
-            } else {
-                if(metric == 'Citations') {
-                    this.model.set('totalCitations', 0);
-                }
-                if(metric == 'Views') {
-                    this.model.set('totalViews', 0);
-                }
-                if(metric == 'Downloads') {
-                    this.model.set('totalDownloads', 0);
                 }
             };
 
             // Replacing the metric total count with the spinning icon.
-            this.$('.metric-value').addClass("badge")
+            this.$('.metric-value').addClass("badge");
             this.$('.metric-value').text(this.numberAbbreviator(total, 1));
         },
         
