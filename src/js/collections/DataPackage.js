@@ -1230,9 +1230,9 @@ define(['jquery', 'underscore', 'backbone', 'localforage', 'rdflib', "uuid", "md
                             systemMetadata: model.serializeSysMeta(),
                             object: model.serialize()
                             }).then(function(value) {
-                                console.log("Saved draft.");
+                                console.log("Saved metadata draft at " + value.timestamp);
                             }).catch(function(err) {
-                                console.log("Failed to save draft: " + err);
+                                console.log("Failed to save metadata draft: " + err);
                             });
                             break;
                         case "Data":
@@ -1242,9 +1242,9 @@ define(['jquery', 'underscore', 'backbone', 'localforage', 'rdflib', "uuid", "md
                                 systemMetadata: model.serializeSysMeta(),
                                 object: model.get("uploadFile")
                                 }).then(function(value) {
-                                    console.log("Saved draft.");
+                                    console.log("Saved data file draft at " + value.timestamp);
                                 }).catch(function(err) {
-                                    console.log("Failed to save draft: " + err);
+                                    console.log("Failed to save data file draft: " + err);
                                 });
                             break;
                     }
@@ -1259,9 +1259,9 @@ define(['jquery', 'underscore', 'backbone', 'localforage', 'rdflib', "uuid", "md
                  systemMetadata: this.packageModel.serializeSysMeta(),
                  object: this.serialize()
              }).then(function(value) {
-                 console.log("Saved draft.");
+                 console.log("Saved data package draft at " + value.timestamp);
              }).catch(function(err) {
-                 console.log("Failed to save draft: " + err);
+                 console.log("Failed to save data package draft: " + err);
              });
         },
         
