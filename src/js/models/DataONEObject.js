@@ -1015,8 +1015,6 @@ define(["jquery", "underscore", "models/NestedModel", "uuid", "collections/Acces
          * and set the hasContentChanges flag on content changes only
          */
         handleChange: function(event, model) {
-            console.log(event);
-            
             // Handle only change events
             if ( typeof event !== "string" ) {
                 return;
@@ -1026,10 +1024,20 @@ define(["jquery", "underscore", "models/NestedModel", "uuid", "collections/Acces
                     return;
                 }
                 // Skip "changed" events - these are redundant
-                if ( event.indexOf("change:changed") == 0 ) {
+                if ( event.indexOf("changed") >= 0 ) {
+                    return;
+                }
+                // Skip "hasContentChanges" events - these are redundant
+                if ( event.indexOf("hasContentChanges") >= 0 ) {
+                    return;
+                }
+                // Skip "uploadStatus" events - these are redundant
+                if ( event.indexOf("uploadStatus") >= 0 ) {
                     return;
                 }
             }
+            console.log(event);
+
             if ( !model ) {
                 var model = this;
             }
