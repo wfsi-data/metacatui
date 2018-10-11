@@ -1,6 +1,6 @@
-define(["jquery", "underscore", "models/NestedModel", "uuid",
+define(["jquery", "underscore", "models/NestedModel", "uuid", "collections/AccessPolicy",
     "collections/ObjectFormats", "md5"],
-    function($, _, NestedModel, uuid, ObjectFormats, md5){
+    function($, _, NestedModel, uuid, AccessPolicy, ObjectFormats, md5){
 
         /*
          A DataONEObject represents a DataONE object that has a format
