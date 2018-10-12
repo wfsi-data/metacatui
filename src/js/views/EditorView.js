@@ -440,6 +440,7 @@ define(['underscore',
             this.listenTo(this.model, "change:uploadStatus", this.showControls);
 
             // Register a listener for any attribute change
+            this.model.off("all", this.model.handleChange, this.model);
             this.model.on("all", this.model.handleChange, this.model);
 
             // If any attributes have changed (including nested objects), show the controls
