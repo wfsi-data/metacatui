@@ -412,7 +412,7 @@ function ($, _, Backbone) {
 		},
 
 		clearJSONLD: function() {
-			$("#jsonld").remove();
+			$("script[type='application/ld+json']").remove();
 		},
 
 		clearHighwirePressMetaTags: function() {

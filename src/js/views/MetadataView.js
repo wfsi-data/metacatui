@@ -2134,7 +2134,7 @@ define(['jquery',
 				count++;
 
 				if (count == 6) {
-					authorText += ", et al. ";
+					authorText += ", et al";
 					return;
 				} else if (count > 6) {
 					return;
@@ -2229,7 +2229,7 @@ define(['jquery',
 				"identifier": model.get("id"),
 				"url": "https://dataone.org/datasets/" +
 					encodeURIComponent(model.get("id")),
-				"schemaVersion": model.get("formatId"),
+				"isAccessibleForFree": true,
 			};
 
 			// Second: Add in optional fields

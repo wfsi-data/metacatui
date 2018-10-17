@@ -26,6 +26,299 @@ MetacatUI.root = MetacatUI.root.replace(/\/$/, "");
 //This version of Metacat UI - used for cache busting
 MetacatUI.metacatUIVersion = "2.3.1";
 
+/** Insert a Schema.org/Dataset description as JSON-LD for the current page
+	  when appropriate. Note that there is very similar code in MetadataView.js
+	  and the codebase is not shared. This code is here for clients like
+	  Google's web crawler that need the JSON-LD injected earlier than 
+	  MetadataView.js does. The reason for the duplication is that MetadataView.js
+	  properly refreshes the JSON-LD on page navigation whereas this code cannot
+	  because it's outside the Backbone app. */
+(function() {
+	var getIdentifier = function(url) {
+		if (typeof url !== "string" && !(url.length > 0)) {
+			return null;
+		}
+
+		var identifier_index = url.indexOf("view/");
+
+		if (identifier_index === -1) {
+			return null;
+		}
+
+		return decodeURIComponent(url.slice(identifier_index + 5, url.length + 1));
+	}
+
+	var getDatePublishedText = function (doc) {
+		if (typeof doc === "undefined" || doc === null) {
+			return null;
+		}
+
+		return doc.pubDate || doc.dateUploaded || null;
+	}
+
+	
+
+	var getYearPublishedText = function(doc) {
+		if (typeof doc === "undefined" || doc === null) {
+			return null;
+		}
+
+		var datePublishedText = getDatePublishedText(doc);
+		var yearPublishedDate = new Date(datePublishedText);
+
+		if (typeof yearPublishedDate.getUTCFullYear === "function" &&
+			  !isNaN(yearPublishedDate.getUTCFullYear())) {
+			return yearPublishedDate.getUTCFullYear().toString();
+		} else {
+			return "";
+		}
+	}
+
+	var generateSchemaOrgGeo = function (north, east, south, west) {
+		if (north === south) {
+			return {
+				"@type": "GeoCoordinates",
+				"latitude": north,
+				"longitude": west
+			};
+		} else {
+			return {
+				"@type": "GeoShape",
+				"box": west + ", " + south + " " + east + ", " + north
+			};
+		}
+	};
+
+	var generateGeoJSONString = function (north, east, south, west) {
+		if (north === south) {
+			var preamble = "{\"type\":\"Point\",\"coordinates\":",
+				inner = "[" + east + "," + north + "]",
+				postamble = "}";
+
+			return preamble + inner + postamble;
+		} else {
+			var preamble = "{\"type\":\"Feature\",\"properties\":{},\"geometry\"" +
+				":{\"type\"\:\"Polygon\",\"coordinates\":[[";
+
+			// Handle the case when the polygon wraps across the 180W/180E boundary
+			if (east < west) {
+				east = 360 - east
+			}
+
+			var inner = "[" + west + "," + south + "]," +
+				"[" + east + "," + south + "]," +
+				"[" + east + "," + north + "]," +
+				"[" + west + "," + north + "]," +
+				"[" + west + "," + south + "]";
+
+			var postamble = "]]}}";
+
+			return preamble + inner + postamble;
+		}
+	};
+
+	var getAuthorText = function(authors) {
+		if (typeof authors === "undefined" ||
+				authors === null ||
+				!authors.length) {
+			return "";
+		}
+
+		var authorText = "";
+
+		for (var i = 0; i < authors.length; i++) {
+			if (i == 5) {
+				authorText += ", et al";
+				break;
+			}
+
+			if (i > 0) {
+				if (authors.length > 2) {
+					authorText += ",";
+				}
+
+				if (i + 1 == authors.length) {
+					authorText += " and";
+				}
+
+				if (authors.length > 1) {
+					authorText += " ";
+				}
+			}
+
+			authorText += authors[i];
+		}
+
+		return authorText;
+	}
+
+	var getCitationIdentifierText = function (doc, nodeName) {
+		if (typeof doc === "undefined" ||
+		    doc === null) {
+			return "";
+		}
+
+		if (doc.seriesId) {
+			if (typeof nodeName === "string" && nodeName === "PANGAEA") {
+				return doc.seriesId || "";
+			} else {
+				return (doc.seriesId + ", version: " + doc.identifier) || "";
+			}
+		} else {
+			return doc.identifier || "";
+		}
+	}
+
+	var generateXhrCallbackNodeRequest = function generateXhrCallbackNodeRequest(doc) {
+    return function () {
+			if (typeof doc === "undefined" || doc === null) {
+				return;
+			}
+
+			var domParser = new DOMParser();
+			var dom = domParser.parseFromString(this.responseText, "application/xml");
+
+			if (dom.querySelector("parsererror")) {
+				return;
+			}
+			
+			var nameNode = dom.querySelector("name");
+
+			if (nameNode) {
+				var nodeName = dom.querySelector("name").innerHTML;
+			} else {
+				nodeName = doc.datasource || null;
+			}
+
+			var jsonld = {
+				"@context": {
+					"@vocab": "http://schema.org/",
+				},
+				"@type": "Dataset",
+				"@id": "https://dataone.org/datasets/" + 
+					encodeURIComponent(doc.identifier),
+				"url": window.location.href,
+				"isAccessibleForFree": true,
+				"version": doc.identifier,
+				"identifier": doc.identifier,
+				"datePublished" : getDatePublishedText(doc)
+			};
+
+			if (nodeName) {
+				jsonld.publisher = nodeName;
+			}
+	
+			if (doc.title) {
+				jsonld.name = doc.title;
+			}
+	
+			if (doc.abstract) {
+				jsonld.description = doc.abstract;
+			}
+	
+			if (doc.origin) {
+				jsonld.creator = doc.origin
+			}
+	
+			if (doc.keywords) {
+				jsonld.keywords = doc.keywords.join(", ");
+			}
+	
+			if (doc.attributeName) {
+				jsonld.variablesMeasured = doc.attributeName;
+			}
+	
+			if (doc.beginDate && doc.endDate) {
+				jsonld.temporalCoverage = doc.beginDate + "/" + doc.endDate;
+			} else if (doc.beginDate || doc.endDate) {
+				jsonld.temporalCoverage = doc.beginDate || doc.endDate;
+			}
+
+			if (doc.northBoundCoord &&
+				doc.eastBoundCoord &&
+				doc.southBoundCoord &&
+				doc.westBoundCoord) {
+	
+				jsonld.spatialCoverage = {
+					"@type": "Place",
+					"additionalProperty": [
+						{
+							"@type": "PropertyValue",
+							"additionalType": 
+								"http://dbpedia.org/resource/Coordinate_reference_system",
+							"name": "Coordinate Reference System",
+							"value": "http://www.opengis.net/def/crs/OGC/1.3/CRS84"
+						}
+					],
+					"geo": generateSchemaOrgGeo(doc.northBoundCoord, 
+						doc.eastBoundCoord, 
+						doc.southBoundCoord, 
+						doc.westBoundCoord),
+					"subjectOf": {
+						"@type": "CreativeWork",
+						"fileFormat": "application/vnd.geo+json",
+						"text": generateGeoJSONString(doc.northBoundCoord, 
+							doc.eastBoundCoord, 
+							doc.southBoundCoord, 
+							doc.westBoundCoord)
+					}
+				}
+			}
+
+			if (doc.title && doc.origin) {
+				var citationParts = [
+					getAuthorText(doc.origin),
+				  getYearPublishedText(doc),
+					(doc.title || ""),
+					(nodeName || ""),
+					getCitationIdentifierText(doc, nodeName)];
+	
+				jsonld.citation = citationParts.join(". ") + ".";
+			}
+
+			var head = document.getElementsByTagName("head")[0];
+			var script_tag = document.createElement("script");
+			script_tag.setAttribute("type", "application/ld+json");
+			script_tag.innerHTML = JSON.stringify(jsonld);
+			head.appendChild(script_tag);
+    };
+  };
+
+	var xhrCallbackSolrRequest = function xhrCallbackSolrRequest() {
+		var responseJSON = JSON.parse(this.responseText);
+
+		if (!(responseJSON &&
+					responseJSON.response &&
+					responseJSON.response.docs &&
+					Array.isArray(responseJSON.response.docs) &&
+					responseJSON.response.docs.length === 1)) {
+			return;
+		}
+
+		var doc = responseJSON.response.docs[0];
+
+    var xhrNodeRequest = new XMLHttpRequest();
+    var xhrCallbackNodeRequest = generateXhrCallbackNodeRequest(doc);
+    xhrNodeRequest.addEventListener("load", xhrCallbackNodeRequest);
+    xhrNodeRequest.open("GET", "https://cn.dataone.org/cn/v2/node/" + doc.datasource);
+    xhrNodeRequest.send();
+  };
+
+	var identifier = getIdentifier(window.location.href),
+		  solr_query_url = "https://search.dataone.org/cn/v2/query/solr/?fl=" +
+		"identifier,seriesId,origin,title,abstract,keywords,attributeName," + 
+		"beginDate,endDate,pubDate,datasource,dateUploaded," +
+		"northBoundCoord,eastBoundCoord,southBoundCoord,westBoundCoord" + 
+		"&wt=json&q=id:\"" + 
+		encodeURIComponent(identifier) + 
+		"\"+AND+formatType:METADATA";
+	
+  var xhrSolrRequest = new XMLHttpRequest();
+  xhrSolrRequest.addEventListener("load", xhrCallbackSolrRequest);
+  xhrSolrRequest.open("GET", solr_query_url);
+  xhrSolrRequest.send();
+})();
+
 MetacatUI.loadTheme = function(theme) {
     var script = document.createElement("script");
     script.setAttribute("type", "text/javascript");
