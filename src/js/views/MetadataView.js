@@ -2190,6 +2190,21 @@ define(['jquery',
 			}
 		},
 
+		getCitationIdentifierText() {	
+			var publisher = this.getPublisherText();
+
+			if (this.model.get("seriesId")) {
+				if (publisher.indexOf("PANGAEA") >= 0) {
+					return this.model.get("seriesId");
+				} else {
+					return (this.model.get("seriesId") + 
+					  ", version: " + this.model.get("id"));
+				}
+			} else {
+				return this.model.get("id");
+			}
+		},
+
 		/**
 		 * Generate Schema.org-compliant JSONLD for the model bound to the view into
 		 *  the head tag of the page by `insertJSONLD`.
@@ -2211,7 +2226,7 @@ define(['jquery',
 						new Date(this.getDatePublishedText()).getUTCFullYear().toString(),
 						model.get("title"),
 						this.getPublisherText(),
-						model.get("id")],
+						this.getCitationIdentifierText()],
 				  citationText = citationParts.join(". ") + ".";
 
 			// First: Create a minimal Schema.org Dataset with just the fields we
