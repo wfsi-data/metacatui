@@ -4788,11 +4788,7 @@ CSS library fixes
     font-weight: 600;
 }
 
-div.analyze.dropdown{
-    display: inline-block;
-}
-
-div.analyze.dropdown.open button.dropdown.btn.btn-secondary.dropdown-toggle{
+div.analyze.dropdown.open .dropdown-toggle{
     display: inline-block;
     color:white;
     text-shadow: 0;
@@ -4805,9 +4801,8 @@ div.controls.btn-toolbar{
 }
 
 .analyze.dropdown-menu {
-    border: none;
-    border-radius: 10px;
+    border-radius: 2px;
     padding: 0px;
-    margin: 0px;
+    margin-top: 1px;
 }
 
