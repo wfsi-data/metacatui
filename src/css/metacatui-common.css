@@ -4721,6 +4721,11 @@ CSS library fixes
 	-moz-transform: translate3d(0,0,0);
 }
 
+.modal-body select {
+    width: 100%;
+    overflow-x: scroll;
+}
+
 /** Progress Bars from Bootstrap 3.3.6 **/
 @-webkit-keyframes progress-bar-stripes {
   from {
