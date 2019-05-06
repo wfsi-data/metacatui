@@ -41,13 +41,50 @@ define(['jquery', 'underscore', 'backbone', 'models/LogsSearch'],
 			// complex objects like this
 			// {mdq_composite_d: {"min":0.25,"max":1.0,"count":11,"missing":0,"sum":6.682560903149138,"sumOfSquares":4.8545478685001076,"mean":0.6075055366499217,"stddev":0.2819317507548068}}
 			mdqStats: {},
-			mdqStatsTotal: {},
 
       //HTTP GET requests are typically limited to 2,083 characters. So query lengths
       // should have this maximum before switching over to HTTP POST
       maxQueryLength: 1958,
       usePOST: false,
-
+      // This Solr Analytics request attempts to retrieve the FAIR suite catagories ("Findable", "Accessible", ...), even though the will not 
+      // be available for other suites, it doesn't cause any problems to include them in the query.
+      analyticsQuery: {
+          "groupings" : {
+              "scores" : {
+                  "expressions" : {
+                      "min_score" : "min(scoreOverall)",
+                      "pctl_25"   : "percentile(25.0, scoreOverall)",
+                      "median"    : "median(scoreOverall)",
+                      "mean"      : "mean(scoreOverall)",
+                      "pctl_75"   : "percentile(75.0, scoreOverall)",
+                      "max_score" : "max(scoreOverall)",
+                      "count"     : "count(scoreOverall)",
+                      "FindableAve"      : "mean(scoreByType_Findable_f)",
+                      "AccessibleAve"    : "mean(scoreByType_Accessible_f)",
+                      "InteroperableAve" : "mean(scoreByType_Interoperable_f)",
+                      "ReusableAve"      : "mean(scoreByType_Reusable_f)",
+                      "identificationAve"   : "mean(scoreByType_identification_f)",
+                      "interpretationAve"   : "mean(scoreByType_interpretation_f)",
+                      "discoveryAve"        : "mean(scoreByType_discovery_f)"
+                    },
+                    "facets" : {
+                        "scoresByDateRange" : {
+                         "type" : "range",
+                          "field" : "dateUploaded",
+                          "start" : "2016-01-01T00:00:00.000Z",
+                          "end" : "2020-01-01T00:00:00.000Z",
+                          "gaps" : [ "+6MONTH" ],
+                          "hardend" : true,
+                          "include" : [
+                              "lower",
+                              "upper"
+                          ],
+                          "others" : [ "none" ]
+                        }
+                    }
+                 }
+              } 
+        },
 			supportDownloads: (MetacatUI.appModel.get("nodeId") && MetacatUI.appModel.get("d1LogServiceUrl"))
 		},
 
@@ -118,7 +155,7 @@ define(['jquery', 'underscore', 'backbone', 'models/LogsSearch'],
 
 			this.getDownloadDates();
 
-			//this.getMdqStatsTotal();
+			this.getMdqStats();
 			//this.getDataDownloadDates();
 			//this.getMetadataDownloadDates();
 		},
@@ -1100,143 +1137,229 @@ define(['jquery', 'underscore', 'backbone', 'models/LogsSearch'],
 		},
 
 		/**
+		** getMdqStats will query the Metadata Quality SOLR for MDQ stats and will update the model accordingly
+		**/
+        /**
 		** getMdqStats will query SOLR for MDQ stats and will update the model accordingly
 		**/
 		getMdqStats: function(){
+            // If the metadata quality Solr server is not defined, exit
+            if(!MetacatUI.appModel.get("mdqQueryServiceUrl")){
+                console.debug("mdqQueryServiceUrl not defined, skipping profile display of metadata quality");
+                return;
+            }
+
 			var model = this;
-
+            var analyticsQuery = model.get("analyticsQuery");
+            //analyticsQuery.groupings.scores.facets.scoresByDateRange.start = this.firstPossibleUpload;
+            analyticsQuery.groupings.scores.facets.scoresByDateRange.start = "2012-01-01T00:00:00Z",
+            analyticsQuery.groupings.scores.facets.scoresByDateRange.end = 'NOW';
 			//Build the query to get the MDQ stats
-			var query = decodeURIComponent(this.get('query'));
-      if( query.length ){
-        query += " AND ";
+            var nodeId = MetacatUI.nodeModel.get("currentMemberNode");
+            var suiteId = MetacatUI.appModel.get("mdqSuiteIds")[0];
+            var SolrDateRangeGaps = MetacatUI.appModel.get("mdqSolrDateRangeGaps");
+            if(SolrDateRangeGaps !== null && SolrDateRangeGaps.length != 0) {
+                analyticsQuery.groupings.scores.facets.scoresByDateRange.gaps = SolrDateRangeGaps;
+            }
+			//var query = MetacatUI.appModel.get('mdqQueryServiceUrl') + '/select?q=*:*' + '+suiteId:' + suiteId;
+            // If we are querying from a CN, then don't include the 'datasource' as we want info for the entire network.
+            var thisNode = MetacatUI.nodeModel.isCN(nodeId);
+            var searchModel = MetacatUI.statsModel.get("searchModel");
+            var datasource = "";
+            if(searchModel != null) {
+                datasource = searchModel.get("dataSource")[0];
+            }
+            
+			var query = "";
+            
+            if(datasource != "") {
+			    query = MetacatUI.appModel.get('mdqQueryServiceUrl') + '/select?q=suiteId:%22' + suiteId + '%22' +'+datasource:%22' + datasource+ '%22';
+            } else  {
+			    query = MetacatUI.appModel.get('mdqQueryServiceUrl') + '/select?q=suiteId:%22' + suiteId + '%22';
+            }
+            
+            var filterObsoletes = MetacatUI.appModel.get("mdqStatsFilterObsoletes");
+            if(filterObsoletes) {
+                query = query + '+-obsoletedBy:*';
+            }
+
+			//var query = MetacatUI.appModel.get('mdqQueryServiceUrl') + '/select?q=suiteId:%22' + suiteId + '%22' +'datasource:%22' + "urn:node:ARCTIC"+ '%22';
+            
+            // Filter by formatIds supported by the quality Suite.
+            // Ideally this would be retrieved from the quality engine, but it is faster to have the
+            // supported suites as a config parameter.
+            var mdqFormatIds = MetacatUI.appModel.get("mdqFormatIds");
+            if (mdqFormatIds !== null && mdqFormatIds.length > 0) {
+                query = query + "+AND+(";
+                for (var ifmt = 0; ifmt < mdqFormatIds.length; ++ifmt) {
+                    query = query + 'metadataFormatId:' + mdqFormatIds[ifmt];
+                    if(ifmt < mdqFormatIds.length - 1) {
+                        query = query + '+OR+';
+                    }
+                }
+                query = query + ")";
       }
+			var otherParams = "&rows=0" + "&wt=json" + "&q.op=AND";
+            console.debug("mdq query: " + query + otherParams);
 
-      query += "formatId:\"https:%2F%2Fnceas.ucsb.edu%2Fmdqe%2Fv1%23run\" AND -obsoletedBy:*";
-
-      var rows = "0",
-          stats = "true",
-          statsField = ["mdq_composite_d", "mdq_discovery_d", "mdq_interpretation_d", "mdq_identification_d"],
-          statsFacet = ["mdq_metadata_formatId_s", "mdq_metadata_rightsHolder_s", "mdq_metadata_datasource_s", "mdq_suiteId_s"],
-          wt = "json";
-
-      var successCallback = function(data, textStatus, xhr) {
-
+            //var analyticsQueryStr = JSON.stringify(analyticsQuery).replace('^"', '').replace('"$', '');
+			//Run the query for stats
+			var requestSettings = {
+				url: query + otherParams,
+				type: "POST",
+                data: {"analytics" : JSON.stringify(analyticsQuery)},
+                // works!
+                //data: {"analytics" : '{ "groupings" : { "scores" : { "expressions" : { "min_score" : "min(scoreOverall)", "25-percentile": "percentile(25.0, scoreOverall)", "median"    : "median(scoreOverall)", "75-percentile": "percentile(75.0, scoreOverall)", "max_score" : "max(scoreOverall)", "count"     : "count(scoreOverall)" }, "facets" : { "scoresByDateRange" : { "type" : "range", "field" : "dateUploaded", "start" : "2016-01-01T00:00:00.000Z", "end" : "2020-01-01T00:00:00.000Z", "gaps" : [ "+1YEAR" ], "hardend" : true, "include" : [ "lower", "upper" ], "others" : [ "none" ] } } } }}'},
+                //contentType: "application/json",
+                xhrFields: { withCredentials: false },
+                //dataType: "application/json",
+				success: function(data, textStatus, xhr) {
+                    var result = JSON.parse(data);
+                    var mdqStats = model.processMdqStats(result.analytics_response.groupings);
+                    console.log("mdqStats count", mdqStats.length);
         // Set the pertinent information in the model
-        model.set('mdqStats', data.stats.stats_fields);
+					model.set('mdqStats', mdqStats);
+				},
+                error: function (what, jqXhr, options) {
+                  console.debug("error fetching Solr analytics report.");
+                }
+			};
 
-      }
-
-      if( this.get("usePOST") ){
-
-        var queryData = new FormData();
-        queryData.append("q", query);
-        queryData.append("rows", rows);
-        queryData.append("stats", stats);
-        _.each(statsField, function(statsFieldValue){
-          queryData.append("stats.field", statsFieldValue);
-        });
-        _.each(statsFacet, function(statsFacetValue){
-          queryData.append("stats.facet", statsFacetValue);
-        });
-        queryData.append("wt", wt);
-
-        var requestSettings = {
-          url: MetacatUI.appModel.get('queryServiceUrl'),
-          type: "POST",
-          contentType: false,
-          processData: false,
-          data: queryData,
-          dataType: "json",
-          success: successCallback
-        }
-
-      }
-      else{
-
-        //Run the query for stats
-        var requestSettings = {
-          url: MetacatUI.appModel.get('queryServiceUrl') +
-              "q=" + query +
-              "&rows=" + rows +
-              "&stats=" + stats +
-              "&stats.field=" + statsField.join("&stats.field=") +
-              "&stats.facet=" + statsFacet.join("&stats.facet=") +
-              "&wt=" + wt,
-          type: "GET",
-          dataType: "json",
-          success: successCallback
-        }
-
-      }
-
-      $.ajax(_.extend(requestSettings, MetacatUI.appUserModel.createAjaxSettings()));
+			//$.ajax(_.extend(requestSettings, MetacatUI.appUserModel.createAjaxSettings()));
+			$.ajax(requestSettings);
     },
 
     /**
-    ** getMdqStatsTotal will query SOLR for ALL MDQ stats and will update the model accordingly
+        ** Convert the Solr Analytics result set to a format more easily used by display functions.
     **/
-    getMdqStatsTotal: function(){
-      var model = this;
-
-      //Build the query to get ALL MDQ stats - not filtered!
-      var query =  "formatId:\"https:%2F%2Fnceas.ucsb.edu%2Fmdqe%2Fv1%23run\" AND -obsoletedBy:*",
-          rows  = "0",
-          stats = "true",
-          statsField = ["mdq_identification_d", "mdq_composite_d", "mdq_discovery_d", "mdq_interpretation_d"],
-          wt = "json";
-
-      var successCallback = function(data, textStatus, xhr) {
-
-        var mdqStatsTotal = data.stats.stats_fields;
-
-        // Set total in the model
-        model.set('mdqStatsTotal', mdqStatsTotal);
-
-        // get the specific stats which will trigger rendering
-        model.getMdqStats();
-
-      }
-
-      if( this.get("usePOST") ){
-
-        var queryData = new FormData();
-        queryData.append("q", query);
-        queryData.append("rows", rows);
-        queryData.append("stats", stats);
-        _.each(statsField, function(statsFieldValue){
-          queryData.append("stats.field", statsFieldValue);
+        processMdqStats: function(stats) {
+            
+            var firstDataPeriod;
+            
+            var allScores = stats.scores.scoresByDateRange;
+            var filteredResults = [];
+            var finalResults = [];
+            // Transform result set to an array of lines such as
+            //     ["startdate", "enddate", count (for this facet), min score, max score, 25th percentile, median score, 75th percentile]
+            // for example:
+            //     ["2018-01-01T00:00:00Z", "2019-01-01T00:00:00Z", 63, 0.71428573, 1, 0.85714287, 0.8999999761581421, 0.95238096]
+            var results = _.map(allScores, function(score) {
+                var datesStr = score.value.replace('[', '').replace(']', '')
+                var dates = datesStr.split(' TO ');
+                // TODO: use regex for label
+                if(score.results.count == 0 || Number.isNaN(score.results.count)) {
+                    return({label: dates[0].substring(0,10),
+                        date: dates[0].substring(0,10),
+                        startDate: dates[0],
+                        endDate: dates[1],
+                        count: 0,
+                        min: 0, 
+                        max: 0,
+                        pct25: 0, 
+                        mean: 0,
+                        median: 0, 
+                        pct75: 0,
+                        FindableAve: 0,
+                        AccessibleAve: 0,
+                        InteroperableAve: 0,
+                        ReusableAve: 0,
+                        discoveryAve: 0,
+                        identificationAve:0,
+                        interpretationAve:0
+                    });
+                };
+                // Convert all values to percentages
+                // TODO: use regex to extract label
+                return({label: dates[0].substring(0,10),
+                    date: dates[0].substring(0,10),
+                    startDate: dates[0],
+                    endDate: dates[1],
+                    count: (Number.isNaN(score.results.count)) ? 0.0 : score.results.count,
+                    min: score.results.min_score * 100.0,
+                    max: score.results.max_score * 100.0,
+                    pct25: score.results.pctl_25 * 100.0,
+                    median: score.results.median * 100.0,
+                    mean: score.results.mean * 100.0,
+                    pct75: score.results.pctl_75 * 100.0,
+                    FindableAve: score.results.FindableAve * 100.0,
+                    AccessibleAve: score.results.AccessibleAve * 100.0,
+                    InteroperableAve: score.results.InteroperableAve * 100.0,
+                    ReusableAve: score.results.ReusableAve * 100.0,
+                    discoveryAve: (Number.isNaN(score.results.discoveryAve)) ? 0.0 : score.results.discoveryAve * 100.0,
+                    identificationAve: score.results.identificationAve * 100.0,
+                    interpretationAve: score.results.interpretationAve * 100.0
+                });
+            }, this);
+            
+            // TODO: update the filtering to only filter leading and trailing zero count entries
+            var foundStart = false;
+            filteredResults = _.filter(results, function(score) {
+                // Skip over initial enties with a count of 0, so that we find the first
+                // date range when data was actually uploaded. Once we have found the first 
+                // time period of data, show all groupings after that.
+                if (score.count == 0) {
+                    // Return true unless wh are past the start of data
+                    if(foundStart) {
+                        return true;
+                    } else {
+                        return false;
+                    }
+                } else {
+                    // The first non-zero value was found, so return all the rest.
+                    if (!foundStart) foundStart = true;
+                    return true;
+                }
         });
-        queryData.append("wt", wt);
+        
+            var rollingAve = MetacatUI.appModel.get("mdqStatsRollingAve");
+            if(rollingAve) {
+                var totalCount = 0;
+                var meanAccum = 0;
+                var findableAveAccum = 0;
+                var accessibleAveAccum = 0;
+                var interoperableAveAccum = 0;
+                var reusableAveAccum = 0;
+                var identificationAveAccum = 0;
+                var interpretationAveAccum = 0;
+                var discoveryAveAccum = 0;
+                console.log("date, i, mean, count, total count, current ave, sum of sums");
+                finalResults = _.map(filteredResults, function(score, i) {
+                    // Calculate rolling average for appropriate fields
+                    totalCount = totalCount + score.count;
+                    meanAccum = meanAccum + (score.mean * score.count);
+                    findableAveAccum = findableAveAccum + (score.FindableAve * score.count);
+                    accessibleAveAccum = accessibleAveAccum + (score.AccessibleAve * score.count);
+                    interoperableAveAccum = interoperableAveAccum + (score.InteroperableAve * score.count);
+                    reusableAveAccum = reusableAveAccum + (score.ReusableAve * score.count);
+                    identificationAveAccum = identificationAveAccum + (score.interpretationAve * score.count);
+                    interpretationAveAccum = interpretationAveAccum + (score.identificationAve * score.count);
+                    discoveryAveAccum = discoveryAveAccum + (score.discoveryAve * score.count);
 
-        var requestSettings = {
-          url: MetacatUI.appModel.get('queryServiceUrl'),
-          type: "POST",
-          contentType: false,
-          processData: false,
-          data: queryData,
-          dataType: "json",
-          success: successCallback
-        }
-
-      }
-      else{
-
-        //Run the query for stats
-        var requestSettings = {
-          url: MetacatUI.appModel.get('queryServiceUrl') +
-               "q=" + query +
-               "&rows=" + rows +
-               "&stats=" + stats +
-               "&stats.field=" + statsField.join("&stats.field=") +
-               "&wt=" + wt,
-          type: "GET",
-          dataType: "json",
-          success: successCallback
-        }
-      }
-
-
-      $.ajax(_.extend(requestSettings, MetacatUI.appUserModel.createAjaxSettings()));
+                    console.log(score.startDate, i, score.mean, score.count, totalCount, (meanAccum / totalCount), meanAccum);
+                    return({label: score.label,
+                        date: score.date,
+                        startDate: score.startDate,
+                        endDate: score.endDate,
+                        count: score.count,
+                        min: score.min,
+                        max: score.max,
+                        pct25: score.pct25,
+                        median: score.median,
+                        mean: meanAccum / totalCount,
+                        pct75: score.pctl_75,
+                        FindableAve: findableAveAccum / totalCount,
+                        AccessibleAve: accessibleAveAccum / totalCount,
+                        InteroperableAve: interoperableAveAccum / totalCount,
+                        ReusableAve: reusableAveAccum / totalCount, 
+                        identificationAve: identificationAveAccum / totalCount,
+                        interpretationAve: interpretationAveAccum / totalCount,
+                        discoveryAve: discoveryAveAccum / totalCount });
+                }, this);
+            } else {
+                finalResults = filteredResults;
+            }
+            
+            return finalResults;
     },
 
     setRequestType: function(){
@@ -1249,7 +1372,6 @@ define(['jquery', 'underscore', 'backbone', 'models/LogsSearch'],
         }
       }
     }
-
   });
   return Stats;
 });
