@@ -51,8 +51,10 @@ define(['jquery', 'underscore', 'backbone', 'd3'],
 			this.height    = options.height    || 300;
 			this.formatFromSolrFacets = options.formatFromSolrFacets || false;
 			this.cumulative = options.cumulative || false;
+            this.max        = options.max || null;
 
 			if(options.data && this.formatFromSolrFacets) this.data = this.formatData(options.data);
+            this.initialWidth = this.width;
 			
 			//What will our x-axis tick format be?
 			//Find the time span - 2628000000 ms is one month
@@ -117,9 +119,12 @@ define(['jquery', 'underscore', 'backbone', 'd3'],
 			this.width  = this.width - margin.left - margin.right;
 			this.height = this.height - margin.top - margin.bottom;
 			
-			var min = d3.min(this.data, function(d) {  return d.count; }),
-				max = d3.max(this.data, function(d) {  return d.count; }),
-				difference = max - min;
+			var min = d3.min(this.data, function(d) {  return d.count; });
+			var	max = d3.max(this.data, function(d) {  return d.count; });
+            if(this.max !== null) {
+                max = this.max;
+            }
+			var difference = max - min;
 			
 			//Format the data
 			this.data.forEach(function(d) {
@@ -435,7 +440,8 @@ define(['jquery', 'underscore', 'backbone', 'd3'],
 			   */
 			  var viewRef = this;
 			  
-			  this.$('.point').hover(
+			  //this.$('.point ').hover(
+			  this.$('.' + this.className).hover(
 				function(e){
 				//Fade in our labels
 				 var activePoint = $(e.target);
