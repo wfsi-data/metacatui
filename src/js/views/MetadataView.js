@@ -1001,11 +1001,50 @@ define(['jquery',
 		 */
 		insertControls: function(){
 
+            // Convert the support mdq formatId list to a version
+            // that JS regex likes (with special characters double 
+            // escaped.
+            RegExp.escape = function(s) {
+                return s.replace(/[-\/\\^$*+?.()|[\]{}]/g, '\\\\$&');
+            };
+			//Get template
+            
+            // var userType = null;
+            // var userName = null;
+            // if(MetacatUI.appView.userView) {
+            //     userType = MetacatUI.appView.userView.model.get("type");
+            //     userName = MetacatUI.appView.userView.model.get("username");
+            // }
+            
+            var mdqSuiteId = MetacatUI.appModel.get("mdqSuiteIds")[0];
+            var mdqFormatIds = MetacatUI.appModel.get("mdqFormatIds");
+            var nodeId = MetacatUI.nodeModel.get("currentMemberNode");
+            var thisNode = MetacatUI.nodeModel.isCN(nodeId);
+
+            // Check if the formatId of the current metadata is supported by the
+            // metadata quality suite. If not, the 'Quality Report' button
+            // will not be displacyed in the metadata controls panel.
+            var thisFormatId = this.model.get("formatId");
+            var mdqFormatSupported = false;
+            if(mdqFormatIds !== null) {
+                for (var ifmt = 0; ifmt < mdqFormatIds.length; ++ifmt) {
+                    var currentFormatId = RegExp.escape(mdqFormatIds[ifmt]);
+                    var re = new RegExp(currentFormatId);
+                    mdqFormatSupported = re.test(thisFormatId);
+                    if(mdqFormatSupported) {
+                        break;
+                    }
+                }
+            }
+                
+            var mdqUrl = MetacatUI.appModel.get("mdqBaseUrl");
+            
 			//Get template
 			var controlsContainer = this.controlsTemplate({
 					citation: $(this.citationContainer).text(),
 					url: window.location,
-          mdqUrl: MetacatUI.appModel.get("mdqBaseUrl"),
+          mdqUrl: mdqUrl,
+          mdqFormatSupported: mdqFormatSupported,
           showWholetale: MetacatUI.appModel.get("showWholeTaleFeatures"),
 					model: this.model.toJSON()
 				});
