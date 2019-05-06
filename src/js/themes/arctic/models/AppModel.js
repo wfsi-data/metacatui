@@ -76,7 +76,8 @@ define(['jquery', 'underscore', 'backbone'],
 
 			allowAccessPolicyChanges: false,
 
-			baseUrl: window.location.origin || (window.location.protocol + "//" + window.location.host),
+			//baseUrl: window.location.origin || (window.location.protocol + "//" + window.location.host),
+			baseUrl: 'https://arcticdata.io',
 			// the most likely item to change is the Metacat deployment context
 			context: '/metacat',
 			d1Service: '/d1/mn/v2',
@@ -121,10 +122,34 @@ define(['jquery', 'underscore', 'backbone'],
 			//signInUrlLdap: null,
 			tokenUrl: null,
 
-            mdqBaseUrl: "https://docker-ucsb-1.dataone.org:30443/quality",
+            mdqBaseUrl: "https://docker-ucsb-4.dataone.org:30443/quality",
             // suidIds and suiteLables must be specified as a list, even if only one suite is available.
-            suiteIds: ["arctic.data.center.suite.1"],
-            suiteLabels: ["Arctic Data Center Conformance Suite v1.0"],
+            mdqSuiteIds: ["arctic.data.center.suite.1"],
+            mdqSuiteLabels: ["Arctic Data Center Conformance Suite v1.0"],
+            //mdqQueryServiceUrl: "http://localhost:8983/solr/quality",
+            mdqQueryServiceUrl: "https://docker-ucsb-4.dataone.org:8983/solr/quality",
+            //mdqQueryServiceUrl: "http://localhost:8983/solr/quality",
+            //mdqFormatIds:["eml*", "*datadryad*", "*isotc211*"],
+            mdqFormatIds:["eml*"],
+            //mdqFormatIds:["*isotc211*"],
+            // Enable / disable the calculation and display of aggregated metadata quality metrics.
+            // This setting does not affect the per dataset quality metrics display.
+            mdqDisplayEnable: true,
+            // The chart type for aggregated quality metrics, i.e. profile, project pages.
+            // Supported values are "LineChart", "BoxPlot"
+            mdqDisplayType: "LineChart",
+            //mdqDisplayType: "BoxPlot",
+            // Length of time 'grouping' interval for Solr query. "+6MONTH" works well for BoxPlot,
+            // "1+MONTH" works well for LineChart.
+            mdqSolrDateRangeGaps:  [ "+1MONTH" ],
+            //mdqSolrDateRangeGaps:  [ "+6MONTH" ],
+            // Should the status values returned from Solr be accumulated as a rolling average?
+            // This setting will affect all 'averages', i.e. "scoreOveral", "scoreByType_Findable_f", 
+            // "scoreByType_Accessible_f", ...
+            mdqStatsRollingAve: true,
+            mdqQualityChartDescription: 'The plot to the right shows quality score cummulative averages'
+                + ' for each of the catagories of the ARCTIC Data Center Quality Suite, which includes' 
+                + ' "discovery", "interpretation", and "identification"',
 
 			// Metrics endpoint url
 			metricsUrl: 'https://logproc-stage-ucsb-1.test.dataone.org/metrics',
@@ -196,8 +221,6 @@ define(['jquery', 'underscore', 'backbone'],
             // Metadata quality report services
             this.set('mdqSuitesServiceUrl', this.get("mdqBaseUrl") + "/suites/");
             this.set('mdqRunsServiceUrl', this.get('mdqBaseUrl') + "/runs/");
-            this.set('mdqSuiteIds', this.get("suiteIds"));
-            this.set('mdqSuiteLabels', this.get("suiteLabels"));
 
 			//Set the NSF Award API proxy
 			if(typeof this.get("grantsUrl") != "undefined")

@@ -40,7 +40,8 @@ define(['jquery', 'underscore', 'backbone'],
       taleEnvironments: ["RStudio", "Jupyter Notebook"],
       dashboardUrl: 'https://girder.wholetale.org/api/v1/integration/dataone',
 
-			baseUrl: window.location.origin || (window.location.protocol + "//" + window.location.host),
+			//baseUrl: window.location.origin || (window.location.protocol + "//" + window.location.host),
+			baseUrl: "https://cn.dataone.org",
 			// the most likely item to change is the Metacat deployment context
 			context: '',
 			d1Service: "/cn/v2",
@@ -85,12 +86,39 @@ define(['jquery', 'underscore', 'backbone'],
 			signInUrlOrcid: null,
 			//signInUrlLdap: null,
 			tokenUrl: null,
-            //mdqBaseUrl: "https://docker-ucsb-1.dataone.org:30443/quality",
-            mdqBaseUrl: "",
+            //mdqBaseUrl: "http://localhost:8080/quality",
+            mdqBaseUrl: "https://docker-ucsb-4.dataone.org:30443/quality",
+            //mdqBaseUrl: "",
             // suidIds and suiteLables must be specified as a list, even if only one suite is available.
-            suiteIds: ["dataone.suite.1"],
-            suiteLabels: ["DataONE Metadata Completeness Suite v1.0"],
-			// Metrics endpoint url
+            mdqSuiteIds: ["FAIR.suite.1"],
+            mdqSuiteLabels: ["FAIR Metadata Suite v1.0"]    ,
+            //mdqQueryServiceUrl: "http://localhost:8983/solr/quality",
+            mdqQueryServiceUrl: "https://docker-ucsb-4.dataone.org:8983/solr/quality",
+            //mdqQueryServiceUrl: "http://localhost:8983/solr/quality",
+            //mdqFormatIds:["eml*", "*datadryad*", "*isotc211*"],
+            mdqFormatIds:["eml*", "*isotc211*"],
+            //mdqFormatIds:["eml*"],
+            //mdqFormatIds:["*isotc211*"],
+            // Enable / disable the calculation and display of aggregated metadata quality metrics.
+            // This setting does not affect the per dataset quality metrics display.
+            mdqDisplayEnable: true,
+            // The chart type for aggregated quality metrics, i.e. profile, project pages.
+            // Supported values are "LineChart", "BoxPlot"
+            mdqDisplayType: "LineChart",
+            //mdqDisplayType: "BoxPlot",
+            // Length of time 'grouping' interval for Solr query. "+6MONTH" works well for BoxPlot,
+            // "1+MONTH" works well for LineChart.
+            mdqSolrDateRangeGaps:  [ "+1MONTH" ],
+            //mdqSolrDateRangeGaps:  [ "+6MONTH" ],
+            // Should the status values returned from Solr be accumulated as a rolling average?
+            // This setting will affect all 'averages', i.e. "scoreOveral", "scoreByType_Findable_f", 
+            // "scoreByType_Accessible_f", ...
+            mdqStatsRollingAve: true,
+            mdqQualityChartDescription: "The plot to the right shows quality score cummulative averages"
+                + " for each of the four catagories of the DataONE FAIR Quality Suite, which follows the"
+                + " FAIR Guidelines for scientific data management. See https://www.go-fair.org/fair-principles"
+                + " for a description of these guidelines.",
+            
 			metricsUrl: 'https://logproc-stage-ucsb-1.test.dataone.org/metrics',
 
 			// Metrics flags for the Dataset Landing Page
@@ -152,8 +180,7 @@ define(['jquery', 'underscore', 'backbone'],
             // Metadata quality report services
             this.set('mdqSuitesServiceUrl', this.get("mdqBaseUrl") + "/suites/");
             this.set('mdqRunsServiceUrl', this.get('mdqBaseUrl') + "/runs/");
-            this.set('mdqSuiteIds', this.get("suiteIds"));
-            this.set('mdqSuiteLabels', this.get("suiteLabels"));
+            this.set('mdqQueryServiceUrl', this.get("mdqQueryServiceUrl"));
 
 			//The logs index
 			if(typeof this.get("d1LogServiceUrl") !== "undefined"){
