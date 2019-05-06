@@ -450,6 +450,81 @@ define(['jquery', 'underscore', 'backbone', 'd3'],
 			  
 		},
 		
+        /*
+         * This function will add a legend to the graph 
+         */
+        addLegend: function(legendData) {
+            var viewRef = this;
+            var legendRectSize = 10;
+            var legendSpacing = 2;
+            var legendOffset = 10;
+            var legendMargin = 5;
+            
+            var legend = this.svg.append("g")
+                .attr('class', 'legend')
+                
+            if (typeof legendData === 'undefined' || legendData.length == 0) {
+                return;
+            }
+            
+            // viewRef.width = 650
+            // viewRef.height = 300
+            // var margin = {top: 20, right: 50, bottom: 50, left: 80};
+
+            //var height = legendRectSize + legendSpacing;
+            // ((10 + 2) * 4) + (5 * 2)
+            var height = ((legendRectSize + legendSpacing) * legendData.length) + (legendMargin * 2)
+            // width: 120, height: 158
+            // translate(690, 170) is 871, want 690
+            // stroke: black
+            // fill: white
+            //                 80 + 650 - 40;
+            var xpos = viewRef.margin.left + viewRef.initialWidth - 338;
+            console.log("viewRef.width", viewRef.initialWidth);
+            console.log("xpos: ", xpos);
+            //                20 + 300 - ((10 + 2) * 4) - 102;
+            // box 701, 191
+            var ypos = viewRef.margin.top + viewRef.height - ((legendRectSize + legendSpacing) * legendData.length) - 34;
+            console.log("ypos: ", ypos);
+            legend.append('rect')
+                .attr('width', 100)
+                // (10 + 2) * 4 + (5 * 2)
+                .attr('height', height)
+                .style('color', 'white')
+                .style('stroke', 'black')
+                .style('fill', 'white')
+                .attr('transform', 'translate(' + xpos + ', ' + ypos + ')');
+            
+            legend.selectAll('g')
+                .data(legendData)
+                .enter()
+                .append('rect')
+                .attr('width', legendRectSize)
+                .attr('height', legendRectSize)
+                .attr('class', function(d) { return d.class })
+                .attr('transform', function(d, i) {
+                  var height = legendRectSize + legendSpacing;
+                  var horz = viewRef.margin.left + viewRef.initialWidth - 330;
+                  var vert = viewRef.margin.top + viewRef.height - ((legendRectSize + legendSpacing) * i) - 39;
+                  return 'translate(' + horz + ',' + vert + ')';
+                });
+            
+            legend.selectAll('g')
+                .data(legendData)
+                .enter()
+                .append('text')
+                .attr('x', legendRectSize + (legendSpacing * 1.25 ))
+                .attr('y', legendRectSize - (legendSpacing * .1 ))
+                .text(function(d) { return d.label; })  
+                .attr('class', 'text')
+                .attr('transform', function(d, i) {
+                  var height = legendRectSize + legendSpacing;
+                  var horz = viewRef.margin.left + viewRef.initialWidth - 330;
+                  var vert = viewRef.margin.top + viewRef.height - ((legendRectSize + legendSpacing) * i) - 40;
+                  return 'translate(' + horz + ',' + vert + ')';
+                });
+        },
+        
 		formatData: function(counts){
 			//Format the data for a cumulative time series chart
 			//We will take only the first 10 characters of the date
