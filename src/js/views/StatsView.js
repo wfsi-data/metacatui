@@ -48,24 +48,24 @@ define(['jquery', 'underscore', 'backbone', 'd3', 'LineChart', 'BarChart', 'Donu
 				this.listenTo(this.model, 'change:metadataFormatIDs', this.drawMetadataCountChart);
 
 				//this.listenTo(this.model, 'change:dataUploads', 	  this.drawUploadTitle);
+			    // mdq
+			    this.listenTo(this.model, 'change:mdqStats',	  	  this.drawMdqChart);
 			}
 
 			this.listenTo(this.model, 'change:downloads', 	  this.drawDownloadTitle);
 			this.listenTo(this.model, 'change:lastEndDate',	  	  this.drawCoverageChartTitle);
-
-			// mdq
-			this.listenTo(this.model, 'change:mdqStats',	  	  this.drawMdqStats);
-
 			this.listenTo(this.model, "change:totalCount", this.showNoActivity);
 
 			// set the header type
 			MetacatUI.appModel.set('headerType', 'default');
+            var qualityChartDescription = MetacatUI.appModel.get('mdqQualityChartDescription');
 
 			//Insert the template
 			this.$el.html(this.template({
 				query: this.model.get('query'),
 				title: this.title,
-				description: this.description
+				description: this.description,
+                qualityChartDescription: qualityChartDescription
 			}));
 
 			//Insert the loading template into the space where the charts will go
@@ -648,116 +648,197 @@ define(['jquery', 'underscore', 'backbone', 'd3', 'LineChart', 'BarChart', 'Donu
 			this.$('#data-coverage-year-range').text(yearRange);
 		},
 
-		drawMdqStats: function() {
-			if (!this.model.get("mdqStats")) {
-				return;
-			}
-			if (!this.model.get("mdqStatsTotal")) {
-				return;
-			}
-			var mdqCompositeStats= this.model.get("mdqStats").mdq_composite_d;
-
-			var mdqTotalStats = this.model.get("mdqStatsTotal").mdq_composite_d;
-
-			if (mdqTotalStats && mdqTotalStats.mean && mdqCompositeStats && mdqCompositeStats.mean) {
-				var diff = mdqCompositeStats.mean - mdqTotalStats.mean;
-				var repoAvg = (mdqTotalStats.mean*100).toFixed(0) + "%";
-
-				if (diff < 0) {
-					$("#mdq-percentile-container").text("Below repository average");
-					$("#mdq-percentile-icon").addClass("icon-thumbs-down");
-				}
-				if (diff > 0) {
-					$("#mdq-percentile-container").text("Above repository average");
-					$("#mdq-percentile-icon").addClass("icon-thumbs-up");
-				}
-				if (diff == 0) {
-					$("#mdq-percentile-container").text("At repository average");
-					$("#mdq-percentile-icon").addClass("icon-star");
-				}
-
-				// for the box plot
-				// top arrow for this view
-				$("#mdq-score-num").text((mdqCompositeStats.mean*100).toFixed(0) + "%");
-				$("#mdq-score").css(
-				{
-					  "margin-left": (mdqCompositeStats.mean*100).toFixed(0) + "%"
-				});
-				// the range
-				$("#mdq-box").css(
-				{
-					"width": ((mdqCompositeStats.max - mdqCompositeStats.min) * 100).toFixed(0) + "%",
-					"margin-left": (mdqCompositeStats.min*100).toFixed(0) + "%"
-				});
-				$("#mdq-box").attr("data-content", mdqCompositeStats.count + " scores range from " + (mdqCompositeStats.min*100).toFixed(0) + "%" + " to " + (mdqCompositeStats.max*100).toFixed(0) + "%");
-				// the bottom arrow for repo
-				$("#mdq-repo-score-num").text((mdqTotalStats.mean*100).toFixed(0) + "%");
-				$("#mdq-repo-score").css(
-				{
-					  "margin-left": (mdqTotalStats.mean*100).toFixed(0) + "%"
-				});
-
-			}
-
-			// now draw the chart
-			this.drawMdqFacets();
-
-		},
-
-		drawMdqFacets: function() {
-
-			var mdqCompositeStats= this.model.get("mdqStats").mdq_composite_d;
-
-			if (mdqCompositeStats) {
-				// keys are the facet values, values are the stats (min, max, mean, etc...)
-				var datasourceFacets = mdqCompositeStats.facets.mdq_metadata_datasource_s || {};
-				var formatIdFacets = mdqCompositeStats.facets.mdq_metadata_formatId_s || {};
-				var rightsHolderFacets = mdqCompositeStats.facets.mdq_metadata_rightsHolder_s || {};
-				var suiteIdFacets = mdqCompositeStats.facets.mdq_suiteId_s || {};
-				var funderFacets = mdqCompositeStats.facets.mdq_metadata_funder_sm || {};
-				var groupFacets = mdqCompositeStats.facets.mdq_metadata_group_sm || {};
-
-				if(!Object.keys(datasourceFacets).length &&
-						!Object.keys(formatIdFacets).length &&
-						!Object.keys(rightsHolderFacets).length &&
-						!Object.keys(suiteIdFacets).length &&
-						!Object.keys(funderFacets).length &&
-						!Object.keys(groupFacets).length)
-					return;
-
-				//this.drawMdqChart(datasourceFacets);
-				//this.drawMdqChart(rightsHolderFacets);
-				this.drawMdqChart(_.extend(formatIdFacets, datasourceFacets, suiteIdFacets, funderFacets, groupFacets));
-
-				//Unhide the quality chart
-				$("#quality-chart").show();
-			}
-		},
-
-		//Draw a bar chart for the slice
-		drawMdqChart: function(data){
+        //Draw a line chart for the FAIR suite
+        drawMdqChart: function(){
 
 			//Get the width of the chart by using the parent container width
-			var parentEl = this.$('.mdq-chart');
-			var width = parentEl.width() || null;
-
+            var parentEl = this.$('.quality-chart');
+            var width = parentEl.width() * .70 || null;			
+            var displayType = MetacatUI.appModel.get("mdqDisplayType")
+            var data = this.model.get('mdqStats');
+            
+            // TODO: display 'no data' in plot 
+            if (data === null || typeof data == "undefined" || data.length == 0) {
+                parentEl.hide();
+                return;
+            }
+            
+            // Are we usign the FAIR suite? 
+            var suiteId = MetacatUI.appModel.get('mdqSuiteIds')[0];
+            var regexSuiteId = RegExp("FAIR.suite.*");
+            if (displayType == "BoxPlot") {
 			var options = {
 					data: data,
-					formatFromSolrFacets: true,
-					solrFacetField: "mean",
-					id: "mdq-slice-chart",
-					yLabel: "mean score",
+                        id: "mdq-chart",
+                        yLabel: "Quality Score (percentage)",
 					yFormat: d3.format(",%"),
-					barClass: "packages",
-					roundedRect: true,
-					roundedRadius: 10,
-					barLabelClass: "packages",
+                        barClass: "quality",
+                        barLabelClass: "quality scores",
 					width: width
 				};
 
-			var barChart = new BarChart(options);
-			parentEl.html(barChart.render().el);
+                var boxPlot = new BoxPlot(options);
+                this.$('.mdq-chart').html(boxPlot.render().el);
+            } else if (displayType == "LineChart" && regexSuiteId.test(suiteId)) {
+                // FAIR Suite
+                //If there was no quality scores, draw a default, blank chart
+                //if(!this.model.get('mdqStats')){
+                if(!data || data.length == 0) {
+                    var lineChartView = new LineChart(
+                            {	  id: "mdq-chart",
+                                yLabel: "Quality score (percentage)",
+                             frequency: 1,
+                             cumulative: false,
+                                 width: this.$('.mdq-chart').width()
+                            });
 
+                    this.$('.mdq-chart').html(lineChartView.render().el);
+                    return;
+                }
+                
+                var plotData = _.map(data, function(obj) {
+                    return( {date: obj.date, count: obj.FindableAve} );
+                });
+            
+                //Create the line chart and draw the metadata line
+                // For DataONE FAIR suite, start with the data for 'Findable', as
+                // the LineChart can only accept data for one line at a time.
+                var lineChartView = new LineChart(
+                        {	  data: plotData,
+                  formatFromSolrFacets: false,
+                        cumulative: false,
+                                id: "mdq-chart",
+                         className: "mdq-fair-findable",
+                            yLabel: "Quality Score (percentage)",
+                        labelValue: "Quality: ",
+                        frequency: 0,
+                            radius: 2,
+                            width: width,
+                            labelDate: "m-y",
+                            max: 100
+                        });
+    
+                // Plot the first line, for FAIR Findable
+                this.$('.mdq-chart').html(lineChartView.render().el);
+
+                // ## var newView = lineChartView.render();
+                
+                // Plot the next line, for FAIR Accessible
+                plotData = _.map(data, function(obj) {
+                    return {date: obj.date, count: obj.AccessibleAve};
+                });
+                
+                lineChartView.className = "mdq-fair-accessible";
+                //lineChartView.labeValue = "Accessible";
+                lineChartView.addLine(plotData);
+                
+                // Plot the next line, for FAIR Interoperable
+                plotData = _.map(data, function(obj) {
+                    return {date: obj.date, count: obj.InteroperableAve};
+                });
+                
+                lineChartView.className = "mdq-fair-interoperable";
+                lineChartView.addLine(plotData);
+                
+                // Plot the next line, for FAIR Reusable
+                plotData = _.map(data, function(obj) {
+                    return {date: obj.date, count: obj.ReusableAve};
+                });
+                lineChartView.className = "mdq-fair-reusable";
+                lineChartView.addLine(plotData);
+                
+                var legendData = [
+                        { label: 'Reusable', class: 'mdq-fair-reusable' },
+                        { label: 'Interoperable', class: 'mdq-fair-interoperable' },
+                        { label: 'Accessible', class: 'mdq-fair-accessible' },
+                        { label: 'Findable', class: 'mdq-fair-findable'}
+                ];
+
+                lineChartView.addLegend(legendData);
+            } else if (displayType == "LineChart" && (RegExp("knb.*").test(suiteId) || RegExp("arctic.*").test(suiteId))) {
+                // Arctic Data Center, KNB
+                //If there was no quality scores, draw a default, blank chart
+                console.log("drawing arctic view");
+                if(!data || data.length == 0) {
+                    var lineChartView = new LineChart(
+                            {	  id: "mdq-chart",
+                                yLabel: "Quality score (percentage)",
+                             frequency: 1,
+                             cumulative: false,
+                                 width: this.$('.mdq-chart').width()
+                            });
+
+                    this.$('.mdq-chart').html(lineChartView.render().el);
+                    return;
+                }
+                
+                var plotData = _.map(data, function(obj) {
+                    return( {date: obj.date, count: obj.discoveryAve} );
+                });
+            
+                //Create the line chart and draw the metadata line
+                var lineChartView = new LineChart({
+                        data: plotData,
+                        formatFromSolrFacets: false,
+                        cumulative: false,
+                                id: "mdq-chart",
+                         className: "mdq-discovery",
+                            yLabel: "Quality Score (percentage)",
+                        labelValue: "Quality: ",
+                        frequency: 0,
+                            radius: 2,
+                            width: width,
+                            labelDate: "m-y",
+                            max: 100
+                });
+    
+                this.$('.mdq-chart').html(lineChartView.render().el);
+
+                plotData = _.map(data, function(obj) {
+                    return {date: obj.date, count: obj.interpretationAve};
+                });
+                
+                lineChartView.className = "mdq-interpretation";
+                lineChartView.addLine(plotData);
+                
+                plotData = _.map(data, function(obj) {
+                    return {date: obj.date, count: obj.identificationAve};
+                });
+                
+                lineChartView.className = "mdq-identification";
+                lineChartView.addLine(plotData);
+                
+                var legendData = [
+                        { label: 'Interpretation', class: 'mdq-interpretation' },
+                        { label: 'Identification', class: 'mdq-identification' },
+                        { label: 'Discovery', class: 'mdq-discovery' }
+                ];
+
+                lineChartView.addLegend(legendData);
+            } else {
+                // Plot the overall score
+                plotData = _.map(data, function(obj) {
+                    return {date: obj.date, count: obj.mean};
+                });
+
+                var lineChartView = new LineChart(
+                        {	  data: plotData,
+                  formatFromSolrFacets: false,
+                        cumulative: false,
+                                id: "mdq-chart",
+                         className: "data",
+                            yLabel: "Quality Score Overall (percentage)",
+                        labelValue: "Quality: ",
+                        frequency: 1,
+                            radius: 2,
+                            width: width,
+                            labelDate: "m-y",
+                            max: 100
+                        });
+    
+                // Plot the first line, for FAIR Findable
+                this.$('.mdq-chart').html(lineChartView.render().el);
+            }
 		},
 
 		/*
