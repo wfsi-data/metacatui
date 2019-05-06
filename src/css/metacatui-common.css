@@ -1116,6 +1116,11 @@ img.icon{
 	opacity: 0.50;
 }
 
+/* Metadata Quality Metrics (in profile display */
+.stripe.quality-chart {
+    height: 325px;
+}
+
 .list-group-item.success .icon-caret-right,
 .list-group-item.success .icon-caret-down,
 .list-group-item.warning .icon-caret-right,

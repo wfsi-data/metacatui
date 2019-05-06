@@ -2490,3 +2490,91 @@ img[src*="gstatic.com/"], img[src*="googleapis.com/"]  {
   background-color: #FFFFFF;
   color: #1C6E84;
 }
+
+/* #mdq-chart .line {
+  color: #C70A61;
+  stroke: #C70A61;
+  fill: none;
+} */
+
+/* #mdq-chart .data .point {
+  color: #C70A61;
+  stroke: #C70A61;
+  fill: #C70A61;
+} */
+
+/* Metadata Quality Metrics (in profile display */
+.stripe.quality-chart {
+    height: 450px;
+}
+
+.stripe.quality-chart section.chart-title {
+    width: 280px;
+}
+
+#mdq-chart.line-chart {
+    width: 800px;
+}
+#mdq-chart .legend text {
+    font-size: 10px;
+    font-weight: 200;
+    opacity: 0.9;
+}
+
+#mdq-chart .mdq-fair-findable {
+  color: #FF582D;
+  stroke: #FF582D;
+  fill: none;
+}
+
+#mdq-chart .mdq-fair-accessible {
+  color: #C70A61;
+  stroke: #C70A61;
+  fill: none
+}
+
+#mdq-chart .mdq-fair-interoperable {
+  color: #1A6379;
+  stroke: #1A6379;
+  fill: none;
+}
+
+#mdq-chart .mdq-fair-reusable {
+  color: #60C5E4;
+  stroke: #60C5E4;
+  fill: none;
+}
+
+#mdq-chart .mdq-fair-findable.point {
+  fill: #FF582D;
+}
+
+#mdq-chart .mdq-fair-accessible.point {
+  fill: #C70A61;
+}
+
+#mdq-chart .mdq-fair-interoperable.point {
+  fill: #1A6379;
+}
+
+#mdq-chart .mdq-fair-reusable.point {
+  fill: #60C5E4;
+} 
+
+#mdq-chart .legend rect.mdq-fair-findable {
+  fill: #FF582D;
+}
+
+#mdq-chart .legend rect.mdq-fair-accessible {
+  fill: #C70A61;
+}
+
+#mdq-chart .legend rect.mdq-fair-interoperable {
+  fill: #1A6379;
+}
+
+#mdq-chart .legend rect.mdq-fair-reusable {
+  fill: #60C5E4;
+}
+
+

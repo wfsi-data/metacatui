@@ -1380,6 +1380,67 @@ MDQ items
 	display: none;
 }
 
+profile .strip.quality-chart section.chart-title {
+    width: 600px;
+}
+
+/* Metadata Quality Metrics (in profile display */
+.stripe.quality-chart {
+    height: 575px;
+}
+
+#mdq-chart.line-chart {
+    width: 800px;
+}
+
+#mdq-chart .legend text {
+    font-size: 10px;
+    font-weight: 200;
+    opacity: 0.9;
+}
+
+#mdq-chart .mdq-discovery {
+  color: #C70A61;
+  stroke: #C70A61;
+  fill: none
+}
+
+#mdq-chart .mdq-identification {
+  color: #1A6379;
+  stroke: #1A6379;
+  fill: none;
+}
+
+#mdq-chart .mdq-interpretation {
+  color: #60C5E4;
+  stroke: #60C5E4;
+  fill: none;
+}
+
+#mdq-chart .mdq-discovery.point {
+  fill: #C70A61;
+}
+
+#mdq-chart .mdq-identification.point {
+  fill: #1A6379;
+}
+
+#mdq-chart .mdq-interpretation.point {
+  fill: #60C5E4;
+}
+
+#mdq-chart .legend rect.mdq-discovery {
+  fill: #C70A61;
+}
+
+#mdq-chart .legend rect.mdq-identification {
+  fill: #1A6379;
+}
+
+#mdq-chart .legend rect.mdq-interpretation {
+  fill: #60C5E4;
+}
+
 /* Metadata Index CSS
 -------------------------------------------------- */
 
