@@ -8,10 +8,10 @@ define(['jquery', 'underscore', 'backbone', 'd3', 'DonutChart', 'views/CitationV
 
 		el: '#Content',
 
-		events: {
+		//events: {
 			//"click input[type='submit']"	:	"submitForm"
-			"change #suiteId" : "switchSuite"
-		},
+			//"change #suiteId" : "switchSuite"
+		//},
 
 		url: null,
 		pid: null,
