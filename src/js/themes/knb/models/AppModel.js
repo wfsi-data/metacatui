@@ -124,8 +124,7 @@ define(['jquery', 'underscore', 'backbone'],
       groupsUrl: null,
       portalUrl: null,
 
-      //mdqBaseUrl: "https://docker-ucsb-4.dataone.org:30443/quality",
-      mdqBaseUrl: "http://docker-dev-ucsb-1.test.dataone.org:30080/quality",
+      mdqBaseUrl: "https://docker-ucsb-4.dataone.org:30443/quality",
       // Quality Suites for the dataset quality chart
       // suidIds and suiteLables must be specified as a list, even if only one suite is available.
       suiteIds: ["knb.suite.1"],
