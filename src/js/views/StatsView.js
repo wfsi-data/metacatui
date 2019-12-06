@@ -12,12 +12,12 @@ define(['jquery', 'underscore', 'backbone', 'd3', 'models/Stats',
     model: null,
 
     hideUpdatesChart: false,
-    
-    /**    
+
+    /**
      * Whether or not to show the graph that indicated the assessment score for all metadata in the query.
      * @type {boolean}
-     */     
-    hideMetadataAssessment: false,
+     */
+    hideMetadataQuality: false,
 
 		template: _.template(profileTemplate),
 
@@ -35,8 +35,7 @@ define(['jquery', 'underscore', 'backbone', 'd3', 'models/Stats',
 				this.el = options.el;
 
       this.hideUpdatesChart = (options.hideUpdatesChart === true)? true : false;
-      
-      //this.hideMetadataAssessment = (typeof options.hideMetadataAssessment === "undefined") ? true : options.hideMetadataAssessment;
+      this.showMetadataQuality = (options.showMetadataQuality === true)? true : false;
 
       this.model = options.model || null;
 		},
@@ -69,11 +68,13 @@ define(['jquery', 'underscore', 'backbone', 'd3', 'models/Stats',
 			this.listenTo(this.model, 'change:downloads', 	  this.drawDownloadTitle);
 			this.listenTo(this.model, 'change:lastEndDate',	  	  this.drawCoverageChartTitle);
 
-			// mdq
-			this.listenTo(this.model, 'change:mdqStats',	  	  this.drawMdqStats);
+      if( this.showMetadataQuality ){
+  			// mdq
+  			this.listenTo(this.model, 'change:mdqStats',	  	  this.drawMdqStats);
+      }
 
 			this.listenTo(this.model, "change:totalCount", this.showNoActivity);
-      
+
 
 			// set the header type
 			MetacatUI.appModel.set('headerType', 'default');
@@ -85,20 +86,20 @@ define(['jquery', 'underscore', 'backbone', 'd3', 'models/Stats',
 				description: this.description,
 				hideUpdatesChart: this.hideUpdatesChart,
 				hideDownloadsChart: !this.model.get("supportDownloads"),
-				hideMetadataAssessment: this.hideMetadataAssessment
+				showMetadataQuality: this.showMetadataQuality
 			}));
-      
+
       // Insert the metadata assessment chart
-      if(!this.hideMetadataAssessment){
+      if(this.showMetadataQuality){
         this.listenTo(this.model, "change:mdqScoresImage", this.drawMetadataAssessment);
         this.listenTo(this.model, "change:mdqScoresError", function () {
                 this.$el.find(".stripe.metadata-assessment").remove();
                 var msg = this.model.get("mdqScoresError");
-                MetacatUI.appView.showAlert("Metadata Assessment Metrics are not available for this collection: " + msg, 
+                MetacatUI.appView.showAlert("Metadata Assessment Metrics are not available for this collection: " + msg,
                     "alert-error", this.$("#metadata-assesment-graphic"), 4000, {remove: true});
             });
       }
-            
+
 			//Insert the loading template into the space where the charts will go
 			if(d3){
 				this.$(".chart").html(this.loadingTemplate);
@@ -112,7 +113,7 @@ define(['jquery', 'underscore', 'backbone', 'd3', 'models/Stats',
 					email: false
 				}));
 			}
-      
+
       this.$el.data("view", this);
 
 			//Start retrieving data from Solr
@@ -120,11 +121,11 @@ define(['jquery', 'underscore', 'backbone', 'd3', 'models/Stats',
 
 			return this;
 		},
-    
-    
-    /**    
+
+
+    /**
         * drawMetadataAssessment - Insert the metadata assessment image into the view
-     */     
+     */
     drawMetadataAssessment: function(){
       try {
         var scoresImage = this.model.get("mdqScoresImage");

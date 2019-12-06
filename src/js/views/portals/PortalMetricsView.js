@@ -118,7 +118,8 @@ define(["jquery",
             var statsModel = new StatsModel({
               query: statsSearchModel.getQuery(),
               searchModel: statsSearchModel,
-              supportDownloads: false
+              supportDownloads: false,
+              includeMetadataQuality: MetacatUI.appModel.get("showMetadataQualityInPortals")
             });
 
             // Add a stats view
@@ -127,9 +128,7 @@ define(["jquery",
                 description: description,
                 el: document.createElement("div"),
                 model: statsModel,
-                // @Peter TODO: change the following to false when StatsView.js
-                // is ready to render the metadata assessment image:
-                hideMetadataAssessment: true
+                showMetadataQuality: MetacatUI.appModel.get("showMetadataQualityInPortals")
             });
 
             //Insert the StatsView into this view

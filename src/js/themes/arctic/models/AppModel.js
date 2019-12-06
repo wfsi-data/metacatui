@@ -122,11 +122,20 @@ define(['jquery', 'underscore', 'backbone'],
       //signInUrlLdap: null,
       tokenUrl: null,
 
+      /**
+      * If true, metadata quality scores will be displayed in the Metrics section of portals
+      * @type {boolean}
+      */
+      showMetadataQualityInPortals: true,
+      /**
+      * The base URL that resolves to the DataONE Metadata Quality service
+      * @type {string}
+      */
       mdqBaseUrl: "https://docker-ucsb-4.dataone.org:30443/quality",
       // suidIds and suiteLables must be specified as a list, even if only one suite is available.
       suiteIds: ["arctic.data.center.suite.1"],
       suiteLabels: ["Arctic Data Center Conformance Suite v1.0"],
-      // Quality suites for aggregated quality scores (i.e. metrics tab) 
+      // Quality suites for aggregated quality scores (i.e. metrics tab)
       aggregatedSuiteIds: ["FAIR.suite.1"],
       aggregatedSuiteLabels: ["FAIR Suite v1.0"],
 

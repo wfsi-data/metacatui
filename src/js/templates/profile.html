@@ -13,8 +13,8 @@
 				<div id="total-datasets" class="span6 show-loading"></div>
 				<div class="span6">
 					<p>
-						The total number of publicly-available metadata records. 
-						Only the latest version of each metadata record is counted. 
+						The total number of publicly-available metadata records.
+						Only the latest version of each metadata record is counted.
 						A "dataset" here is defined by a single metadata record which
 						may be packaged with one or more data files.
 					</p>
@@ -25,14 +25,14 @@
 				<div class="span6">
 					<p>
 						The volume of all publicly-available metadata and data files
-						in this repository. Only the latest version of each file is 
+						in this repository. Only the latest version of each file is
 						included.
 					</p>
 				</div>
 			</div>
 		</section>
 	</section>
-	<% if(!hideMetadataAssessment){ %>
+	<% if(showMetadataQuality){ %>
 	<section class="stripe metadata-assessment">
 		<section class="charts">
 			<h3>Metadata Assessment</h3>
@@ -51,8 +51,8 @@
 				<div id="downloads-title" class="show-loading span4"></div>
 				<div class="span8">
 					<h3>Downloads</h3>
-					<p>The number of individual metadata and data files downloaded over time. These download counts are partially 
-					<a href="http://www.projectcounter.org/" target="_blank">COUNTER</a> compliant, meaning that downloads from some Internet robots and 
+					<p>The number of individual metadata and data files downloaded over time. These download counts are partially
+					<a href="http://www.projectcounter.org/" target="_blank">COUNTER</a> compliant, meaning that downloads from some Internet robots and
 					repeat downloads within a certain time window are excluded.</p>
 				</div>
 			</section>
@@ -77,7 +77,7 @@
 	<% } %>
 	<section class="stripe format-charts-container">
 		<section class="charts">
-			<section class="chart-title">	
+			<section class="chart-title">
 				<div id="formats-title"></div>
 				<h3>File formats</h3>
 				<p>We breakdown the types of metadata and data files uploaded. Only the most recent version of each file is included.</p>
@@ -103,7 +103,7 @@
 	</section>
 	<!-- <section class="stripe" id="quality-chart">
 		<section class="charts">
-			<section>	
+			<section>
 				<h2>Metadata quality metrics</h2>
 				<p>A summary of the MDQ scores are included below</p>
 			</section>

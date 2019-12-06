@@ -38,10 +38,16 @@ define(['jquery', 'underscore', 'backbone', 'models/LogsSearch'],
 			temporalCoverage: 0,
 			coverageYears: 0,
 
+      /**
+      * If true, gets the Metadata Quality (mdq) statistics. Metadata quality stats are turned off by default.
+      * @type {boolean}
+      */
+      includeMetadataQuality: false,
 			// complex objects like this
 			// {mdq_composite_d: {"min":0.25,"max":1.0,"count":11,"missing":0,"sum":6.682560903149138,"sumOfSquares":4.8545478685001076,"mean":0.6075055366499217,"stddev":0.2819317507548068}}
 			mdqStats: {},
 			mdqStatsTotal: {},
+
 
       //HTTP GET requests are typically limited to 2,083 characters. So query lengths
       // should have this maximum before switching over to HTTP POST
@@ -117,7 +123,7 @@ define(['jquery', 'underscore', 'backbone', 'models/LogsSearch'],
 			this.getFormatTypes();
 
 			this.getDownloadDates();
-            this.getMdqScores();
+      this.getMdqScores();
 			//this.getMdqStatsTotal();
 			//this.getDataDownloadDates();
 			//this.getMetadataDownloadDates();
@@ -1103,6 +1109,12 @@ define(['jquery', 'underscore', 'backbone', 'models/LogsSearch'],
 		** getMdqStats will query SOLR for MDQ stats and will update the model accordingly
 		**/
 		getMdqStats: function(){
+
+      //Exit if metadata quality is disabled
+      if( !this.get("includeMetadataQuality") ){
+        return;
+      }
+
 			var model = this;
 
 			//Build the query to get the MDQ stats
@@ -1176,6 +1188,12 @@ define(['jquery', 'underscore', 'backbone', 'models/LogsSearch'],
     ** getMdqStatsTotal will query SOLR for ALL MDQ stats and will update the model accordingly
     **/
     getMdqStatsTotal: function(){
+
+      //Exit if metadata quality is disabled
+      if( !this.get("includeMetadataQuality") ){
+        return;
+      }
+
       var model = this;
 
       //Build the query to get ALL MDQ stats - not filtered!
@@ -1238,7 +1256,7 @@ define(['jquery', 'underscore', 'backbone', 'models/LogsSearch'],
 
       $.ajax(_.extend(requestSettings, MetacatUI.appUserModel.createAjaxSettings()));
     },
-    
+
     imgLoad: function(url) {
         // Create new promise with the Promise() constructor;
         // This has as its argument a function with two parameters, resolve and reject
@@ -1248,7 +1266,7 @@ define(['jquery', 'underscore', 'backbone', 'models/LogsSearch'],
             var request = new XMLHttpRequest();
             request.open('GET', url);
             request.responseType = 'blob';
-            
+
             // When the request loads, check whether it was successful
             request.onload = function () {
                 if (request.status === 200) {
@@ -1260,26 +1278,31 @@ define(['jquery', 'underscore', 'backbone', 'models/LogsSearch'],
                     model.set('mdqScoresError', request.statusText);
                 }
             };
-          
+
             request.onerror = function () {
                 console.log("onerror");
                 // Also deal with the case when the entire request fails to begin with
                 // This is probably a network error, so reject the promise with an appropriate message
                 reject(new Error('There was a network error.'));
             };
-          
+
             // Send the request
             request.send();
         });
     },
 
     getMdqScores: function(){
+      //Exit if metadata quality is disabled
+      if( !this.get("includeMetadataQuality") ){
+        return;
+      }
+
         // Get a reference to the body element, and create a new image object
         var body = document.querySelector('body'),
         myImage = new Image();
         var model = this;
         myImage.crossOrigin = ""; // or "anonymous"
-        
+
         // Call the function with the URL we want to load, but then chain the
         // promise then() method on to the end of it. This contains two callbacks
         var serviceUrl = MetacatUI.appModel.get('mdqScoresServiceUrl');
