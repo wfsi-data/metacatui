@@ -12,6 +12,12 @@ define(['jquery', 'underscore', 'backbone', 'models/SolrResult', 'models/Package
 		tagName:  'div',
 		className: 'row-fluid result-row',
 
+    /**
+    * The MetricsModel for this search result
+    * @type {MetricsModel}
+    */
+    metricsModel: null,
+
 		// Cache the template function for a single item.
 		//template: _.template($('#result-template').html()),
 		template: _.template(ResultItemTemplate),
@@ -166,7 +172,7 @@ define(['jquery', 'underscore', 'backbone', 'models/SolrResult', 'models/Package
 
 			// Get the individual dataset metics only if the response from Metrics Service API
 			// has non-zero array sizes
-			if(datasets.length > 0) {
+			if( typeof datasets !== "undefined" && datasets.length > 0) {
 				var index = datasets.indexOf(this.model.get("id"));
 				viewCount = views[index];
 				downloadCount = downloads[index];
@@ -341,7 +347,11 @@ define(['jquery', 'underscore', 'backbone', 'models/SolrResult', 'models/Package
 		},
 
 		onClose: function(){
-			this.clear();
+      this.clear();
+
+      if( this.metricsModel ){
+        this.stopListening(this.metricsModel);
+      }
 		}
 	});
 	return SearchResultView;

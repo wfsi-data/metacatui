@@ -21,12 +21,12 @@ define(["underscore", "jquery", "backbone", "models/filters/Filter"],
             /**
             * Inherits all default properties of {@link Filter}
             * @property {string[]} geohashes - The array of geohashes used to spatially constrain the search
-            * @property {object} groupedGeohashes -The same geohash values, grouped by geohash level (e.g. 1,2,3...). Complete geohash groups (of 32) are consolidated to the level above.
+            * @property {object} geohashGroups -The same geohash values, grouped by geohash level (e.g. 1,2,3...). Complete geohash groups (of 32) are consolidated to the level above.
             * @property {number} east The easternmost longitude of the represented bounding box
             * @property {number} west The westernmost longitude of the represented bounding box
             * @property {number} north The northernmost latitude of the represented bounding box
             * @property {number} south The southernmost latitude of the represented bounding box
-            * @property {number} geohashLvel The default precision level of the geohash-based search
+            * @property {number} geohashLevel The default precision level of the geohash-based search
             */
             defaults: function() {
                 return _.extend(Filter.prototype.defaults(), {
@@ -36,7 +36,7 @@ define(["underscore", "jquery", "backbone", "models/filters/Filter"],
                     north: null,
                     south: null,
                     geohashLevel: null,
-                    groupedGeohashes: {},
+                    geohashGroups: {},
                     label: "Limit search to the map area",
                     icon: "globe",
                     operator: "OR",
@@ -48,7 +48,9 @@ define(["underscore", "jquery", "backbone", "models/filters/Filter"],
              * Initialize the model, calling super
              */
             initialize: function(attributes, options) {
-                this.on("change:geohashes", this.groupGeohashes);
+              Filter.prototype.initialize.call(this, attributes, options);
+
+              this.on("change:geohashes", this.groupGeohashes);
             },
 
             /**
@@ -96,6 +98,25 @@ define(["underscore", "jquery", "backbone", "models/filters/Filter"],
             /**
             * @inheritdoc
             */
+            parse: function(xml){
+
+              //Parse the XML using the parent class parse method
+              var filterJSON = Filter.prototype.parse.call(this, xml);
+
+              //Now parse all of the unique/specialized parts of the SpatialFilter
+
+              //Get the geohash groups
+              filterJSON.geohashGroups = this.getGroupedGeohashes(filterJSON.values);
+              //Get all of the geohash values
+              filterJSON.geohashes = _.flatten(_.values(filterJSON.geohashGroups));
+
+              return filterJSON;
+
+            },
+
+            /**
+            * @inheritdoc
+            */
             updateDOM: function(options){
 
               try{
@@ -126,40 +147,64 @@ define(["underscore", "jquery", "backbone", "models/filters/Filter"],
             },
 
             /**
+            * Consolidates geohashes into groups based on their geohash level
+            * @param {string[]} geohashes - A list of geohash strings to group by geohash level
+            * @return {object} A literal object where the geohash levels are the keys and the values are the geohashes
+            */
+            getGroupedGeohashes: function(geohashes){
+              //If no geohashes are supplied, get the geohashes from the model attributes
+              if( typeof geohashes === "undefined" || !Array.isArray(geohashes) ){
+                var geohashes = this.get("geohashes");
+              }
+
+              //If there are no geohashes, return an empty object since there is nothing to group!
+              if( geohashes.length == 0 ){
+                return {};
+              }
+
+              var geohashGroups = {};
+              var sortedGeohashes = geohashes.sort();
+              var groupedGeohashes = _.groupBy(sortedGeohashes, function(geohash) {
+                  return geohash.substring(0, geohash.length - 1);
+              });
+              //Find groups of geohashes that makeup a complete geohash tile (32)
+              // so we can shorten the query
+              var completeGroups = _.filter(Object.keys(groupedGeohashes), function(group) {
+                  return groupedGeohashes[group].length == 32;
+              });
+
+              // Find groups that fall short of 32 tiles
+              var incompleteGroups = [];
+              _.each(
+                  _.filter(Object.keys(groupedGeohashes), function(group) {
+                      return (groupedGeohashes[group].length < 32)
+                  }), function(incomplete) {
+                      incompleteGroups.push(groupedGeohashes[incomplete]);
+                  }
+              );
+              incompleteGroups = _.flatten(incompleteGroups);
+
+              // Add both complete and incomplete groups to the instance property
+              if((typeof incompleteGroups !== "undefined") && (incompleteGroups.length > 0)) {
+                  geohashGroups[incompleteGroups[0].length.toString()] = incompleteGroups;
+              }
+              if((typeof completeGroups !== "undefined") && (completeGroups.length > 0)) {
+                  geohashGroups[completeGroups[0].length.toString()] = completeGroups;
+              }
+
+              return geohashGroups;
+            },
+
+            /**
              *  Consolidates geohashes into groups based on their geohash level
              *  and updates the model with those groups. The fields and values attributes
              *  on this model are also updated with the geohashes.
+             * @param {string[]} geohashes - A list of geohash strings to group by geohash level
              */
-            groupGeohashes: function() {
-                var geohashGroups = {};
-                var sortedGeohashes = this.get("geohashes").sort();
-                var groupedGeohashes = _.groupBy(sortedGeohashes, function(geohash) {
-                    return geohash.substring(0, geohash.length - 1);
-                });
-                //Find groups of geohashes that makeup a complete geohash tile (32)
-                // so we can shorten the query
-                var completeGroups = _.filter(Object.keys(groupedGeohashes), function(group) {
-                    return groupedGeohashes[group].length == 32;
-                });
+            groupGeohashes: function(geohashes) {
 
-                // Find groups that fall short of 32 tiles
-                var incompleteGroups = [];
-                _.each(
-                    _.filter(Object.keys(groupedGeohashes), function(group) {
-                        return (groupedGeohashes[group].length < 32)
-                    }), function(incomplete) {
-                        incompleteGroups.push(groupedGeohashes[incomplete]);
-                    }
-                );
-                incompleteGroups = _.flatten(incompleteGroups);
+                var geohashGroups = this.getGroupedGeohashes(geohashes);
 
-                // Add both complete and incomplete groups to the instance property
-                if((typeof incompleteGroups !== "undefined") && (incompleteGroups.length > 0)) {
-                    geohashGroups[incompleteGroups[0].length.toString()] = incompleteGroups;
-                }
-                if((typeof completeGroups !== "undefined") && (completeGroups.length > 0)) {
-                    geohashGroups[completeGroups[0].length.toString()] = completeGroups;
-                }
                 this.set("geohashGroups", geohashGroups); // Triggers a change event
 
                 //Determine the field and value attributes
@@ -180,6 +225,8 @@ define(["underscore", "jquery", "backbone", "models/filters/Filter"],
             resetValue: function(){
               this.set("fields", this.defaults().fields);
               this.set("values", this.defaults().values);
+              this.set("geohashes", this.defaults().geohashes);
+              this.set("geohashGroups", this.defaults().geohashGroups);
             }
         });
         return SpatialFilter;

@@ -1,7 +1,7 @@
 define(["jquery", "underscore", "backbone", "models/filters/Filter", "models/filters/BooleanFilter",
     "models/filters/ChoiceFilter", "models/filters/DateFilter", "models/filters/NumericFilter",
-    "models/filters/ToggleFilter"],
-    function($, _, Backbone, Filter, BooleanFilter, ChoiceFilter, DateFilter, NumericFilter, ToggleFilter) {
+    "models/filters/ToggleFilter", "models/filters/SpatialFilter"],
+    function($, _, Backbone, Filter, BooleanFilter, ChoiceFilter, DateFilter, NumericFilter, ToggleFilter, SpatialFilter) {
         "use strict";
 
         /**
@@ -52,7 +52,15 @@ define(["jquery", "underscore", "backbone", "models/filters/Filter", "models/fil
                     return new NumericFilter(attrs, options);
 
                   default:
-                    return new Filter(attrs, options);
+                    //If the field for this filter is a geohash field, return a SpatialFilter
+                    var field = $(attrs.objectDOM).children("field").first().text();
+                    if( field.match(/geohash_/) ){
+                      return new SpatialFilter(attrs, options);
+                    }
+                    //Default to a Filter
+                    else{
+                      return new Filter(attrs, options);
+                    }
                 }
               }
 

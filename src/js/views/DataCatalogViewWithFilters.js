@@ -121,13 +121,13 @@ define(["jquery",
                 templateVars = {
                     gmaps: gmaps,
                     mode: MetacatUI.appModel.get("searchMode"),
-                    useMapBounds: this.searchModel.get("useGeohash"),
+                    //useMapBounds: //this.searchModel.get("useGeohash"),
                     username: MetacatUI.appUserModel.get("username"),
                     isMySearch: (_.indexOf(this.searchModel.get("username"), MetacatUI.appUserModel.get("username")) > -1),
                     loading: loadingHTML,
                     searchModelRef: this.searchModel,
                     searchResultsRef: this.searchResults,
-                    dataSourceTitle: (MetacatUI.theme == "dataone") ? "Member Node" : "Data source"
+                    dataSourceTitle: (MetacatUI.appModel.get("theme") == "dataone") ? "Member Node" : "Data source"
                 }
                 compiledEl =
                     this.template(_.extend(this.searchModel.toJSON(), templateVars));
@@ -337,24 +337,43 @@ define(["jquery",
 
             /**
              * Toggle the map filter to include or exclude it from the Solr query
+             * @param {Event} [event] - An event after which to toggle the map filter
              */
             toggleMapFilter: function(event) {
-                var toggleInput = this.$("input" + this.mapFilterToggle);
-                if ((typeof toggleInput === "undefined") || !toggleInput) return;
 
+                //Get the toggle checkbox
+                var toggleInput = this.$("input" + this.mapFilterToggle);
+                if ((typeof toggleInput === "undefined") || !toggleInput)
+                  return;
+
+                //Is it checked?
                 var isOn = $(toggleInput).prop("checked");
 
                 // If the user clicked on the label, then change the checkbox for them
                 if (event && event.target.tagName != "INPUT") {
-                    isOn = !isOn;
-                    toggleInput.prop("checked", isOn);
+                  isOn = !isOn;
+                  toggleInput.prop("checked", isOn);
                 }
 
+                //if the map filter was turned off, remove the SpatialFilter from the Filters collection
+                if( !isOn ){
+                  var spatialFilter = _.findWhere(this.searchModel.get("filters").models, {type: "SpatialFilter"});
+
+                  if( spatialFilter ){
+                    spatialFilter.resetValue();
+                  }
+                }
+
+                this.allowSearch = true;
+                google.maps.event.trigger(this.mapModel.get("map"), "idle");
+
+/*
+                //Get the SpatialFilter from the Filters collection
                 var spatialFilter = _.findWhere(this.searchModel.get("filters").models, {type: "SpatialFilter"});
 
+                //If the map filter was turned on,
                 if (isOn) {
-                    this.searchModel.set("useGeohash", true);
-
+                    //Show the applied filter element
                     if( this.filterGroupsView && spatialFilter ){
 
                       this.filterGroupsView.addCustomAppliedFilter(spatialFilter);
@@ -362,7 +381,7 @@ define(["jquery",
                     }
 
                 } else {
-                    this.searchModel.set("useGeohash", false);
+                  //  this.searchModel.set("useGeohash", false);
                     // Remove the spatial filter from the collection
                     this.searchModel.get("filters").remove(spatialFilter);
 
@@ -380,6 +399,7 @@ define(["jquery",
                     var action = isOn ? "on" : "off";
                     ga("send", "event", "map", action);
                 }
+                */
             },
 
             /**
@@ -515,12 +535,11 @@ define(["jquery",
 
                 // Get the existing spatial filter if it exists
                 if (this.searchModel.get("filters") &&
-                    this.searchModel.get("filters")
-                        .where({type: "SpatialFilter"}).length > 0) {
-                    spatialFilter = this.searchModel.get("filters")
-                        .where({type: "SpatialFilter"})[0];
+                    _.findWhere(this.searchModel.get("filters").models, {type: "SpatialFilter"})) {
+                    spatialFilter = _.findWhere(this.searchModel.get("filters").models, {type: "SpatialFilter"});
                 } else {
                     spatialFilter = new SpatialFilter();
+                    this.searchModel.get("filters").add(spatialFilter);
                 }
 
                 // Store references
@@ -549,17 +568,34 @@ define(["jquery",
 
                         // If the map is at the minZoom, i.e. zoomed out all the way so the whole world is visible, do not apply the spatial filter
                         if (catalogViewRef.map.getZoom() == mapOptions.minZoom) {
+
+                            //If the user has never zoomed on the map yet (i.e. this is the initial rendering of the map)
                             if (!catalogViewRef.hasZoomed) {
+
+                                //Set the map center as the lat,long point that's configured in the MapModel
                                 if (needsRecentered && !catalogViewRef.hasDragged) {
-                                    catalogViewRef.mapModel.get("map").setCenter(savedMapCenter);
+                                  //Set the center of the map
+                                  catalogViewRef.mapModel.get("map").setCenter(savedMapCenter);
                                 }
+
+                                //If there is a SpatialFilter with a value, render the applied filter
+                                if( spatialFilter.get("geohashes").length ){
+                                  catalogViewRef.renderSpatialAppliedFilter(spatialFilter);
+                                }
+                                else{
+                                  catalogViewRef.filterGroupsView.removeCustomAppliedFilter(spatialFilter);
+                                }
+
                                 return;
                             }
+                            //If the user has zoomed all the way out to the minimum zoom, reset the map
+                            else{
+                              //Hide the map filter toggle element
+                              catalogViewRef.$(catalogViewRef.mapFilterToggle).hide();
+                              //Reset the map
+                              catalogViewRef.resetMap();
+                            }
 
-                            //Hide the map filter toggle element
-                            catalogViewRef.$(catalogViewRef.mapFilterToggle).hide();
-
-                            catalogViewRef.resetMap();
                         } else {
                             // If the user has not zoomed or dragged to a new area of the map yet
                             // and our map is off-center, recenter it
@@ -607,27 +643,9 @@ define(["jquery",
                             });
 
                             // Add the spatial filter to the filters collection if enabled
-                            if ( catalogViewRef.searchModel.get("useGeohash") ) {
+                            if ( spatialFilter.hasChangedValues() ){//catalogViewRef.searchModel.get("useGeohash") ) {
 
-                                catalogViewRef.searchModel.get("filters").add(spatialFilter);
-
-                                if( catalogViewRef.filterGroupsView && spatialFilter ){
-                                  catalogViewRef.filterGroupsView.addCustomAppliedFilter(spatialFilter);
-
-                                  //When the custom spatial filter is removed in the UI, toggle the map filter
-                                  catalogViewRef.listenTo( catalogViewRef.filterGroupsView, "customAppliedFilterRemoved", function(removedFilter){
-
-                                      if( removedFilter.type == "SpatialFilter" ){
-
-                                        //Uncheck the map filter on the map itself
-                                        catalogViewRef.$(".toggle-map-filter").prop("checked", false);
-                                        catalogViewRef.toggleMapFilter();
-
-                                      }
-
-                                  });
-
-                                }
+                                catalogViewRef.renderSpatialAppliedFilter(spatialFilter);
 
                             } else {
                                 // If we have zoomed but have not added or removed filters, we
@@ -637,6 +655,7 @@ define(["jquery",
                                 }
                             }
                         }
+
                         // Reset to the first page
                         if (catalogViewRef.hasZoomed) {
                             MetacatUI.appModel.set("page", 0);
@@ -675,6 +694,36 @@ define(["jquery",
                         catalogViewRef.allowSearch = true;
                     }
                 });
+            },
+
+            renderSpatialAppliedFilter: function(spatialFilter){
+              if( typeof spatialFilter === "undefined" ){
+                return;
+              }
+              else if( this.filterGroupsView && spatialFilter ){
+
+                //Add the applied filter element to the page
+                this.filterGroupsView.addCustomAppliedFilter(spatialFilter);
+
+                //Check the map toggle that is displayed on top of the map
+                this.$(this.mapFilterToggle).prop("checked", true).show();
+
+                //When the custom spatial filter is removed in the UI, toggle the map filter
+                this.listenTo( this.filterGroupsView, "customAppliedFilterRemoved", function(removedFilter){
+
+                    if( removedFilter.type == "SpatialFilter" ){
+
+                      //Reset the SpatialFilter
+                      removedFilter.resetValue();
+                      //Uncheck the map filter on the map itself
+                      this.$(this.mapFilterToggle).prop("checked", false).hide();
+                    //  this.toggleMapFilter();
+
+                    }
+
+                });
+
+              }
             }
         });
         return DataCatalogViewWithFilters;

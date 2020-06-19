@@ -204,7 +204,7 @@ define(['jquery', 'underscore', 'backbone',
 
     },
 
-    /*
+    /**
     * Renders the section of the view that will display the currently-applied filters
     */
     renderAppliedFiltersSection: function(){
@@ -229,7 +229,7 @@ define(['jquery', 'underscore', 'backbone',
 
       //Get all the nonNumeric filter models
       var nonNumericFilters = this.filters.reject(function(filterModel){
-        return (filterModel.type == "NumericFilter" || filterModel.type == "DateFilter");
+        return (filterModel.type == "NumericFilter" || filterModel.type == "DateFilter" || filterModel.type == "SpatialFilter");
       });
       //Listen to changes on the "values" attribute for nonNumeric filters
       _.each(nonNumericFilters, function(nonNumericFilter){
@@ -282,6 +282,9 @@ define(['jquery', 'underscore', 'backbone',
 
     },
 
+    /**
+    * Renders the top-level filter that searches the full text
+    */
     renderAllFilter: function(){
 
       //Create an "All" filter that will search the general `text` Solr field
@@ -305,6 +308,9 @@ define(['jquery', 'underscore', 'backbone',
 
     },
 
+    /**
+    * Performs various UI functions after this view has been fully rendered and added to the page.
+    */
     postRender: function(){
 
       var groupTabs = this.$(".filter-group-links");
@@ -488,7 +494,7 @@ define(['jquery', 'underscore', 'backbone',
 
     /**
     * Creates a single applied filter element and returns it. Filters can
-    *  have multiple values, so one value is passed to this function at a time.
+    * have multiple values, so one value is passed to this function at a time.
     * @param {Filter} filterModel - The Filter model that is being added to the display
     * @param {string|number|Boolean} value - The new value set on the Filter model that is displayed in this applied filter
     * @returns {jQuery} - The complete applied filter element
@@ -497,6 +503,7 @@ define(['jquery', 'underscore', 'backbone',
 
       //Create the filter label
       var filterLabel = filterModel.get("label"),
+          filterIcon  = filterModel.get("icon"),
           filterValue = value;
 
       //If the filter type is Choice, get the choice label which can be different from the value
@@ -596,10 +603,16 @@ define(['jquery', 'underscore', 'backbone',
 
       //Create an element to contain both the label and value
       var filterLabelEl = $(document.createElement("span")).addClass("label");
+      var filterIconEl  = $(document.createElement("span")).addClass("icon icon-" + filterIcon);
       var filterValueEl = $(document.createElement("span")).addClass("value").text(filterValue);
 
       var filterTextContainer = $(document.createElement("span"))
                                  .append(filterLabelEl, filterValueEl);
+
+      //If there is a filter icon specified, then display the icon
+      if( filterIcon ){
+        filterTextContainer.prepend(filterIconEl);
+      }
 
       //If there is both a label and value, separated them with a colon
       if( filterLabel && filterValue ){
@@ -631,7 +644,7 @@ define(['jquery', 'underscore', 'backbone',
     },
 
 
-    /*
+    /**
     * Adds a custom filter that likely exists outside of the FilterGroups but needs
     * to be displayed with these other applied fitlers.
     *
@@ -678,7 +691,7 @@ define(['jquery', 'underscore', 'backbone',
 
     },
 
-    /*
+    /**
     * Removes the custom applied filter from the UI.
     *
     * @param {Filter} filterModel - The Filter Model to display
@@ -697,9 +710,9 @@ define(['jquery', 'underscore', 'backbone',
 
     },
 
-    /*
+    /**
     * When a remove button is clicked, get the filter model associated with it
-    /* and remove the filter from the filter group
+    * and remove the filter from the filter group
     *
     * @param {Event} - The DOM Event that occured on the filter remove icon
     */
@@ -729,9 +742,10 @@ define(['jquery', 'underscore', 'backbone',
 
     },
 
-    /*
+    /**
     * Remove the filter from the UI and the Search collection
-    *
+    * @param {Filter} filterModel - The Filter to remove from the Filters collection
+    * @param {Element} appliedFilterEl - The element for the applied filter
     */
     removeFilter: function(filterModel, appliedFilterEl){
 
@@ -776,9 +790,9 @@ define(['jquery', 'underscore', 'backbone',
 
     },
 
-    /*
+    /**
     * Gets all the applied filters in this view and their associated filter models
-    *   and removes them.
+    * and removes them.
     */
     removeAllFilters: function(){
 
@@ -804,7 +818,7 @@ define(['jquery', 'underscore', 'backbone',
     * Remove the applied filter element for the given model
     * This only removed the element from the page, it doesn't update the model at all or
     * trigger any events.
-    * @param {Filter} - The Filter model whose elements will be deleted
+    * @param {Filter} filterModel - The Filter model whose elements will be deleted
     */
     removeAppliedFilterElByModel: function(filterModel){
 
