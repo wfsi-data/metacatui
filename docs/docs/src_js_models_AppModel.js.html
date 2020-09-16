@@ -687,27 +687,27 @@ define(['jquery', 'underscore', 'backbone'],
       /**
       * Metadata Assessment Suite IDs for the dataset assessment reports.
       * @type {string[]}
-      * @default ["FAIR.suite.1"]
+      * @default ["FAIR-suite-0.3.1"]
       */
-      mdqSuiteIds: ["FAIR.suite.1"],
+      mdqSuiteIds: ["FAIR-suite-0.3.1"],
       /**
       * Metadata Assessment Suite labels for the dataset assessment reports
       * @type {string[]}
-      * @default ["FAIR Suite v1.0"]
+      * @default ["FAIR Suite v0.3.1"]
       */
-      mdqSuiteLabels: ["FAIR Suite v1.0"],
+      mdqSuiteLabels: ["FAIR Suite v0.3.1"],
       /**
       * Metadata Assessment Suite IDs for the aggregated assessment charts
       * @type {string[]}
-      * @default ["FAIR.suite.1"]
+      * @default ["FAIR-suite-0.3.1"]
       */
-      mdqAggregatedSuiteIds: ["FAIR.suite.1"],
+      mdqAggregatedSuiteIds: ["FAIR-suite-0.3.1"],
       /**
       * Metadata Assessment Suite labels for the aggregated assessment charts
       * @type {string[]}
-      * @default ["FAIR.suite.1"]
+      * @default ["FAIR Suite v0.3.1"]
       */
-      mdqAggregatedSuiteLabels: ["FAIR Suite v1.0"],
+      mdqAggregatedSuiteLabels: ["FAIR Suite v0.3.1"],
       /**
       * The metadata formats for which to display metadata assessment reports
       * @type {string[]}
@@ -720,6 +720,13 @@ define(['jquery', 'underscore', 'backbone'],
       * @type {string}
       */
       metricsUrl: 'https://logproc-stage-ucsb-1.test.dataone.org/metrics',
+
+      /**
+      * Forwards collection Query to Metrics Service if enabled
+      * @type {boolean}
+      * @default true
+      */
+     metricsForwardCollectionQuery: true,
 
       /**
       * DataONE Citation reporting endpoint url
@@ -770,20 +777,6 @@ define(['jquery', 'underscore', 'backbone'],
       * @since 2.9.0
       */
       hideSummaryViewsChart: true,
-
-      /*
-      * List of Repositories that are DataONE Plus Members.
-      * DataONE Plus features are displayed only for these members.
-      * @type {string[]}
-      * @readonly
-      * @default ["urn:node:ARCTIC", "urn:node:ESS_DIVE", "urn:node:KNB", "urn:node:mnUCSB1"]
-      * @since 2.13.0
-      * ------------------------------------
-      * This config will not be displayed in the JSDoc documentation since it is
-      * temporary and only useful for internal DataONE purposes. This functionality will be replaced
-      * with the DataONE Bookkeeper service, eventually.
-      */
-      dataonePlusMembers: ["urn:node:ARCTIC", "urn:node:ESS_DIVE", "urn:node:KNB", "urn:node:mnUCSB1"],
 
       /**
       * Metrics flag for the Dataset Landing Page
@@ -1085,6 +1078,15 @@ define(['jquery', 'underscore', 'backbone'],
       */
       portalTermPlural: "portals",
       /**
+      * A URL of a webpage for people to learn more about portals. If no URL is provided,
+      * links to more info about portals will be omitted.
+      * @since 2.14.0
+      * @type {string}
+      * @example "https://dataone.org/plus"
+      * @default null
+      */
+      portalInfoURL: null,
+      /**
       * Set to false to prevent ANYONE from creating a new portal.
       * @type {boolean}
       * @default true
@@ -1214,8 +1216,8 @@ define(['jquery', 'underscore', 'backbone'],
         'urn:node:IEDA_MGDL', 'IEDA_MGDL', 'IEDA MGDL',
         'urn:node:METAGRIL', 'METAGRIL', 'metaGRIL',
         'urn:node:ARM', 'ARM', 'ARM - Atmospheric Radiation Measurement Research Facility',
-        "urn:node:OPC", "OPC",
-        "urn:node:TNC_DANGERMOND", "dangermond", "TNC_DANGERMOND"
+        "urn:node:CA_OPC", "CA_OPC", "OPC",
+        "urn:node:TNC_DANGERMOND", "dangermond", "TNC_DANGERMOND", "dangermondpreserve"
       ],
 
       /**
@@ -1226,6 +1228,46 @@ define(['jquery', 'underscore', 'backbone'],
       * @since 2.14.0
       */
       portalLimit: 1,
+
+      /**
+      * The default values to use in portals. Default sections are applied when a portal is new.
+      * Default images are used in new freeform pages in the portal builder.
+      * The default colors are used when colors haven't been saved to the portal document.
+      * Colors can be hex codes, rgb codes, or any other form supported by browsers in CSS
+      * @type {object}
+      * @property {object[]} sections The default sections for a new portal. Each object within the section array can have a title property and a label property
+      * @property {string} label The name of the section that will appear in the tab
+      * @property {string} title A longer title for the section that will appear in the section header
+      * @property {string} newPortalActiveSectionLabel When a user start the portal builder for a brand new portal, the label for the section that the builder should start on. Can be set to "Data", "Metrics", "Settings", or one of the labels from the default sections described above.
+      * @property {string[]} sectionImageIdentifiers A list of image pids to use as default images for new markdown sections
+      * @property {string} primaryColor The color that is used most frequently in the portal view
+      * @property {string} secondaryColor The color that is used second-most frequently in the portal view
+      * @property {string} accentColor The color that is rarely used in portal views as an accent color
+      * @property {string} primaryColorTransparent An rgba() version of the primaryColor that is semi-transparent
+      * @property {string} secondaryColorTransparent An rgba() version of the secondaryColor that is semi-transparent
+      * @property {string} accentColorTransparent An rgba() version of the accentColor that is semi-transparent
+      * @example {
+      *   sections: [
+      *     { label: "About",
+      *       title: "About our project"
+      *     },
+      *     { label: "Publications",
+      *       title: "Selected publications by our lab group"
+      *     }
+      *   ],
+      *   newPortalActiveSectionLabel: "About",
+      *   sectionImageIdentifiers: ["urn:uuid:d2f31a83-debf-4d78-bef7-6abe20962581", "urn:uuid:6ad37acd-d0ac-4142-9f42-e5f05ff55564", "urn:uuid:0b6be09f-2e6f-4e7b-a83c-2823495f9608", "urn:uuid:5b4e0347-07ed-4580-b039-6c4df57ed801", "urn:uuid:0cf62da9-a099-440e-9c1e-595a55c0d60d"],
+      *   primaryColor: "#16acc0",
+      *   primaryColorTransparent: "rgba(22, 172, 192, .7)",
+      *   secondaryColor: "#EED268",
+      *   secondaryColorTransparent: "rgba(238, 210, 104, .7)",
+      *   accentColor: "#0f5058",
+      *   accentColorTransparent: "rgba(15, 80, 88, .7)"
+      *  }
+      * @since 2.14.0
+      */
+      portalDefaults: {
+      },
 
       /** If true, then archived content is available in the search index.
       * Set to false if this MetacatUI is using a Metacat version before 2.10.0
@@ -1287,11 +1329,12 @@ define(['jquery', 'underscore', 'backbone'],
               description: "Only show results with data collected within the year range"
             },
             {
-              fields: ["id", "identifier", "documents", "resourceMap", "seriesId"],
+              fields: ["identifier", "documents", "resourceMap", "seriesId"],
               label: "Identifier",
               placeholder: "DOI or ID",
               icon: "bullseye",
-              description: "Find datasets if you have all or part of its DOI or ID"
+              description: "Find datasets if you have all or part of its DOI or ID",
+              operator: "OR"
             },
             {
               fields: ["kingdom", "phylum", "class", "order", "family", "genus", "species"],
@@ -1384,7 +1427,7 @@ define(['jquery', 'underscore', 'backbone'],
 
       /**
       * Enable or disable the DataONE Bookkeeper services. If enabled, Portal Views will use the DataONE Plus
-      * paid features for active subscriptions. If disabled, the Portal Views will assume
+      * paid features for active memberships. If disabled, the Portal Views will assume
       * all portals are in inactive/free, and will only render free features.
       * @type {boolean}
       * @since 2.14.0
@@ -1415,13 +1458,13 @@ define(['jquery', 'underscore', 'backbone'],
       */
       bookkeeperUsagesUrl: null,
       /**
-      * The URL for the DataONE Bookkeeper Subscriptions API, e.g. listSubscriptions(), getSubscription(), createSubscription(), etc.
+      * The URL for the DataONE Bookkeeper Memberships API, e.g. listMemberships(), fetchMembership(), createMembership(), etc.
       * This full URL is contructed using {@link AppModel#bookkeeperBaseUrl} when the AppModel is initialized.
       * @readonly
       * @type {string}
       * @since 2.14.0
       */
-      bookkeeperSubscriptionsUrl: null,
+      bookkeeperMembershipsUrl: null,
       /**
       * The URL for the DataONE Bookkeeper Customers API, e.g. listCustomers(), getCustomer(), createCustomer(), etc.
       * This full URL is contructed using {@link AppModel#bookkeeperBaseUrl} when the AppModel is initialized.
@@ -1443,6 +1486,27 @@ define(['jquery', 'underscore', 'backbone'],
       // and won't be released in an offical MetacatUI version, since they will be replaced by bookkeeper
       dataonePlusPreviewMode: false,
       dataonePlusPreviewPortals: [],
+      /*
+      * List of Repositories that are DataONE Hosted Repos.
+      * DataONE Hosted Repo features are displayed only for these members.
+      * @type {string[]}
+      * @readonly
+      * @since 2.13.0
+      * ------------------------------------
+      * This config will not be displayed in the JSDoc documentation since it is
+      * temporary and only useful for internal DataONE purposes. This functionality will be replaced
+      * with the DataONE Bookkeeper service, eventually.
+      */
+      dataoneHostedRepos: ["urn:node:KNB", "urn:node:ARCTIC", "urn:node:CA_OPC", "urn:node:TNC_DANGERMOND", "urn:node:ESS_DIVE"],
+
+      /**
+      * The length of random portal label generated during preview/trial mode of DataONE Plus
+      * @readonly
+      * @type {number}
+      * @default 7
+      * @since 2.14.0
+      */
+      randomLabelNumericLength: 7,
 
       /**
       * The following configuration options are deprecated or experimental and should only be changed by advanced users
@@ -1567,7 +1631,7 @@ define(['jquery', 'underscore', 'backbone'],
 
       //Construct the DataONE Bookkeeper service API URLs
       if( this.get("enableBookkeeperServices") ){
-        this.set("bookkeeperSubscriptionsUrl", this.get("bookkeeperBaseUrl")  + "/subscriptions");
+        this.set("bookkeeperMembershipsUrl", this.get("bookkeeperBaseUrl")  + "/subscriptions");
         this.set("bookkeeperCustomersUrl",     this.get("bookkeeperBaseUrl")  + "/customers");
         this.set("bookkeeperQuotasUrl",        this.get("bookkeeperBaseUrl")  + "/quotas");
         this.set("bookkeeperUsagesUrl",        this.get("bookkeeperBaseUrl")  + "/usages");
@@ -1721,13 +1785,13 @@ define(['jquery', 'underscore', 'backbone'],
 </div>
 
 <nav>
-    <h2><a href="index.html">Home</a></h2><h3>Namespaces</h3><ul><li><a href="AppConfig.html">AppConfig</a></li><li><a href="MetacatUI.html">MetacatUI</a></li></ul><h3>Classes</h3><ul><li><a href="AccessPolicy.html">AccessPolicy</a></li><li><a href="AccessPolicyView.html">AccessPolicyView</a></li><li><a href="AccessRule.html">AccessRule</a></li><li><a href="AppModel.html">AppModel</a></li><li><a href="AppView.html">AppView</a></li><li><a href="BooleanFilter.html">BooleanFilter</a></li><li><a href="ChoiceFilter.html">ChoiceFilter</a></li><li><a href="Citations.html">Citations</a></li><li><a href="CollectionModel.html">CollectionModel</a></li><li><a href="ColorPaletteView.html">ColorPaletteView</a></li><li><a href="DataCatalogView_drawTiles-TextOverlay.html">TextOverlay</a></li><li><a href="DataCatalogViewWithFilters.html">DataCatalogViewWithFilters</a></li><li><a href="DataItemView.html">DataItemView</a></li><li><a href="DataONEObject.html">DataONEObject</a></li><li><a href="DataPackage.html">DataPackage</a></li><li><a href="DateFilter.html">DateFilter</a></li><li><a href="DraftsView.html">DraftsView</a></li><li><a href="EditCollectionView.html">EditCollectionView</a></li><li><a href="EditorView.html">EditorView</a></li><li><a href="EML211.html">EML211</a></li><li><a href="EML211EditorView.html">EML211EditorView</a></li><li><a href="EMLEntity.html">EMLEntity</a></li><li><a href="EMLEntityView.html">EMLEntityView</a></li><li><a href="EMLGeoCoverage.html">EMLGeoCoverage</a></li><li><a href="EMlGeoCoverageView.html">EMlGeoCoverageView</a></li><li><a href="EMLNonNumericDomain.html">EMLNonNumericDomain</a></li><li><a href="EMLNumericDomain.html">EMLNumericDomain</a></li><li><a href="EMLPartyView.html">EMLPartyView</a></li><li><a href="EMLTemporalCoverage.html">EMLTemporalCoverage</a></li><li><a href="EMLView.html">EMLView</a></li><li><a href="Filter.html">Filter</a></li><li><a href="FilterGroup.html">FilterGroup</a></li><li><a href="FilterGroupsView.html">FilterGroupsView</a></li><li><a href="Filters.html">Filters</a></li><li><a href="ImageUploaderView.html">ImageUploaderView</a></li><li><a href="LookupModel.html">LookupModel</a></li><li><a href="MarkdownEditorView.html">MarkdownEditorView</a></li><li><a href="MarkdownView.html">MarkdownView</a></li><li><a href="MetadataView.html">MetadataView</a></li><li><a href="MetricModalView.html">MetricModalView</a></li><li><a href="NavbarView.html">NavbarView</a></li><li><a href="NumericFilter.html">NumericFilter</a></li><li><a href="ObjectFormats.html">ObjectFormats</a></li><li><a href="PortalDataView.html">PortalDataView</a></li><li><a href="PortalEditorView.html">PortalEditorView</a></li><li><a href="PortalListView.html">PortalListView</a></li><li><a href="PortalLogosView.html">PortalLogosView</a></li><li><a href="PortalMembersView.html">PortalMembersView</a></li><li><a href="PortalModel.html">PortalModel</a></li><li><a href="PortalSectionView.html">PortalSectionView</a></li><li><a href="PortalUsagesView.html">PortalUsagesView</a></li><li><a href="PortalView.html">PortalView</a></li><li><a href="PortEditorDataView.html">PortEditorDataView</a></li><li><a href="PortEditorImageView.html">PortEditorImageView</a></li><li><a href="PortEditorLogosView.html">PortEditorLogosView</a></li><li><a href="PortEditorMdSectionView.html">PortEditorMdSectionView</a></li><li><a href="PortEditorSectionsView.html">PortEditorSectionsView</a></li><li><a href="PortEditorSectionView.html">PortEditorSectionView</a></li><li><a href="PortEditorSettingsView.html">PortEditorSettingsView</a></li><li><a href="QualityReport.html">QualityReport</a></li><li><a href="Quota.html">Quota</a></li><li><a href="Quotas.html">Quotas</a></li><li><a href="RegisterCitationView.html">RegisterCitationView</a></li><li><a href="Search.html">Search</a></li><li><a href="SolrResultList.html">SolrResultList</a></li><li><a href="SpatialFilter.html">SpatialFilter</a></li><li><a href="Stats.html">Stats</a></li><li><a href="Subscription.html">Subscription</a></li><li><a href="TableEditorView.html">TableEditorView</a></li><li><a href="ToggleFilter.html">ToggleFilter</a></li><li><a href="UIRouter.html">UIRouter</a></li><li><a href="Usage.html">Usage</a></li><li><a href="Usages.html">Usages</a></li><li><a href="UserView.html">UserView</a></li></ul><h3>Global</h3><ul><li><a href="global.html#appConfigPath">appConfigPath</a></li><li><a href="global.html#className">className</a></li><li><a href="global.html#logos">logos</a></li><li><a href="global.html#onClose">onClose</a></li><li><a href="global.html#render">render</a></li><li><a href="global.html#tagName">tagName</a></li><li><a href="global.html#template">template</a></li><li><a href="global.html#type">type</a></li></ul>
+    <h2><a href="index.html">Home</a></h2><h3>Namespaces</h3><ul><li><a href="AppConfig.html">AppConfig</a></li><li><a href="MetacatUI.html">MetacatUI</a></li></ul><h3>Classes</h3><ul><li><a href="AccessPolicy.html">AccessPolicy</a></li><li><a href="AccessPolicyView.html">AccessPolicyView</a></li><li><a href="AccessRule.html">AccessRule</a></li><li><a href="AppModel.html">AppModel</a></li><li><a href="AppView.html">AppView</a></li><li><a href="BooleanFilter.html">BooleanFilter</a></li><li><a href="ChoiceFilter.html">ChoiceFilter</a></li><li><a href="Citations.html">Citations</a></li><li><a href="CollectionModel.html">CollectionModel</a></li><li><a href="ColorPaletteView.html">ColorPaletteView</a></li><li><a href="DataCatalogView_drawTiles-TextOverlay.html">TextOverlay</a></li><li><a href="DataCatalogViewWithFilters.html">DataCatalogViewWithFilters</a></li><li><a href="DataItemView.html">DataItemView</a></li><li><a href="DataONEObject.html">DataONEObject</a></li><li><a href="DataPackage.html">DataPackage</a></li><li><a href="DateFilter.html">DateFilter</a></li><li><a href="DraftsView.html">DraftsView</a></li><li><a href="EditCollectionView.html">EditCollectionView</a></li><li><a href="EditorView.html">EditorView</a></li><li><a href="EML211.html">EML211</a></li><li><a href="EML211EditorView.html">EML211EditorView</a></li><li><a href="EMLEntity.html">EMLEntity</a></li><li><a href="EMLEntityView.html">EMLEntityView</a></li><li><a href="EMLGeoCoverage.html">EMLGeoCoverage</a></li><li><a href="EMlGeoCoverageView.html">EMlGeoCoverageView</a></li><li><a href="EMLNonNumericDomain.html">EMLNonNumericDomain</a></li><li><a href="EMLNumericDomain.html">EMLNumericDomain</a></li><li><a href="EMLPartyView.html">EMLPartyView</a></li><li><a href="EMLTemporalCoverage.html">EMLTemporalCoverage</a></li><li><a href="EMLView.html">EMLView</a></li><li><a href="Filter.html">Filter</a></li><li><a href="FilterGroup.html">FilterGroup</a></li><li><a href="FilterGroupsView.html">FilterGroupsView</a></li><li><a href="Filters.html">Filters</a></li><li><a href="ImageUploaderView.html">ImageUploaderView</a></li><li><a href="LookupModel.html">LookupModel</a></li><li><a href="MarkdownEditorView.html">MarkdownEditorView</a></li><li><a href="MarkdownView.html">MarkdownView</a></li><li><a href="Membership.html">Membership</a></li><li><a href="Memberships.html">Memberships</a></li><li><a href="MembershipsView.html">MembershipsView</a></li><li><a href="MembershipView.html">MembershipView</a></li><li><a href="MetadataView.html">MetadataView</a></li><li><a href="MetricModalView.html">MetricModalView</a></li><li><a href="NavbarView.html">NavbarView</a></li><li><a href="NumericFilter.html">NumericFilter</a></li><li><a href="ObjectFormats.html">ObjectFormats</a></li><li><a href="PortalDataView.html">PortalDataView</a></li><li><a href="PortalEditorView.html">PortalEditorView</a></li><li><a href="PortalListView.html">PortalListView</a></li><li><a href="PortalLogosView.html">PortalLogosView</a></li><li><a href="PortalMembersView.html">PortalMembersView</a></li><li><a href="PortalModel.html">PortalModel</a></li><li><a href="PortalSectionView.html">PortalSectionView</a></li><li><a href="PortalUsagesView.html">PortalUsagesView</a></li><li><a href="PortalView.html">PortalView</a></li><li><a href="PortEditorDataView.html">PortEditorDataView</a></li><li><a href="PortEditorImageView.html">PortEditorImageView</a></li><li><a href="PortEditorLogosView.html">PortEditorLogosView</a></li><li><a href="PortEditorMdSectionView.html">PortEditorMdSectionView</a></li><li><a href="PortEditorSectionsView.html">PortEditorSectionsView</a></li><li><a href="PortEditorSectionView.html">PortEditorSectionView</a></li><li><a href="PortEditorSettingsView.html">PortEditorSettingsView</a></li><li><a href="QualityReport.html">QualityReport</a></li><li><a href="Quota.html">Quota</a></li><li><a href="Quotas.html">Quotas</a></li><li><a href="RegisterCitationView.html">RegisterCitationView</a></li><li><a href="Search.html">Search</a></li><li><a href="SolrResultList.html">SolrResultList</a></li><li><a href="SpatialFilter.html">SpatialFilter</a></li><li><a href="Stats.html">Stats</a></li><li><a href="TableEditorView.html">TableEditorView</a></li><li><a href="ToggleFilter.html">ToggleFilter</a></li><li><a href="UIRouter.html">UIRouter</a></li><li><a href="Usage.html">Usage</a></li><li><a href="Usages.html">Usages</a></li><li><a href="User.html">User</a></li><li><a href="UserView.html">UserView</a></li></ul><h3>Global</h3><ul><li><a href="global.html#appConfigPath">appConfigPath</a></li><li><a href="global.html#className">className</a></li><li><a href="global.html#logos">logos</a></li><li><a href="global.html#onClose">onClose</a></li><li><a href="global.html#render">render</a></li><li><a href="global.html#tagName">tagName</a></li><li><a href="global.html#template">template</a></li><li><a href="global.html#type">type</a></li></ul>
 </nav>
 
 <br class="clear">
 
 <footer>
-    Documentation generated by <a href="https://github.com/jsdoc/jsdoc">JSDoc 3.6.3</a> on Fri Jul 31 2020 12:52:37 GMT-0400 (Eastern Daylight Time)
+    Documentation generated by <a href="https://github.com/jsdoc/jsdoc">JSDoc 3.6.3</a> on Wed Sep 16 2020 15:01:12 GMT-0400 (Eastern Daylight Time)
 </footer>
 
 <script> prettyPrint(); </script>
