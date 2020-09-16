@@ -116,7 +116,7 @@ define(["jquery",
 
               //Call the super class initialize function
               CollectionModel.prototype.initialize.call(this, attrs);
-              
+
               // Generate transparent colours from the primary, secondary, and accent colors
               // TODO
 
@@ -124,14 +124,14 @@ define(["jquery",
                 this.set("synced", true);
                 //Create an isPartOf filter for this new Portal
                 this.addIsPartOfFilter();
-                
+
                 var model = this;
-                
+
                 // Insert new sections if any are set in the appModel
-                
+
                 var portalDefaults = MetacatUI.appModel.get("portalDefaults"),
                     defaultSections = portalDefaults ? portalDefaults.sections : [];
-              
+
                 if(defaultSections && defaultSections.length && Array.isArray(defaultSections)){
                   defaultSections.forEach(function(section, index){
                     // If there is at least one section default set...
@@ -152,33 +152,35 @@ define(["jquery",
               // check for info received from Bookkeeper
               if( MetacatUI.appModel.get("enableBookkeeperServices") ){
 
-                this.listenTo( MetacatUI.appUserModel, "change:dataoneSubscription", function(){
-                  if(MetacatUI.appUserModel.get("dataoneSubscription").isTrialing()) {
+                this.listenTo( MetacatUI.appUserModel, "change:dataoneMemberships", function(){
+                  var memberships = MetacatUI.appUserModel.get("dataoneMemberships");
+
+                  if( memberships.length && memberships.models[0].isTrialing()) {
                     this.setRandomLabel();
                   }
                 });
 
-                //Fetch the user subscription info
-                MetacatUI.appUserModel.fetchSubscription();
+                //Fetch the user membership info
+                MetacatUI.appUserModel.fetchMembership();
               }
 
               // Cache this model for later use
               this.cachePortal();
 
             },
-            
-            /**            
+
+            /**
              * getRandomSectionImage - Using the list of image identifiers set
              * in the app config, select an image to use for a portal section.
              * The function will not return the same image until all the images
              * have been returned at least once. If an image would return a 404
              * error, it is skipped. If all images give 404s, an empty string
              * is returned.
-             *              
+             *
              * @return {PortalImage}  A portal image model to use in a section model
-             */             
+             */
             getRandomSectionImage: function(){
-              
+
               // This variable will hold the section image to return, if any
               var newSectionImage = "",
                   // The default portal values set in the config
@@ -188,14 +190,14 @@ define(["jquery",
                   // Keep track of where we are in the list of default images,
                   // so there's not too much repetition
                   runningNumber = this.get("defaultImageRunningNumber") || 0;
-              
+
               // If none are set, get the configured default image IDs,
               // shuffle them, and set them on the model.
               if(!defaultImageIds || !defaultImageIds.length){
-                
+
                 // Get the list of default section image IDs from the appModel
                 defaultImageIds = portalDefaults ? portalDefaults.sectionImageIdentifiers : false;
-                
+
                 // If some are configured...
                 if(defaultImageIds && defaultImageIds.length){
                   // ...Shuffle the images...
@@ -207,34 +209,34 @@ define(["jquery",
                   this.set("defaultSectionImageIds", defaultImageIds);
                 }
               }
-              
+
               // Can't get a random image if none are configured
               if(!defaultImageIds){
                 console.log("Can't set a default image on new markdown sections because there are no default image IDs set. Check portalDefaults.sectionImageIdentifiers in the config file.");
                 return
               }
-              
+
               // Select one of the image IDs
               if(defaultImageIds && defaultImageIds.length > 0){
-                
+
                 if(runningNumber >= defaultImageIds.length){
                   runningNumber = 0
                 }
-                
+
                 // Go through the shuffled array of image IDs in order
                 for (i = runningNumber; i < defaultImageIds.length; i++) {
-                  
+
                   // Skip images that have already returned 404 errors
                   if(defaultImageIds[i] == "NOT FOUND"){
                     continue;
                   }
-                  
+
                   // Section images are PortalImage models
                   var newSectionImage = new PortalImage({
                     identifier: defaultImageIds[i],
                     portalModel: this.get("portalModel")
                   });
-                  
+
                   // Skip adding an image if it doesn't exist given the identifer and baseUrl found in the image model
                   if(newSectionImage.imageExists()){
                     break;
@@ -246,10 +248,10 @@ define(["jquery",
                   }
                 }
               }
-              
+
               this.set("defaultImageRunningNumber", i + 1);
               this.set("defaultSectionImageIds", defaultImageIds);
-              
+
               return newSectionImage
             },
 
@@ -1788,8 +1790,8 @@ define(["jquery",
                     // and start the save process again
                     if( MetacatUI.appModel.get("enableBookkeeperServices") ){
 
-                      var subscription = MetacatUI.appUserModel.get("dataoneSubscription");
-                      if(subscription && subscription.isTrialing()) {
+                      var memberships = MetacatUI.appUserModel.get("dataoneMemberships");
+                      if(memberships.length && memberships.models[0].isTrialing()) {
                         this.setRandomLabel();
 
                         this.set("labelDoubleChecked", true);
@@ -1933,7 +1935,7 @@ define(["jquery",
                       this.set("hideMembers", null);
                       break;
                     case "freeform":
-                    
+
                       // Add a new, blank markdown section with a default image
                       var sectionModels = _.clone(this.get("sections")),
                           newSection = new PortalSectionModel({
@@ -1941,7 +1943,7 @@ define(["jquery",
                             // Include a default image if some are configured.
                             image: this.getRandomSectionImage()
                           });
-                          
+
                       sectionModels.push( newSection );
                       this.set("sections", sectionModels);
                       // Trigger event manually so we can just pass newSection

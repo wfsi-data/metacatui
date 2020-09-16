@@ -4,12 +4,14 @@ define(['jquery', 'underscore', 'backbone', 'jws', 'models/Search', "collections
 	'use strict';
 
 	/**
-  * @class UserModel
+  * @class User
+  * @name User
+  * @classdesc The User model contains information about the person currently using the MetacatUI application.
   * @extends Backbone.Model
   * @constructor
   */
 	var UserModel = Backbone.Model.extend(
-    /** @lends UserModel.prototype */{
+    /** @lends User.prototype */{
 		defaults: function(){
 			return{
 				type: "person", //assume this is a person unless we are told otherwise - other possible type is a "group"
@@ -43,8 +45,7 @@ define(['jquery', 'underscore', 'backbone', 'jws', 'models/Search', "collections
 				rawData: null,
         portalQuota: -1,
         isAuthorizedCreatePortal: null,
-        dataoneQuotas: null,
-        dataoneSubscription: null
+        dataoneMemberships: null
 			}
 		},
 
@@ -66,8 +67,8 @@ define(['jquery', 'underscore', 'backbone', 'jws', 'models/Search', "collections
 			this.set("searchResults", searchResults);
 
       if( MetacatUI.appModel.get("enableBookkeeperServices") ){
-        //When the user is logged in, see if they have a DataONE subscription
-        this.on("change:loggedIn", this.fetchSubscription);
+        //When the user is logged in, see if they have a DataONE membership
+        this.on("change:loggedIn", this.fetchMembership);
       }
 		},
 
@@ -935,85 +936,92 @@ define(['jquery', 'underscore', 'backbone', 'jws', 'models/Search', "collections
 
     /**
     * Checks if the user has authorization to perform the given action.
+    * @fires User#change:isAuthorizedCreatePortal
     */
     isAuthorizedCreatePortal: function(){
 
-      //Reset the isAuthorized attribute silently so a change event is always triggered
-      this.set("isAuthorizedCreatePortal", null, {silent: true});
+      try{
 
-      //If the user isn't logged in, set authorization to false
-      if( !this.get("loggedIn") ){
-        this.set("isAuthorizedCreatePortal", false);
-        return;
-      }
+        //Reset the isAuthorized attribute silently so a change event is always triggered
+        this.set("isAuthorizedCreatePortal", null, {silent: true});
 
-      //If creating portals has been disabled app-wide, then set to false
-      if( MetacatUI.appModel.get("enableCreatePortals") === false ){
-        this.set("isAuthorizedCreatePortal", false);
-        return;
-      }
-      //If creating portals has been limited to only certain subjects, check if this user is one of them
-      else if( MetacatUI.appModel.get("limitPortalsToSubjects").length ){
-        if( !this.get("allIdentitiesAndGroups").length ){
-          this.on("change:allIdentitiesAndGroups", this.isAuthorizedCreatePortal);
+        //If the user isn't logged in, set authorization to false
+        if( !this.get("loggedIn") ){
+          this.set("isAuthorizedCreatePortal", false);
           return;
         }
 
-        //Find the subjects that have access to create portals. Could be specific users or groups.
-        var subjectsThatHaveAccess = _.intersection(MetacatUI.appModel.get("limitPortalsToSubjects"), this.get("allIdentitiesAndGroups"));
-        if( !subjectsThatHaveAccess.length ){
-          //If this user is not in the whitelist, set to false
+        //If creating portals has been disabled app-wide, then set to false
+        if( MetacatUI.appModel.get("enableCreatePortals") === false ){
           this.set("isAuthorizedCreatePortal", false);
-        }
-        else{
-          //If this user is in the whitelist, set to true
-          this.set("isAuthorizedCreatePortal", true);
-        }
-        return;
-      }
-      //If anyone is allowed to create a portal, check if they have the quota to create a portal
-      else if( MetacatUI.appModel.get("enableBookkeeperServices") ){
-
-        //Get the Quotas for this user
-        var quotas = this.get("dataoneQuotas"),
-            portalQuotas;
-
-        //If the Quotas are still being fetched,
-        if(quotas == this.defaults().dataoneQuotas && !quotas){
-          this.on("change:dataoneQuotas", this.isAuthorizedCreatePortal);
           return;
         }
-        else{
-          portalQuotas = quotas.where({ quotaType: "portal" });
-        }
-
-        //If this user has no portal Quota at all, they are not auth to create a portal
-        if( !portalQuotas ){
-          this.set("isAuthorizedCreatePortal", false);
-        }
-        else{
-
-          //Check that there is at least one Quota where the totalUsage < softLimit
-          var hasRemainingUsage = _.some(portalQuotas, function(quota){
-            return quota.get("totalUsage") < quota.get("softLimit");
-          });
-
-          //If there is remaining usage left in at least one Quota, then the user can create a portal
-          if( hasRemainingUsage ){
-            this.set("isAuthorizedCreatePortal", true);
+        //If creating portals has been limited to only certain subjects, check if this user is one of them
+        else if( MetacatUI.appModel.get("limitPortalsToSubjects").length ){
+          if( !this.get("allIdentitiesAndGroups").length ){
+            this.on("change:allIdentitiesAndGroups", this.isAuthorizedCreatePortal);
+            return;
           }
-          //Otherwise they cannot create a new portal
-          else{
+
+          //Find the subjects that have access to create portals. Could be specific users or groups.
+          var subjectsThatHaveAccess = _.intersection(MetacatUI.appModel.get("limitPortalsToSubjects"), this.get("allIdentitiesAndGroups"));
+          if( !subjectsThatHaveAccess.length ){
+            //If this user is not in the allowlist, set to false
             this.set("isAuthorizedCreatePortal", false);
           }
+          else{
+            //If this user is in the allowlist, set to true
+            this.set("isAuthorizedCreatePortal", true);
+          }
+          return;
         }
+        //If anyone is allowed to create a portal, check if they have the quota to create a portal
+        else if( MetacatUI.appModel.get("enableBookkeeperServices") ){
 
-        //@todoGet the admin group and force admins to have at least one quota left
+          //Get the Memberships for this user
+          var memberships = this.get("dataoneMemberships");
 
+          //If this user doesn't have a DataONE Membership, they cannot create a portal
+          if( !memberships || !memberships.length ){
+            this.set("isAuthorizedCreatePortal", false);
+            return;
+          }
+          else{
+            var isAuthorizedCreatePortal = false,
+                i = 0;
+
+            //Iterate over each Membership to check for one that has remaining portal Quota
+            while( !isAuthorizedCreatePortal && i<memberships.models.length){
+              //Get the Membership for this User
+              var quotas = memberships.models[i].getQuotas("portal");
+
+              if( quotas && quotas.length){
+
+                //Check that there is at least one Quota where the totalUsage < softLimit
+                var hasRemainingUsage = _.some(quotas, function(quota){
+                  return quota.get("totalUsage") < quota.get("softLimit");
+                });
+
+                //If there is remaining usage left in at least one Quota, then the user can create a portal
+                isAuthorizedCreatePortal = hasRemainingUsage;
+              }
+
+              i++;
+            }
+
+            //Save the authorization check on this User model
+            this.set("isAuthorizedCreatePortal", isAuthorizedCreatePortal);
+          }
+
+        }
+        else{
+          //Default to letting people create portals
+          this.set("isAuthorizedCreatePortal", true);
+        }
       }
-      else{
-        //Default to letting people create portals
-        this.set("isAuthorizedCreatePortal", true);
+      catch(e){
+        console.error("Failure in User.isAuthorizedCreatePortal: ", e, "Falling back to disallowing user to create portal.");
+        this.set("isAuthorizedCreatePortal", false);
       }
 
     },
@@ -1048,9 +1056,10 @@ define(['jquery', 'underscore', 'backbone', 'jws', 'models/Search', "collections
     },
 
     /**
-    * Retrieve all the info about this user's DataONE Subscription
+    * Retrieve all the info about this user's DataONE Membership
+    * @fires User#change:dataoneMemberships
     */
-    fetchSubscription: function(){
+    fetchMembership: function(){
 
       //If Bookkeeper services are disabled, exit
       if( !MetacatUI.appModel.get("enableBookkeeperServices") ){
@@ -1059,15 +1068,22 @@ define(['jquery', 'underscore', 'backbone', 'jws', 'models/Search', "collections
 
       try{
         var thisUser = this;
-        require(["collections/bookkeeper/Quotas", "models/bookkeeper/Subscription"], function(Quotas, Subscription){
+        require(["collections/bookkeeper/Quotas", "collections/bookkeeper/Memberships", "models/bookkeeper/Membership"],
+                function(Quotas, Memberships, Membership){
 
-          //Create a Quotas collection
-          var quotas = new Quotas();
+          //Create a Memberships collection
+          var memberships = new Memberships();
 
-          //Create a Subscription model
-          var subscription = new Subscription();
+          //Create a Membership model
+          var membership = new Membership();
+
+          //Add the Membership model to the Membership collection
+          memberships.add(membership);
 
           if( MetacatUI.appModel.get("dataonePlusPreviewMode") ){
+            //Create a Quotas collection
+            var quotas = new Quotas();
+
             //Create Quota models for preview mode
             quotas.add({
               softLimit: MetacatUI.appModel.get("portalLimit"),
@@ -1075,62 +1091,35 @@ define(['jquery', 'underscore', 'backbone', 'jws', 'models/Search', "collections
               quotaType: "portal",
               unit: "portal",
               subject: thisUser.get("username"),
-              subscription: subscription
+              membership: membership
             });
+            //Save the Quotas collection to the Membership
+            membership.set("quotas", quotas);
 
             //Default to all people being in trial mode
-            subscription.set("status", "trialing");
+            membership.set("status", "trialing");
 
-            //Save a reference to the Quotas on this UserModel
-            thisUser.set("dataoneQuotas", quotas);
-
-            //Save a reference to the Subscriptioin on this UserModel
-            thisUser.set("dataoneSubscription", subscription);
+            //Save a reference to the Membership on this UserModel
+            thisUser.set("dataoneMemberships", memberships);
 
           }
           else{
-            thisUser.listenToOnce(quotas, "reset", function(){
-              //Save a reference to the Quotas on this UserModel
-              thisUser.set("dataoneQuotas", quotas);
-            });
 
-            thisUser.listenToOnce(subscription, "sync", function(){
-              //Save a reference to the Subscriptioin on this UserModel
-              thisUser.set("dataoneSubscription", subscription);
+            thisUser.listenToOnce(memberships, "sync", function(){
+              //Save a reference to the Memberships on this UserModel
+              thisUser.set("dataoneMemberships", memberships);
             });
-
-            //Fetch the Quotas
-            quotas.fetch({ subscriber: thisUser.get("username") });
 
             //Fetch the Subscriptioin
-            subscription.fetch();
+            memberships.fetch();
           }
 
         });
       }
       catch(e){
-        console.error("Couldn't get DataONE Subscription info. Proceeding as an unsubscribed user. ", e);
+        console.error("Couldn't get DataONE Membership info. Proceeding as an unsubscribed user. ", e);
       }
 
-    },
-
-    /**
-    * Gets the already-fetched Quotas for the User, filters down to the type given, and returns them.
-    * @param {string} [type] - The Quota type to return
-    * @returns {Quota[]} The filtered array of Quota models or an empty array, if none are found
-    */
-    getQuotas: function(type){
-      var quotas = this.get("dataoneQuotas");
-
-      if( quotas && type ){
-        return quotas.where({ quotaType: type });
-      }
-      else if( quotas && !type ){
-        return quotas;
-      }
-      else{
-        return [];
-      }
     },
 
 		reset: function(){

@@ -1264,15 +1264,23 @@ define(['jquery', 'underscore', 'backbone', 'clipboard',
 
       var view = this;
 
-      //If Bookkeeper services are enabled, render the Portals via a PortalUsagesView,
-      // which queries Bookkeeper for portal Usages
+      //If Bookkeeper services are enabled, render the Portals via a MembershipsView,
+      // which queries the DataONE Bookkeeper for portals in a Membership
       if( MetacatUI.appModel.get("enableBookkeeperServices") ){
-        require(['views/portals/PortalUsagesView'], function(PortalUsagesView){
-          var portalListView = new PortalUsagesView();
-          //Render the Portal list view and insert it in the page
-          portalListView.render();
+
+        //Render a MembershipsView to show the user their DataONE Services Memberships
+
+        require(['views/bookkeeper/MembershipsView'], function(MembershipsView){
+
+          var membershipsView = new MembershipsView();
+
           view.$(view.portalListContainer)
-              .html(portalListView.el);
+              .html(membershipsView.el);
+
+          membershipsView.memberships = MetacatUI.appUserModel.get("dataoneMemberships");
+
+          membershipsView.render();
+
         });
       }
       //If Bookkeeper services are disabled, render the Portals via a PortalListView,

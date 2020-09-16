@@ -196,43 +196,58 @@ define(["jquery",
       */
       getSearchResultsForUsages: function(usages){
 
+
         try{
 
-          //Set the number of portals to the number of usages found
-          this.numPortals = this.usagesCollection.length;
+          //Reject any Usages that are on nodes not enabled in the MetacatUI config
+          // as an alternateRepository
+          var altRepoIds = _.pluck(MetacatUI.appModel.get("alternateRepositories"), "identifier");
+          var usages = this.usagesCollection.reject(function(usage){
+            return !_.contains(altRepoIds, usage.get("nodeId"));
+          });
 
-          var portalIds = this.usagesCollection.pluck("instanceId");
+          //Group the Usages by Member Node ID
+          var usagesByNode = _.groupBy( usages, function(usage){ return usage.get("nodeId") });
 
-          //If there are no given filters, create a Filter for the seriesId of each portal Usage
-          if( !this.filters && portalIds.length ){
-            this.filters = new Filters();
+          _.mapObject(usagesByNode, function(usages, nodeId){
+            //Set the number of portals to the number of usages found
+            this.numPortals = usages.length;
 
-            this.filters.mustMatchIds = true;
-            this.filters.add({
-              fields: ["seriesId"],
-              values: portalIds,
-              operator: "OR",
-              matchSubstring: false,
-              exclude: false
-            });
+            //Get a list of the portal identifiers in this member node
+            var portalIds = [];
+            _.each(usages, function(u){ portalIds.push(u.get("instanceId")) });
 
-            //Only get Portals that the user is an owner of
-            this.filters.addWritePermissionFilter();
-          }
-          //If the filters set on this view is an array of JSON, add it to a Filters collection
-          else if( this.filters.length && !Filters.prototype.isPrototypeOf(this.filters) ){
-            //Create search filters for finding the portals
-            var filters = new Filters();
+            //If there are no given filters, create a Filter for the seriesId of each portal Usage
+            if( !this.filters && portalIds.length ){
+              this.filters = new Filters();
 
-            filters.add( this.filters );
+              this.filters.mustMatchIds = true;
+              this.filters.add({
+                fields: ["seriesId"],
+                values: portalIds,
+                operator: "OR",
+                matchSubstring: false,
+                exclude: false
+              });
 
-            this.filters = filters;
-          }
-          else{
-            this.filters = new Filters();
-          }
+              //Only get Portals that the user is an owner of
+              this.filters.addWritePermissionFilter();
+            }
+            //If the filters set on this view is an array of JSON, add it to a Filters collection
+            else if( this.filters.length && !Filters.prototype.isPrototypeOf(this.filters) ){
+              //Create search filters for finding the portals
+              var filters = new Filters();
 
-          this.getSearchResults();
+              filters.add( this.filters );
+
+              this.filters = filters;
+            }
+            else{
+              this.filters = new Filters();
+            }
+
+            this.getSearchResults({ nodeId: nodeId });
+          }, this);
 
         }
         catch(e){
@@ -256,12 +271,18 @@ define(["jquery",
         //If in DataONE Plus Preview mode, total the portal count from Solr and use that as the portal totalUsage
         if( MetacatUI.appModel.get("dataonePlusPreviewMode") ){
 
-          var portalQuotas = MetacatUI.appUserModel.getQuotas("portal");
+          var memberships = MetacatUI.appUserModel.get("dataoneMemberships"),
+              membership;
 
-          if( portalQuotas.length ){
-            portalQuotas[0].set("totalUsage", this.usagesCollection.length);
+          if( memberships && memberships.length ){
+            //TODO: Render a PortalListView for each membership. For now, default to the first
+            membership = memberships.models[0];
+            var portalQuotas = membership.getQuotas("portal");
+
+            if( portalQuotas.length ){
+              portalQuotas[0].set("totalUsage", this.usagesCollection.length);
+            }
           }
-
         }
       },
 

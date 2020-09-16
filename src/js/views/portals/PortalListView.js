@@ -140,8 +140,10 @@ define(["jquery",
 
         /**
         * Queries for the portal objects using the SearchResults collection
+        * @param {object} [options] - A list of optional options when getting the search results
+        * @property {string} options.nodeId The member node identifier to query for the portals
         */
-        getSearchResults: function(){
+        getSearchResults: function(options){
 
           try{
 
@@ -169,7 +171,15 @@ define(["jquery",
 
             //Set the query service URL
             try{
-              if( MetacatUI.appModel.get("defaultAlternateRepositoryId") ){
+              //If a specific node Id is specified, use that
+              if( options && options.nodeId ){
+                var mnToQuery = _.findWhere( MetacatUI.appModel.get("alternateRepositories"), { identifier: options.nodeId } );
+                if( mnToQuery ){
+                  this.searchResults.queryServiceUrl = mnToQuery.queryServiceUrl;
+                }
+              }
+              //Otherwise, use the default altnerate repository ID
+              else if( MetacatUI.appModel.get("defaultAlternateRepositoryId") ){
                 var mnToQuery = _.findWhere( MetacatUI.appModel.get("alternateRepositories"), { identifier: MetacatUI.appModel.get("defaultAlternateRepositoryId") } );
                 if( mnToQuery ){
                   this.searchResults.queryServiceUrl = mnToQuery.queryServiceUrl;
@@ -177,7 +187,7 @@ define(["jquery",
               }
             }
             catch(e){
-              console.error("Could not get active alt repo. ", e);
+              console.error("Could not get alt repo in PortalListView.getSearchResults: ", e);
             }
 
             //Set the query on the SearchResults
@@ -384,16 +394,25 @@ define(["jquery",
                      message += " free preview. ";
                    }
                    else{
-                     message += " subscription. ";
+                     message += " membership. ";
                    }
 
-                   var portalQuotas = MetacatUI.appUserModel.getQuotas("portal");
-                   if( portalQuotas.length ){
-                     message += "(" + portalQuotas[0].get("softLimit") + " " +
-                                ((portalQuotas[0].get("softLimit") > 1)? MetacatUI.appModel.get("portalTermPlural") : MetacatUI.appModel.get("portalTermSingular")) + ")";
-                   }
+                   var memberships = MetacatUI.appUserModel.get("dataoneMemberships"),
+                       membership;
 
-                   message += " Contact us to upgrade your subscription.";
+                   if( memberships && memberships.length ){
+                     //TODO: Render a PortalListView for each membership. For now, default to the first
+                     membership = memberships.models[0];
+                     var portalQuotas = membership.getQuotas("portal");
+
+                     if( portalQuotas.length ){
+                       message += "(" + portalQuotas[0].get("softLimit") + " " +
+                                  ((portalQuotas[0].get("softLimit") > 1)? MetacatUI.appModel.get("portalTermPlural") : MetacatUI.appModel.get("portalTermSingular")) + ")";
+                     }
+
+                     message += " Contact us to upgrade your membership.";
+
+                   }
 
                  }
                  else{

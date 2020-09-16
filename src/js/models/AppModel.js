@@ -1398,7 +1398,7 @@ define(['jquery', 'underscore', 'backbone'],
 
       /**
       * Enable or disable the DataONE Bookkeeper services. If enabled, Portal Views will use the DataONE Plus
-      * paid features for active subscriptions. If disabled, the Portal Views will assume
+      * paid features for active memberships. If disabled, the Portal Views will assume
       * all portals are in inactive/free, and will only render free features.
       * @type {boolean}
       * @since 2.14.0
@@ -1429,13 +1429,13 @@ define(['jquery', 'underscore', 'backbone'],
       */
       bookkeeperUsagesUrl: null,
       /**
-      * The URL for the DataONE Bookkeeper Subscriptions API, e.g. listSubscriptions(), fetchSubscription(), createSubscription(), etc.
+      * The URL for the DataONE Bookkeeper Memberships API, e.g. listMemberships(), fetchMembership(), createMembership(), etc.
       * This full URL is contructed using {@link AppModel#bookkeeperBaseUrl} when the AppModel is initialized.
       * @readonly
       * @type {string}
       * @since 2.14.0
       */
-      bookkeeperSubscriptionsUrl: null,
+      bookkeeperMembershipsUrl: null,
       /**
       * The URL for the DataONE Bookkeeper Customers API, e.g. listCustomers(), getCustomer(), createCustomer(), etc.
       * This full URL is contructed using {@link AppModel#bookkeeperBaseUrl} when the AppModel is initialized.
@@ -1602,7 +1602,7 @@ define(['jquery', 'underscore', 'backbone'],
 
       //Construct the DataONE Bookkeeper service API URLs
       if( this.get("enableBookkeeperServices") ){
-        this.set("bookkeeperSubscriptionsUrl", this.get("bookkeeperBaseUrl")  + "/subscriptions");
+        this.set("bookkeeperMembershipsUrl", this.get("bookkeeperBaseUrl")  + "/subscriptions");
         this.set("bookkeeperCustomersUrl",     this.get("bookkeeperBaseUrl")  + "/customers");
         this.set("bookkeeperQuotasUrl",        this.get("bookkeeperBaseUrl")  + "/quotas");
         this.set("bookkeeperUsagesUrl",        this.get("bookkeeperBaseUrl")  + "/usages");
