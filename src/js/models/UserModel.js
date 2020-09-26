@@ -999,7 +999,7 @@ define(['jquery', 'underscore', 'backbone', 'jws', 'models/Search', "collections
 
                 //Check that there is at least one Quota where the totalUsage < softLimit
                 var hasRemainingUsage = _.some(quotas, function(quota){
-                  return quota.get("totalUsage") < quota.get("softLimit");
+                  return quota.hasRemainingUsage();
                 });
 
                 //If there is remaining usage left in at least one Quota, then the user can create a portal

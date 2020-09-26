@@ -51,6 +51,14 @@ define(["jquery",
           DataONEObject: null,
           SolrResult: null
         }
+      },
+
+      /**
+      * Returns true if this Usage status indicates that the Usage is active (rather than inactive).
+      * @returns {boolean}
+      */
+      isActive: function(){
+        return this.get("status") == "active";
       }
 
   });

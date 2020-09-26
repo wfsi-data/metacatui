@@ -18,6 +18,12 @@ define(["jquery",
       /** @lends PortalUsagesView.prototype */{
 
       /**
+      * A reference to the DataONE Plus Membership that these Portals are a part of.
+      * @type {Membership}
+      */
+      membership: null,
+
+      /**
       * A reference to the Usages collection that is rendered in this view
       * @type {Usages}
       */
@@ -39,134 +45,26 @@ define(["jquery",
           this.$el.html(this.template());
 
           if( !this.usagesCollection ){
-            this.usagesCollection = new Usages();
-          }
-
-          //When in DataONE Plus Preview mode, search for portals in Solr first,
-          // then create Usage models for each portal in Solr.
-          if( MetacatUI.appModel.get("dataonePlusPreviewMode") ){
-
-            this.listenTo(this.searchResults, "sync", function(){
-
-              //Create a Usage for each portal found in Solr
-              this.searchResults.each(function(searchResult){
-                this.usagesCollection.add({
-                  instanceId: searchResult.get("seriesId"),
-                  status: "active",
-                  quantity: 1,
-                  nodeId: searchResult.get("datasource")
-                });
-              }, this);
-
-              //Merge the Usages and Search Results
-              this.mergeSearchResults();
-
-              //Update the view with info about the corresponding Usage model
-              this.showUsageInfo();
-            });
-
-            if( MetacatUI.appModel.get("dataonePlusPreviewPortals").length ){
-
-              this.altReposChecked = 0;
-              this.altReposToCheck = [];
-              this.additionalPortalsToDisplay = [];
-
-              _.each( MetacatUI.appModel.get("alternateRepositories"), function(altRepo){
-
-                var portalsInThisRepo = _.where(MetacatUI.appModel.get("dataonePlusPreviewPortals"),
-                                          { datasource: altRepo.identifier });
-
-                if( portalsInThisRepo.length ){
-
-                  var searchResults = new SearchResults();
-                  this.listenToOnce(searchResults, "reset", function(){
-
-                    if( searchResults.length ){
-                      this.additionalPortalsToDisplay = this.additionalPortalsToDisplay.concat( searchResults.models );
-                    }
-
-                    if(typeof this.altReposChecked == "number" ){
-                      this.altReposChecked++;
-                      if( this.altReposChecked == this.altReposToCheck ){
-                        //Call the PortalListView render function
-                        PortalListView.prototype.render.call(this);
-                      }
-                    }
-
-                    //Create a Usage for each portal found in Solr
-                    searchResults.each(function(searchResult){
-                      this.usagesCollection.add({
-                        instanceId: searchResult.get("seriesId"),
-                        status: "active",
-                        quantity: 1,
-                        nodeId: searchResult.get("datasource")
-                      });
-                    }, this);
-
-                    //Merge the Usages and Search Results
-                    this.mergeSearchResults(searchResults);
-
-                    //Update the view with info about the corresponding Usage model
-                    this.showUsageInfo();
-
-                  });
-
-                  //Create a Filters() collection
-                  var portalFilters = new Filters();
-                  portalFilters.mustMatchIds = true;
-                  portalFilters.addWritePermissionFilter();
-                  portalFilters.add({
-                    fields: ["obsoletedBy"],
-                    values: ["*"],
-                    matchSubstring: false,
-                    exclude: true
-                  });
-                  portalFilters.add({
-                    fields: ["datasource"],
-                    values: [altRepo.identifier],
-                    matchSubstring: false,
-                    exclude: false
-                  });
-                  var portalIds = _.pluck(portalsInThisRepo, "seriesId");
-                  portalFilters.add({
-                    fields: ["seriesId"],
-                    values: portalIds,
-                    operator: "OR",
-                    matchSubstring: false
-                  });
-
-                  searchResults.rows = portalIds.length;
-                  searchResults.fields = this.searchFields;
-
-                  searchResults.queryServiceUrl = altRepo.queryServiceUrl;
-
-                  searchResults.setQuery( portalFilters.getQuery() );
-
-                  this.altReposToCheck++;
-
-                  //Get the first page of results
-                  searchResults.toPage(0);
+            if( this.membership ){
+              var portalQuotas = this.membership.getQuotas("portal");
+              if( portalQuotas.length ){
+                this.usagesCollection = portalQuotas[0].get("usages");
+                if( this.usagesCollection.length == 0 ){
+                  this.showEmptyList();
+                  this.renderCreateButton();
+                  return;
                 }
-
-              }, this);
-
-
-              return;
-
+              }
+              //If there is no Usages collection or Membership model, there is nothing to render
+              else{
+                return;
+              }
             }
-
-            //Call the PortalListView render function
-            PortalListView.prototype.render.call(this);
-
-            //Don't do anything else in this render function
-            return;
+            //If there is no Usages collection or Membership model, there is nothing to render
+            else{
+              return;
+            }
           }
-
-          //When the collection has been fetched, redner the Usage list
-          this.listenToOnce(this.usagesCollection, "sync", this.getSearchResultsForUsages);
-
-          //Listen to the collection for errors
-          this.listenToOnce(this.usagesCollection, "error", this.showError);
 
           //When the SearchResults are retrieved, merge them with the Usages collection
           this.listenToOnce(this.searchResults, "sync", function(){
@@ -176,11 +74,16 @@ define(["jquery",
             this.showUsageInfo();
           });
 
-          //Fetch the collection
-          this.usagesCollection.fetch({
-            quotaType: "portal",
-            subject: MetacatUI.appUserModel.get("username")
-          });
+          if( this.usagesCollection.fetching == true ){
+            //When the collection has been fetched, render the Usage list
+            this.listenToOnce(this.usagesCollection, "sync", this.getSearchResultsForUsages);
+
+            //Listen to the collection for errors
+            this.listenToOnce(this.usagesCollection, "error", this.showError);
+          }
+          else{
+            this.getSearchResultsForUsages(this.usagesCollection);
+          }
 
         }
         catch(e){
@@ -199,55 +102,65 @@ define(["jquery",
 
         try{
 
+          if( !usages ){
+            var usages = this.usagesCollection;
+          }
+
           //Reject any Usages that are on nodes not enabled in the MetacatUI config
           // as an alternateRepository
           var altRepoIds = _.pluck(MetacatUI.appModel.get("alternateRepositories"), "identifier");
-          var usages = this.usagesCollection.reject(function(usage){
+          var filteredUsages = usages.reject(function(usage){
             return !_.contains(altRepoIds, usage.get("nodeId"));
           });
 
-          //Group the Usages by Member Node ID
-          var usagesByNode = _.groupBy( usages, function(usage){ return usage.get("nodeId") });
+          if( filteredUsages.length == 0 || !filteredUsages ){
+            //If there are no portal usages, trigger the SearchResults as synced, since we won't be sending a search at all.
+            this.searchResults.trigger("sync");
+          }
+          else{
+            //Group the Usages by Member Node ID
+            var usagesByNode = _.groupBy( filteredUsages, function(usage){ return usage.get("nodeId") });
 
-          _.mapObject(usagesByNode, function(usages, nodeId){
-            //Set the number of portals to the number of usages found
-            this.numPortals = usages.length;
+            _.mapObject(usagesByNode, function(filteredUsages, nodeId){
+              //Set the number of portals to the number of usages found
+              this.numPortals = filteredUsages.length;
 
-            //Get a list of the portal identifiers in this member node
-            var portalIds = [];
-            _.each(usages, function(u){ portalIds.push(u.get("instanceId")) });
+              //Get a list of the portal identifiers in this member node
+              var portalIds = [];
+              _.each(filteredUsages, function(u){ portalIds.push(u.get("instanceId")) });
 
-            //If there are no given filters, create a Filter for the seriesId of each portal Usage
-            if( !this.filters && portalIds.length ){
-              this.filters = new Filters();
+              //If there are no given filters, create a Filter for the seriesId of each portal Usage
+              if( !this.filters && portalIds.length ){
+                this.filters = new Filters();
 
-              this.filters.mustMatchIds = true;
-              this.filters.add({
-                fields: ["seriesId"],
-                values: portalIds,
-                operator: "OR",
-                matchSubstring: false,
-                exclude: false
-              });
+                this.filters.mustMatchIds = true;
+                this.filters.add({
+                  fields: ["seriesId"],
+                  values: portalIds,
+                  operator: "OR",
+                  matchSubstring: false,
+                  exclude: false
+                });
 
-              //Only get Portals that the user is an owner of
-              this.filters.addWritePermissionFilter();
-            }
-            //If the filters set on this view is an array of JSON, add it to a Filters collection
-            else if( this.filters.length && !Filters.prototype.isPrototypeOf(this.filters) ){
-              //Create search filters for finding the portals
-              var filters = new Filters();
+                //Only get Portals that the user is an owner of
+                //this.filters.addWritePermissionFilter();
+              }
+              //If the filters set on this view is an array of JSON, add it to a Filters collection
+              else if( this.filters.length && !Filters.prototype.isPrototypeOf(this.filters) ){
+                //Create search filters for finding the portals
+                var filters = new Filters();
 
-              filters.add( this.filters );
+                filters.add( this.filters );
 
-              this.filters = filters;
-            }
-            else{
-              this.filters = new Filters();
-            }
+                this.filters = filters;
+              }
+              else{
+                this.filters = new Filters();
+              }
 
-            this.getSearchResults({ nodeId: nodeId });
-          }, this);
+              this.getSearchResults({ nodeId: nodeId });
+            }, this);
+          }
 
         }
         catch(e){
@@ -291,6 +204,8 @@ define(["jquery",
       */
       showUsageInfo: function(){
 
+        var missingPortalObjects = 0;
+
         this.usagesCollection.each(function(usage){
 
           //Find the list item HTML element for this Usage
@@ -319,12 +234,102 @@ define(["jquery",
             }
 
           }
+          else{
+            if( usage.isActive() ){
+              missingPortalObjects++;
+            }
+          }
 
         }, this);
+
+        if( missingPortalObjects > 0 ){
+          var missingMessage = missingPortalObjects + " " + MetacatUI.appModel.get("portalTermPlural") +
+                          " have been created in your " + MetacatUI.appModel.get("dataonePlusName") +
+                          " membership but we couldn't find them in a search.";
+
+          if( this.$("tbody .loading, tbody .message").length ){
+            this.$("tbody .loading, tbody .message").remove();
+
+            var row = this.createListItem();
+            row.html("<td colspan='4' class='center message'>" + missingMessage + "</td>");
+            this.$(this.listContainer).html(row);
+
+          }
+          else{
+            this.$el.append(missingMessage);
+          }
+        }
 
         //Add a "Create" button to create a new portal, since we know the total Usage and
         // remaining Quota now.
         this.renderCreateButton();
+
+      },
+
+      /**
+      * @inheritdoc
+      */
+      renderCreateButton: function(){
+
+        try{
+
+          //Create a New portal buttton
+          var createButton    = this.makeCreateButton(),
+              canCreatePortal = true,
+              portalLimit     = 0;
+
+          if( this.membership ){
+            var portalQuotas = this.membership.getQuotas("portal");
+
+            if( portalQuotas.length ){
+              canCreatePortal = portalQuotas[0].hasRemainingUsage();
+              portalLimit = portalQuotas[0].get("softLimit");
+            }
+            else{
+              canCreatePortal = false;
+            }
+          }
+          else{
+            canCreatePortal = false;
+          }
+
+          if( canCreatePortal ){
+
+            //Add the link URL to the button
+            createButton.attr("href", MetacatUI.root + "/edit/" + MetacatUI.appModel.get("portalTermPlural"))
+
+          }
+          else{
+            //Disable the button
+            createButton.addClass("disabled");
+
+            var message = MetacatUI.appModel.get("portalEditNoQuotaMessage");
+
+            if( portalLimit > 0 ){
+              message += " (" + portalLimit + " " +
+                         ((portalLimit > 1)? MetacatUI.appModel.get("portalTermPlural") : MetacatUI.appModel.get("portalTermSingular")) +
+                         ")"
+            }
+
+            //Add the tooltip to the button
+            createButton.tooltip({
+              placement: "top",
+              trigger: "hover click focus",
+              delay: {
+                show: 500
+              },
+              title: message
+            });
+          }
+
+          //Add the create button to the view
+          this.$(this.createBtnContainer).html(createButton);
+
+        }
+        catch(e){
+          console.error("Couldn't render the Create Portal button: ", e);
+        }
+
 
       }
 

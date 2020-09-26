@@ -214,15 +214,18 @@ define(["jquery",
 
           try{
 
+            //If we are not in DataONE Plus Preview Mode or using Bookkeeper, then render a Create Portal button
+            if( !MetacatUI.appModel.get("dataonePlusPreviewMode") && !MetacatUI.appModel.get("enableBookkeeperServices") ){
+              //Add a "Create" button to create a new portal
+              this.renderCreateButton();
+            }
+
             //Get the list container element
             var listContainer = this.$(this.listContainer);
 
             //If no search results were found, display a message
             if( (!this.searchResults || !this.searchResults.length) && !this.additionalPortalsToDisplay.length){
-              var row = this.createListItem();
-              row.html("<td colspan='4' class='center'>You haven't created or have access to any " +
-                        MetacatUI.appModel.get("portalTermPlural") + " yet.</td>");
-              listContainer.html(row);
+              this.showEmptyList();
               return;
             }
 
@@ -237,13 +240,6 @@ define(["jquery",
               listContainer.append(this.createListItem(searchResult));
 
             }, this);
-
-            //TODO: Unwrap the call to renderCreateButton() from this if condition,
-            // because the ListView will only ever be used when Usages/Bookkeeper is enabled
-            if( !MetacatUI.appModel.get("dataonePlusPreviewMode") ){
-              //Add a "Create" button to create a new portal
-              this.renderCreateButton();
-            }
 
           }
           catch(e){
@@ -357,26 +353,16 @@ define(["jquery",
             else{
 
               //Create a New portal buttton
-              var createButton = $(document.createElement("a"))
-                                 .addClass("btn btn-primary")
-                                 .append( $(document.createElement("i")).addClass("icon icon-plus icon-on-left"),
-                                   "New " + MetacatUI.appModel.get('portalTermSingular'));
-
-              var isNotAuthorizedNoBookkeeper   = !MetacatUI.appModel.get("enableBookkeeperServices") &&
-                                                   MetacatUI.appUserModel.get("isAuthorizedCreatePortal") === false,
-                  reachedLimitWithBookkeeper    = MetacatUI.appModel.get("enableBookkeeperServices") &&
-                                                  MetacatUI.appUserModel.get("isAuthorizedCreatePortal") === false,
-                  reachedLimitWithoutBookkeeper = !MetacatUI.appModel.get("enableBookkeeperServices") &&
-                                                   MetacatUI.appModel.get("portalLimit") <= this.searchResults.length;
+              var createButton = this.makeCreateButton();
 
               //If creating portals is disabled in the entire app, or is only limited to certain groups,
               // then don't show the Create button.
-              if( isNotAuthorizedNoBookkeeper ){
+              if( MetacatUI.appUserModel.get("isAuthorizedCreatePortal") === false ){
                 return;
               }
               //If creating portals is enabled, but this person is unauthorized because of Bookkeeper info,
               // then show the Create button as disabled.
-              else if( reachedLimitWithBookkeeper || reachedLimitWithoutBookkeeper ){
+              else if( MetacatUI.appModel.get("portalLimit") <= this.searchResults.length ){
 
                  //Disable the button
                  createButton.addClass("disabled");
@@ -384,46 +370,13 @@ define(["jquery",
                  //Add the create button to the view
                  this.$(this.createBtnContainer).html(createButton);
 
-                 var message = "You've already reached the " + MetacatUI.appModel.get("portalTermSingular") +
-                               " limit for your ";
+                 var message = MetacatUI.appModel.get("portalEditNoQuotaMessage");
 
-                 if( MetacatUI.appModel.get("enableBookkeeperServices") ){
-                   message += MetacatUI.appModel.get("dataonePlusName");
-
-                   if( MetacatUI.appModel.get("dataonePlusPreviewMode") ){
-                     message += " free preview. ";
-                   }
-                   else{
-                     message += " membership. ";
-                   }
-
-                   var memberships = MetacatUI.appUserModel.get("dataoneMemberships"),
-                       membership;
-
-                   if( memberships && memberships.length ){
-                     //TODO: Render a PortalListView for each membership. For now, default to the first
-                     membership = memberships.models[0];
-                     var portalQuotas = membership.getQuotas("portal");
-
-                     if( portalQuotas.length ){
-                       message += "(" + portalQuotas[0].get("softLimit") + " " +
-                                  ((portalQuotas[0].get("softLimit") > 1)? MetacatUI.appModel.get("portalTermPlural") : MetacatUI.appModel.get("portalTermSingular")) + ")";
-                     }
-
-                     message += " Contact us to upgrade your membership.";
-
-                   }
-
-                 }
-                 else{
-                   message += " account. ";
-
-                   var portalLimit = MetacatUI.appModel.get("portalLimit");
-                   if( portalLimit > 0 ){
-                     message += "(" + portalLimit + " " +
-                                ((portalLimit > 1)? MetacatUI.appModel.get("portalTermPlural") : MetacatUI.appModel.get("portalTermSingular")) +
-                                ")"
-                   }
+                 var portalLimit = MetacatUI.appModel.get("portalLimit");
+                 if( portalLimit > 0 ){
+                   message += " (" + portalLimit + " " +
+                              ((portalLimit > 1)? MetacatUI.appModel.get("portalTermPlural") : MetacatUI.appModel.get("portalTermSingular")) +
+                              ")"
                  }
 
                  //Add the tooltip to the button
@@ -435,6 +388,7 @@ define(["jquery",
                    },
                    title: message
                  });
+
               }
               else{
 
@@ -452,6 +406,34 @@ define(["jquery",
           catch(e){
             console.error(e);
           }
+        },
+
+        /**
+        * Creates a "Create portal" button and returns it
+        * @returns {jQuery}
+        */
+        makeCreateButton: function(){
+          //Create a New portal buttton
+          return $(document.createElement("a"))
+                             .addClass("btn btn-primary")
+                             .append( $(document.createElement("i")).addClass("icon icon-plus icon-on-left"),
+                               "New " + MetacatUI.appModel.get('portalTermSingular'));
+        },
+
+        /**
+        * Shows a message that no portals have been created yet
+        */
+        showEmptyList: function(){
+
+          //If there is already a message displayed in the table, don't show another one.
+          if( this.$("tbody > tr > td.message").length ){
+            return;
+          }
+
+          var row = this.createListItem();
+          row.html("<td colspan='4' class='center message'>You haven't created or have access to any " +
+                    MetacatUI.appModel.get("portalTermPlural") + " yet.</td>");
+          this.$(this.listContainer).html(row);
         },
 
         /**

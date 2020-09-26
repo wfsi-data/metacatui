@@ -32,6 +32,12 @@ define(["jquery", "underscore", "backbone", "models/bookkeeper/Usage", "models/b
     * @type {string[]}
     */
     queryParams: ["quotaType", "subscriber"],
+    
+    /**
+    * If true, this collection is in the process of being fetched
+    * @type {boolean}
+    */
+    fetching: false,
 
     /**
     * Constructs a URL string for fetching this collection and returns it

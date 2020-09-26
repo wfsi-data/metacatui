@@ -41,6 +41,7 @@ define(["jquery",
       * @property {number} startDate  The timestamp of the date that this Membership was started
       * @property {string} status  The status of this Membership, which is taken from a controlled vocabulary set on this model (statusOptions)
       * @property {string[]} statusOptions  The controlled vocabulary from which the `status` value can be from
+      * @property {object} statusNames A literal object that maps the status type to a human-readable name
       * @property {number} trialEnd  The timestamp of the date that this free trial Membership ends
       * @property {number} trialStart  The timestamp of the date that this free trial Membership starts
       * @property {Quotas} quotas A Quotas collection that is associated with this Membership
@@ -59,6 +60,14 @@ define(["jquery",
           startDate: null,
           status: null,
           statusOptions: ["trialing", "active", "past_due", "canceled", "unpaid", "incomplete_expired", "incomplete"],
+          statusNames: {
+            "trialing": "Preview Mode",
+            "active": "Active",
+            "past_due": "Past due",
+            "canceled": "Canceled",
+            "unpaid": "Unpaid",
+            "incomplete_expired": "Expired",
+            "incomplete": "Incomplete"},
           trialEnd: null,
           trialStart: null,
           quotas: null
@@ -110,6 +119,38 @@ define(["jquery",
         else{
           return [];
         }
+      },
+
+      /**
+      * For each Quota of this type in this Membership, the usage quantity is totaled and returned.
+      * If no type is specified, all quotas in this Membership will be totaled.
+      * @param {string} [type] - The Quota type to total. e.g. "portal". See {@link Quota#defaults} `quotaTypeOptions`
+      * @returns {number} The total usage of the given Quota type for this Membership
+      */
+      getTotalUsage: function(type){
+        var totalUsage = 0;
+
+        _.each(this.getQuotas(type), function(q){
+          totalUsage += q.get("totalUsage");
+        });
+
+        return totalUsage;
+      },
+
+      /**
+      * For each Quota of this type in this Membership, the quota softLimit is totaled and returned.
+      * If no type is specified, all quotas in this Membership will be totaled.
+      * @param {string} [type] - The Quota type to total. e.g. "portal". See {@link Quota#defaults} `quotaTypeOptions`
+      * @returns {number} The total quota softLimit of the given Quota type for this Membership
+      */
+      getTotalQuotaLimit: function(type){
+        var totalQuotaLimit = 0;
+
+        _.each(this.getQuotas(type), function(q){
+          totalQuotaLimit += q.get("softLimit");
+        });
+
+        return totalQuotaLimit;
       },
 
       /**

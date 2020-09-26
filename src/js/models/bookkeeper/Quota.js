@@ -1,8 +1,10 @@
 /* global define */
 define(["jquery",
         "underscore",
-        "backbone"],
-  function($, _, Backbone) {
+        "backbone",
+        "collections/bookkeeper/Usages",
+        "models/bookkeeper/Usage"],
+  function($, _, Backbone, Usages, Usage) {
     /**
      * @classdesc A Quota Model represents a single instance of a Quota object from the
      * DataONE Bookkeeper data model. Quotas are limits set
@@ -39,6 +41,7 @@ define(["jquery",
       * @property {string} customerId  The id of the Customer associated with this Quota
       * @property {string} subject  The user or group subject associated with this Quota
       * @property {number} totalUsage  The total or sum of usage of this Quota
+      * @property {Usages} usages - The Usages collection that is associated with this Quota
       */
       defaults: function(){
         return {
@@ -52,8 +55,37 @@ define(["jquery",
           unitOptions: ["portal", "byte"],
           customerId: "",
           subject: "",
-          totalUsage: 0
+          totalUsage: 0,
+          usages: new Usages()
         }
+      },
+
+      /**
+      * Adds a reference to the given Usage to this Quota by adding it to the Usages
+      * collection attribute ('usages'). The totalUsage or other attributes are not affected.
+      * @param {Usage}
+      */
+      addUsage: function(usage){
+
+        //Get the Usages collection
+        var usages = this.get("usages");
+
+        //If a collection hasn't been created yet, create one
+        if( !usages ){
+          usages = new Usages();
+          this.set("usages", usages);
+        }
+
+        //Add the Usage model to the Usages collection
+        usages.add(usage);
+      },
+
+      /**
+      * Returns true if this Quota has at least 1 usage remaining.
+      * @returns {boolean}
+      */
+      hasRemainingUsage: function(){
+        return this.get("totalUsage") < this.get("softLimit");
       }
 
     });

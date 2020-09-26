@@ -34,6 +34,8 @@ define(["jquery",
 
         try{
 
+          var totalMemberships = this.memberships.length
+
           //Create and render a MembershipView for each Membership
           this.memberships.each(function(membership){
 
@@ -42,6 +44,10 @@ define(["jquery",
             membershipView.membership = membership;
             this.$el.append( membershipView.el );
             membershipView.render();
+
+            if( totalMemberships > 1  && membership.getTotalQuotaLimit("portal") > 0 ){
+              this.$el.append("<hr/>");
+            }
 
           }, this);
 
