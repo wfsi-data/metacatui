@@ -1453,6 +1453,22 @@ define(['jquery', 'underscore', 'backbone'],
       */
       dataonePlusName: "DataONE Plus",
 
+      /**
+      * The noun used to describe the DataONE services, which is used in messaging throughout the UI.
+      * This is only used if the enableBookkeeperServices setting is set to true.
+      * @type {string}
+      * @default "membership"
+      */
+      dataonePlusGeneralName: "membership",
+
+      /**
+      * The noun used to describe the DataONE Plus free trials, which is used in messaging throughout the UI.
+      * This is only used if the enableBookkeeperServices setting is set to true.
+      * @type {string}
+      * @default "free preview"
+      */
+      dataonePlusTrialName: "free preview",
+
       //These two DataONE Plus Preview attributes are for a special DataONE Plus tag of MetacatUI
       // and won't be released in an offical MetacatUI version, since they will be replaced by bookkeeper
       dataonePlusPreviewMode: false,
@@ -1741,6 +1757,23 @@ define(['jquery', 'underscore', 'backbone'],
       //Otherwise, use the first alt repo in the list
       if( !defaultAltRepo ){
         this.set("activeAlternateRepositoryId", altRepos[0].identifier);
+      }
+    },
+
+    /**
+    * Logs a runtime error to an external error-logging service. Currently, error messages are
+    * logged to Google Analytics, if a {@link AppConfig#googleAnalyticsKey} is specified. More
+    * robust services should be supported in future releases.
+    * @param {string} errorMessage - The human-readable error message to log
+    * @param {boolean} isFatal - If true, the error is a fatal error that killed the app. Set to true to log this.
+    */
+    logError: function(errorMessage, isFatal){
+      //Send this exception to Google Analytics
+      if( this.get("googleAnalyticsKey") && (typeof ga !== "undefined") ){
+        ga("send", "exception", {
+          "exDescription": errorMessage,
+          "exFatal": isFatal
+        });
       }
     }
   });

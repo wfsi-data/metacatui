@@ -181,22 +181,6 @@ define(["jquery",
 
         this.usagesCollection.mergeCollections(searchResults);
 
-        //If in DataONE Plus Preview mode, total the portal count from Solr and use that as the portal totalUsage
-        if( MetacatUI.appModel.get("dataonePlusPreviewMode") ){
-
-          var memberships = MetacatUI.appUserModel.get("dataoneMemberships"),
-              membership;
-
-          if( memberships && memberships.length ){
-            //TODO: Render a PortalListView for each membership. For now, default to the first
-            membership = memberships.models[0];
-            var portalQuotas = membership.getQuotas("portal");
-
-            if( portalQuotas.length ){
-              portalQuotas[0].set("totalUsage", this.usagesCollection.length);
-            }
-          }
-        }
       },
 
       /**

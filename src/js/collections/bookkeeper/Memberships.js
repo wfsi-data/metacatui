@@ -15,6 +15,12 @@ define(["jquery", "underscore", "backbone", "models/bookkeeper/Membership", "col
     /** @lends Memberships.prototype */ {
 
     /**
+    * The name of this Collection type
+    * @type {string}
+    */
+    type: "Memberships",
+
+    /**
     * The class/model that is contained in this collection.
     * @type {Backbone.Model}
     */
@@ -94,7 +100,12 @@ define(["jquery", "underscore", "backbone", "models/bookkeeper/Membership", "col
       this.fetching = true;
 
       var fetchOptions = {
-        url: this.url(options)
+        url: this.url(options),
+        error: function(memberships, xhr){
+          if( xhr.status == 404 ){
+            memberships.trigger("notFound");
+          }
+        }
       }
 
       fetchOptions = Object.assign(fetchOptions, MetacatUI.appUserModel.createAjaxSettings());

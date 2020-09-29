@@ -45,7 +45,8 @@ define(['jquery', 'underscore', 'backbone', 'jws', 'models/Search', "collections
 				rawData: null,
         portalQuota: -1,
         isAuthorizedCreatePortal: null,
-        dataoneMemberships: null
+        dataoneMemberships: null,
+        dataoneCustomer: null
 			}
 		},
 
@@ -1074,45 +1075,14 @@ define(['jquery', 'underscore', 'backbone', 'jws', 'models/Search', "collections
           //Create a Memberships collection
           var memberships = new Memberships();
 
-          //Create a Membership model
-          var membership = new Membership();
+          thisUser.listenToOnce(memberships, "sync notFound", function(){
 
-          //Add the Membership model to the Membership collection
-          memberships.add(membership);
-
-          if( MetacatUI.appModel.get("dataonePlusPreviewMode") ){
-            //Create a Quotas collection
-            var quotas = new Quotas();
-
-            //Create Quota models for preview mode
-            quotas.add({
-              softLimit: MetacatUI.appModel.get("portalLimit"),
-              hardLimit: MetacatUI.appModel.get("portalLimit"),
-              quotaType: "portal",
-              unit: "portal",
-              subject: thisUser.get("username"),
-              membership: membership
-            });
-            //Save the Quotas collection to the Membership
-            membership.set("quotas", quotas);
-
-            //Default to all people being in trial mode
-            membership.set("status", "trialing");
-
-            //Save a reference to the Membership on this UserModel
+            //Save a reference to the Memberships on this UserModel
             thisUser.set("dataoneMemberships", memberships);
+          });
 
-          }
-          else{
-
-            thisUser.listenToOnce(memberships, "sync", function(){
-              //Save a reference to the Memberships on this UserModel
-              thisUser.set("dataoneMemberships", memberships);
-            });
-
-            //Fetch the Subscriptioin
-            memberships.fetch();
-          }
+          //Fetch the Subscriptioin
+          memberships.fetch();
 
         });
       }
