@@ -45,7 +45,7 @@ define(['jquery', 'underscore', 'backbone', 'jws', 'models/Search', "collections
 				rawData: null,
         portalQuota: -1,
         isAuthorizedCreatePortal: null,
-        dataoneMemberships: null,
+        dataoneOrders: null,
         dataoneCustomer: null
 			}
 		},
@@ -68,8 +68,8 @@ define(['jquery', 'underscore', 'backbone', 'jws', 'models/Search', "collections
 			this.set("searchResults", searchResults);
 
       if( MetacatUI.appModel.get("enableBookkeeperServices") ){
-        //When the user is logged in, see if they have a DataONE membership
-        this.on("change:loggedIn", this.fetchMembership);
+        //When the user is logged in, see if they have a DataONE order
+        this.on("change:loggedIn", this.fetchOrder);
       }
 		},
 
@@ -904,7 +904,7 @@ define(['jquery', 'underscore', 'backbone', 'jws', 'models/Search', "collections
     /**
     * Checks if this user has the quota to perform the given action
     * @param {string} action - The action to be performed
-    * @param {string} customerGroup - The subject or identifier of the customer/membership group
+    * @param {string} customerGroup - The subject or identifier of the customer/order group
     * to use this quota against
     */
     checkQuota: function(action, customerGroup){
@@ -979,11 +979,11 @@ define(['jquery', 'underscore', 'backbone', 'jws', 'models/Search', "collections
         //If anyone is allowed to create a portal, check if they have the quota to create a portal
         else if( MetacatUI.appModel.get("enableBookkeeperServices") ){
 
-          //Get the Memberships for this user
-          var memberships = this.get("dataoneMemberships");
+          //Get the Orders for this user
+          var orders = this.get("dataoneOrders");
 
-          //If this user doesn't have a DataONE Membership, they cannot create a portal
-          if( !memberships || !memberships.length ){
+          //If this user doesn't have a DataONE Order, they cannot create a portal
+          if( !orders || !orders.length ){
             this.set("isAuthorizedCreatePortal", false);
             return;
           }
@@ -991,10 +991,10 @@ define(['jquery', 'underscore', 'backbone', 'jws', 'models/Search', "collections
             var isAuthorizedCreatePortal = false,
                 i = 0;
 
-            //Iterate over each Membership to check for one that has remaining portal Quota
-            while( !isAuthorizedCreatePortal && i<memberships.models.length){
-              //Get the Membership for this User
-              var quotas = memberships.models[i].getQuotas("portal");
+            //Iterate over each Order to check for one that has remaining portal Quota
+            while( !isAuthorizedCreatePortal && i<orders.models.length){
+              //Get the Order for this User
+              var quotas = orders.models[i].getQuotas("portal");
 
               if( quotas && quotas.length){
 
@@ -1057,10 +1057,10 @@ define(['jquery', 'underscore', 'backbone', 'jws', 'models/Search', "collections
     },
 
     /**
-    * Retrieve all the info about this user's DataONE Membership
-    * @fires User#change:dataoneMemberships
+    * Retrieve all the info about this user's DataONE Order
+    * @fires User#change:dataoneOrders
     */
-    fetchMembership: function(){
+    fetchOrder: function(){
 
       //If Bookkeeper services are disabled, exit
       if( !MetacatUI.appModel.get("enableBookkeeperServices") ){
@@ -1069,25 +1069,25 @@ define(['jquery', 'underscore', 'backbone', 'jws', 'models/Search', "collections
 
       try{
         var thisUser = this;
-        require(["collections/bookkeeper/Quotas", "collections/bookkeeper/Memberships", "models/bookkeeper/Membership"],
-                function(Quotas, Memberships, Membership){
+        require(["collections/bookkeeper/Quotas", "collections/bookkeeper/Orders", "models/bookkeeper/Order"],
+                function(Quotas, Orders, Order){
 
-          //Create a Memberships collection
-          var memberships = new Memberships();
+          //Create a Orders collection
+          var orders = new Orders();
 
-          thisUser.listenToOnce(memberships, "sync notFound", function(){
+          thisUser.listenToOnce(orders, "sync notFound", function(){
 
-            //Save a reference to the Memberships on this UserModel
-            thisUser.set("dataoneMemberships", memberships);
+            //Save a reference to the Orders on this UserModel
+            thisUser.set("dataoneOrders", orders);
           });
 
           //Fetch the Subscriptioin
-          memberships.fetch();
+          orders.fetch();
 
         });
       }
       catch(e){
-        console.error("Couldn't get DataONE Membership info. Proceeding as an unsubscribed user. ", e);
+        console.error("Couldn't get DataONE Order info. Proceeding as an unsubscribed user. ", e);
       }
 
     },

@@ -5,51 +5,51 @@ define(["jquery",
         "collections/bookkeeper/Quotas"],
   function($, _, Backbone, Quotas) {
     /**
-     * @classdesc A Membership Model represents a single instance of a Membership object from the
+     * @classdesc A Order Model represents a single instance of a Order object from the
      * DataONE Bookkeeper data model.
-     * Memberships represent a Product that has been ordered by a Customer
+     * Orders represent a Product that has been ordered by a Customer
      * and is paid for on a recurring basis or is in a free trial period.
      * See https://github.com/DataONEorg/bookkeeper for documentation on the
      * DataONE Bookkeeper service and data model.
      *
-     * @class Membership
-     * @name Membership
+     * @class Order
+     * @name Order
      * @constructor
     */
-    var Membership = Backbone.Model.extend(
-      /** @lends Membership.prototype */ {
+    var Order = Backbone.Model.extend(
+      /** @lends Order.prototype */ {
 
       /**
       * The name of this type of model
       * @type {string}
       */
-      type: "Membership",
+      type: "Order",
 
       /**
-      * Default attributes for Membership models
-      * @name Membership#defaults
+      * Default attributes for Order models
+      * @name Order#defaults
       * @type {Object}
-      * @property {string} id  The unique identifier of this Membership, from Bookkeeper
-      * @property {string} object The name of this type of Bookkeeper object, which will always be "membership"
-      * @property {number} canceledAt  The timestamp of the date that this Membership was canceled
-      * @property {string} collectionMethod  The method of payment collection for this Membership, which is a string from a controlled vocabulary from Bookkeeper
-      * @property {number} created  The timestamp of the date that this Membership was created
-      * @property {number} customerId  The identifier of the Customer that is associated with this Membership
-      * @property {Object} metadata  Arbitrary metadata about this Membership. These values should be parsed and set on this model (TODO)
-      * @property {number} productId  The identifier of a Product in this Membership
-      * @property {number} quantity  The number of Memberships
-      * @property {number} startDate  The timestamp of the date that this Membership was started
-      * @property {string} status  The status of this Membership, which is taken from a controlled vocabulary set on this model (statusOptions)
+      * @property {string} id  The unique identifier of this Order, from Bookkeeper
+      * @property {string} object The name of this type of Bookkeeper object, which will always be "order"
+      * @property {number} canceledAt  The timestamp of the date that this Order was canceled
+      * @property {string} collectionMethod  The method of payment collection for this Order, which is a string from a controlled vocabulary from Bookkeeper
+      * @property {number} created  The timestamp of the date that this Order was created
+      * @property {number} customerId  The identifier of the Customer that is associated with this Order
+      * @property {Object} metadata  Arbitrary metadata about this Order. These values should be parsed and set on this model (TODO)
+      * @property {number} productId  The identifier of a Product in this Order
+      * @property {number} quantity  The number of Orders
+      * @property {number} startDate  The timestamp of the date that this Order was started
+      * @property {string} status  The status of this Order, which is taken from a controlled vocabulary set on this model (statusOptions)
       * @property {string[]} statusOptions  The controlled vocabulary from which the `status` value can be from
       * @property {object} statusNames A literal object that maps the status type to a human-readable name
-      * @property {number} trialEnd  The timestamp of the date that this free trial Membership ends
-      * @property {number} trialStart  The timestamp of the date that this free trial Membership starts
-      * @property {Quotas} quotas A Quotas collection that is associated with this Membership
+      * @property {number} trialEnd  The timestamp of the date that this free trial Order ends
+      * @property {number} trialStart  The timestamp of the date that this free trial Order starts
+      * @property {Quotas} quotas A Quotas collection that is associated with this Order
       */
       defaults: function(){
         return {
           id: null,
-          object: "membership",
+          object: "order",
           canceledAt: null,
           collectionMethod: "send_invoice",
           created: null,
@@ -75,35 +75,35 @@ define(["jquery",
       },
 
       /**
-      * Constructs and returns the URL string that is used to fetch and save a Membership
+      * Constructs and returns the URL string that is used to fetch and save a Order
       */
       url: function(){
-        return MetacatUI.appModel.get("bookkeeperMembershipsUrl");
+        return MetacatUI.appModel.get("bookkeeperOrdersUrl");
       },
 
       /**
       * Parses and returns the raw json returned from fetch()
-      * @param {JSON} membershipJSON - The raw JSON returned from Membership.fetch()
+      * @param {JSON} orderJSON - The raw JSON returned from Order.fetch()
       * @returns {JSON} The model data in JSON form
       */
-      parse: function(membershipJSON){
+      parse: function(orderJSON){
 
         //Create a Quotas Collection for the quotas attribute, and use that collection to parse that
         // section of the JSON
-        if( membershipJSON.quotas && membershipJSON.quotas.length ){
-          var quotasCollection = new Quotas(membershipJSON.quotas);
-          membershipJSON.quotas = quotasCollection;
+        if( orderJSON.quotas && orderJSON.quotas.length ){
+          var quotasCollection = new Quotas(orderJSON.quotas);
+          orderJSON.quotas = quotasCollection;
         }
         else{
-          membershipJSON.quotas = this.defaults().quotas;
+          orderJSON.quotas = this.defaults().quotas;
         }
 
-        return membershipJSON;
+        return orderJSON;
       },
 
       /**
-      * Finds the Quotas in this Membership, filters down to the type given, and returns them.
-      * If no type is specified, all quotas in this Membership will be returned.
+      * Finds the Quotas in this Order, filters down to the type given, and returns them.
+      * If no type is specified, all quotas in this Order will be returned.
       * @param {string} [type] - The Quota type to return. e.g. "portal". See {@link Quota#defaults} `quotaTypeOptions`
       * @returns {Quota[]} The filtered array of Quota models or an empty array, if none are found
       */
@@ -122,10 +122,10 @@ define(["jquery",
       },
 
       /**
-      * For each Quota of this type in this Membership, the usage quantity is totaled and returned.
-      * If no type is specified, all quotas in this Membership will be totaled.
+      * For each Quota of this type in this Order, the usage quantity is totaled and returned.
+      * If no type is specified, all quotas in this Order will be totaled.
       * @param {string} [type] - The Quota type to total. e.g. "portal". See {@link Quota#defaults} `quotaTypeOptions`
-      * @returns {number} The total usage of the given Quota type for this Membership
+      * @returns {number} The total usage of the given Quota type for this Order
       */
       getTotalUsage: function(type){
         var totalUsage = 0;
@@ -138,10 +138,10 @@ define(["jquery",
       },
 
       /**
-      * For each Quota of this type in this Membership, the quota softLimit is totaled and returned.
-      * If no type is specified, all quotas in this Membership will be totaled.
+      * For each Quota of this type in this Order, the quota softLimit is totaled and returned.
+      * If no type is specified, all quotas in this Order will be totaled.
       * @param {string} [type] - The Quota type to total. e.g. "portal". See {@link Quota#defaults} `quotaTypeOptions`
-      * @returns {number} The total quota softLimit of the given Quota type for this Membership
+      * @returns {number} The total quota softLimit of the given Quota type for this Order
       */
       getTotalQuotaLimit: function(type){
         var totalQuotaLimit = 0;
@@ -155,7 +155,7 @@ define(["jquery",
 
       /**
       *
-      * Returns true if this Membership is in a free trial period.
+      * Returns true if this Order is in a free trial period.
       * @returns {boolean}
       */
       isTrialing: function(){
@@ -164,5 +164,5 @@ define(["jquery",
 
   });
 
-  return Membership;
+  return Order;
 });

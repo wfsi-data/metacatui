@@ -1,34 +1,34 @@
 "use strict";
 
-define(["jquery", "underscore", "backbone", "models/bookkeeper/Membership", "collections/bookkeeper/Usages"],
-  function($, _, Backbone, Membership, Usages) {
+define(["jquery", "underscore", "backbone", "models/bookkeeper/Order", "collections/bookkeeper/Usages"],
+  function($, _, Backbone, Order, Usages) {
 
   /**
-   * @class Memberships
-   * @classdesc A Memberships collection is a collection of {@link Membership} models
-   * that represent one or more DataONE service Memberships, as part of the DataONE
+   * @class Orders
+   * @classdesc A Orders collection is a collection of {@link Order} models
+   * that represent one or more DataONE service Orders, as part of the DataONE
    * Bookkeeper service.
    * See https://github.com/DataONEorg/bookkeeper for documentation on the
    * DataONE Bookkeeper service and data model.
    */
-  var Memberships = Backbone.Collection.extend(
-    /** @lends Memberships.prototype */ {
+  var Orders = Backbone.Collection.extend(
+    /** @lends Orders.prototype */ {
 
     /**
     * The name of this Collection type
     * @type {string}
     */
-    type: "Memberships",
+    type: "Orders",
 
     /**
     * The class/model that is contained in this collection.
     * @type {Backbone.Model}
     */
-    model: Membership,
+    model: Order,
 
     /**
-    * The Usages collection associated with these Memberships, which will be divided among the
-    * Membership models they are associated with.
+    * The Usages collection associated with these Orders, which will be divided among the
+    * Order models they are associated with.
     * @type {Usages}
     */
     usagesCollection: null,
@@ -40,8 +40,8 @@ define(["jquery", "underscore", "backbone", "models/bookkeeper/Membership", "col
     fetching: false,
 
     /**
-    * A list of query parameters that are supported by the Bookkeeper Memberships API. These
-    * query parameters can be passed to {@link Memberships#fetch} in the `options` object, and they
+    * A list of query parameters that are supported by the Bookkeeper Orders API. These
+    * query parameters can be passed to {@link Orders#fetch} in the `options` object, and they
     * will be used during the fetch.
     * @type {string[]}
     */
@@ -50,10 +50,10 @@ define(["jquery", "underscore", "backbone", "models/bookkeeper/Membership", "col
     /**
     * Constructs a URL string for fetching this collection and returns it
     * @param {Object} [options]
-    * @property {string} options.requestor  The subject of the user that is requesting the Memberships list.
+    * @property {string} options.requestor  The subject of the user that is requesting the Orders list.
     *                                       This is usually the same as `subscriber`, but can be different to
-    *                                       retrieve Memberships at a lower authorization level.
-    * @property {string} options.subscriber  The user or group subject associated with these Memberships
+    *                                       retrieve Orders at a lower authorization level.
+    * @property {string} options.subscriber  The user or group subject associated with these Orders
     * @returns {string} The URL string
     */
     url: function(options){
@@ -78,21 +78,21 @@ define(["jquery", "underscore", "backbone", "models/bookkeeper/Membership", "col
 
       }
 
-      //Prepend the Bookkeeper Memberships URL to the url query parameters string
-      url = MetacatUI.appModel.get("bookkeeperMembershipsUrl") + url;
+      //Prepend the Bookkeeper Orders URL to the url query parameters string
+      url = MetacatUI.appModel.get("bookkeeperOrdersUrl") + url;
 
       return url;
 
     },
 
     /**
-    * Fetches a list of Memberships from the DataONE Bookkeeper service, parses them, and
+    * Fetches a list of Orders from the DataONE Bookkeeper service, parses them, and
     * stores them on this collection.
     * @param {Object} [options]
-    * @property {string} options.requestor  The subject of the user that is requesting the Memberships list.
+    * @property {string} options.requestor  The subject of the user that is requesting the Orders list.
     *                                       This is usually the same as `subscriber`, but can be different to
-    *                                       retrieve Memberships at a lower authorization level.
-    * @property {string} options.subscriber  The user or group subject associated with these Memberships
+    *                                       retrieve Orders at a lower authorization level.
+    * @property {string} options.subscriber  The user or group subject associated with these Orders
     */
     fetch: function(options){
 
@@ -101,9 +101,9 @@ define(["jquery", "underscore", "backbone", "models/bookkeeper/Membership", "col
 
       var fetchOptions = {
         url: this.url(options),
-        error: function(memberships, xhr){
+        error: function(orders, xhr){
           if( xhr.status == 404 ){
-            memberships.trigger("notFound");
+            orders.trigger("notFound");
           }
         }
       }
@@ -138,12 +138,12 @@ define(["jquery", "underscore", "backbone", "models/bookkeeper/Membership", "col
     },
 
     /**
-    * Organizes the Usage models by Membership so that each Membership model in this collection
-    * has a reference to a Usages collection that contains the Usages for that Membership.
+    * Organizes the Usage models by Order so that each Order model in this collection
+    * has a reference to a Usages collection that contains the Usages for that Order.
     */
     parseUsages: function(){
 
-      //If this Memberships collection is still being fetched, then wait until it is
+      //If this Orders collection is still being fetched, then wait until it is
       // finished and parse the Usages
       if( this.fetching ){
         this.once("sync", this.parseUsages);
@@ -153,8 +153,8 @@ define(["jquery", "underscore", "backbone", "models/bookkeeper/Membership", "col
 
         this.usagesCollection.each(function(usage){
 
-          this.each(function(membership){
-            var matchingQuota = membership.get("quotas").findWhere({ id: usage.get("quotaId") });
+          this.each(function(order){
+            var matchingQuota = order.get("quotas").findWhere({ id: usage.get("quotaId") });
 
             if( matchingQuota && matchingQuota.type == "Quota" ){
               //Add the Usage to the Quota
@@ -173,5 +173,5 @@ define(["jquery", "underscore", "backbone", "models/bookkeeper/Membership", "col
 
   });
 
-  return Memberships;
+  return Orders;
 });

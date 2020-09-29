@@ -152,16 +152,16 @@ define(["jquery",
               // check for info received from Bookkeeper
               if( MetacatUI.appModel.get("enableBookkeeperServices") ){
 
-                this.listenTo( MetacatUI.appUserModel, "change:dataoneMemberships", function(){
-                  var memberships = MetacatUI.appUserModel.get("dataoneMemberships");
+                this.listenTo( MetacatUI.appUserModel, "change:dataoneOrders", function(){
+                  var orders = MetacatUI.appUserModel.get("dataoneOrders");
 
-                  if( memberships.length && memberships.models[0].isTrialing()) {
+                  if( orders.length && orders.models[0].isTrialing()) {
                     this.setRandomLabel();
                   }
                 });
 
-                //Fetch the user membership info
-                MetacatUI.appUserModel.fetchMembership();
+                //Fetch the user order info
+                MetacatUI.appUserModel.fetchOrder();
               }
 
               // Cache this model for later use
@@ -1790,8 +1790,8 @@ define(["jquery",
                     // and start the save process again
                     if( MetacatUI.appModel.get("enableBookkeeperServices") ){
 
-                      var memberships = MetacatUI.appUserModel.get("dataoneMemberships");
-                      if(memberships.length && memberships.models[0].isTrialing()) {
+                      var orders = MetacatUI.appUserModel.get("dataoneOrders");
+                      if(orders.length && orders.models[0].isTrialing()) {
                         this.setRandomLabel();
 
                         this.set("labelDoubleChecked", true);

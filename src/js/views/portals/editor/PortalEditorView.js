@@ -389,7 +389,7 @@ function(_, $, Backbone, Portal, PortalImage, Filters, EditorView, SignInView,
       this.sectionsView.render();
 
       //If this portal is a free trial DataONE Plus portal, then display some messaging
-      this.renderMembershipInfo();
+      this.renderOrderInfo();
 
       //Show the required fields for this editor
       this.renderRequiredIcons(MetacatUI.appModel.get("portalEditorRequiredFields"));
@@ -798,23 +798,23 @@ function(_, $, Backbone, Portal, PortalImage, Filters, EditorView, SignInView,
     },
 
     /**
-    * The DataONE Plus Membership if fetched from Bookkeeper and the status of the
-    * Membership is rendered on the page.
-    * Subviews in this view should have their own renderMembershipInfo() function
-    * that inserts membership details into the subview.
+    * The DataONE Plus Order if fetched from Bookkeeper and the status of the
+    * Order is rendered on the page.
+    * Subviews in this view should have their own renderOrderInfo() function
+    * that inserts order details into the subview.
     */
-    renderMembershipInfo: function(){
+    renderOrderInfo: function(){
       if( MetacatUI.appModel.get("enableBookkeeperServices") ){
 
-        if( MetacatUI.appUserModel.get("loggedIn") && MetacatUI.appUserModel.get("dataoneMemberships") ){
-          //Show the free trial message for this portal, if the membership is in a free trial
-          var memberships = MetacatUI.appUserModel.get("dataoneMemberships"),
-              //TODO: Iterate over multiple memberships. For now, default to first
-              membership  = memberships.models[0],
+        if( MetacatUI.appUserModel.get("loggedIn") && MetacatUI.appUserModel.get("dataoneOrders") ){
+          //Show the free trial message for this portal, if the order is in a free trial
+          var orders = MetacatUI.appUserModel.get("dataoneOrders"),
+              //TODO: Iterate over multiple orders. For now, default to first
+              order  = orders.models[0],
               isFreeTrial  = false;
 
-          //If the Membership is in free trial mode
-          if( membership && membership.isTrialing() ){
+          //If the Order is in free trial mode
+          if( order && order.isTrialing() ){
 
             if( MetacatUI.appModel.get("dataonePlusPreviewMode") ){
               //If this portal is not in the configured list of Plus portals
@@ -867,7 +867,7 @@ function(_, $, Backbone, Portal, PortalImage, Filters, EditorView, SignInView,
           }
         }
         else{
-            this.listenTo( MetacatUI.appUserModel, "change:dataoneMemberships", this.renderMembershipInfo );
+            this.listenTo( MetacatUI.appUserModel, "change:dataoneOrders", this.renderOrderInfo );
         }
 
       }

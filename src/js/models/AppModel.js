@@ -1429,13 +1429,13 @@ define(['jquery', 'underscore', 'backbone'],
       */
       bookkeeperUsagesUrl: null,
       /**
-      * The URL for the DataONE Bookkeeper Memberships API, e.g. listMemberships(), fetchMembership(), createMembership(), etc.
+      * The URL for the DataONE Bookkeeper Orders API, e.g. listOrders(), fetchOrder(), createOrder(), etc.
       * This full URL is contructed using {@link AppModel#bookkeeperBaseUrl} when the AppModel is initialized.
       * @readonly
       * @type {string}
       * @since 2.14.0
       */
-      bookkeeperMembershipsUrl: null,
+      bookkeeperOrdersUrl: null,
       /**
       * The URL for the DataONE Bookkeeper Customers API, e.g. listCustomers(), getCustomer(), createCustomer(), etc.
       * This full URL is contructed using {@link AppModel#bookkeeperBaseUrl} when the AppModel is initialized.
@@ -1618,7 +1618,7 @@ define(['jquery', 'underscore', 'backbone'],
 
       //Construct the DataONE Bookkeeper service API URLs
       if( this.get("enableBookkeeperServices") ){
-        this.set("bookkeeperMembershipsUrl", this.get("bookkeeperBaseUrl")  + "/subscriptions");
+        this.set("bookkeeperOrdersUrl",        this.get("bookkeeperBaseUrl")  + "/subscriptions");
         this.set("bookkeeperCustomersUrl",     this.get("bookkeeperBaseUrl")  + "/customers");
         this.set("bookkeeperQuotasUrl",        this.get("bookkeeperBaseUrl")  + "/quotas");
         this.set("bookkeeperUsagesUrl",        this.get("bookkeeperBaseUrl")  + "/usages");

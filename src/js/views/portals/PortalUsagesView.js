@@ -18,10 +18,10 @@ define(["jquery",
       /** @lends PortalUsagesView.prototype */{
 
       /**
-      * A reference to the DataONE Plus Membership that these Portals are a part of.
-      * @type {Membership}
+      * A reference to the DataONE Plus Order that these Portals are a part of.
+      * @type {Order}
       */
-      membership: null,
+      order: null,
 
       /**
       * A reference to the Usages collection that is rendered in this view
@@ -45,8 +45,8 @@ define(["jquery",
           this.$el.html(this.template());
 
           if( !this.usagesCollection ){
-            if( this.membership ){
-              var portalQuotas = this.membership.getQuotas("portal");
+            if( this.order ){
+              var portalQuotas = this.order.getQuotas("portal");
               if( portalQuotas.length ){
                 this.usagesCollection = portalQuotas[0].get("usages");
                 if( this.usagesCollection.length == 0 ){
@@ -55,12 +55,12 @@ define(["jquery",
                   return;
                 }
               }
-              //If there is no Usages collection or Membership model, there is nothing to render
+              //If there is no Usages collection or Order model, there is nothing to render
               else{
                 return;
               }
             }
-            //If there is no Usages collection or Membership model, there is nothing to render
+            //If there is no Usages collection or Order model, there is nothing to render
             else{
               return;
             }
@@ -213,7 +213,7 @@ define(["jquery",
                                  "<a href='mailto:" + MetacatUI.appModel.get("emailContact") + "'>" +
                                  MetacatUI.appModel.get("emailContact") + "</a>" +
                                  " to activate it. It may be deactivated because your " +
-                                  MetacatUI.appModel.get("dataonePlusName") + " membership has ended."
+                                  MetacatUI.appModel.get("dataonePlusName") + " " + MetacatUI.appModel.get("dataonePlusGeneralName") + " has ended."
                       });
             }
 
@@ -229,7 +229,7 @@ define(["jquery",
         if( missingPortalObjects > 0 ){
           var missingMessage = missingPortalObjects + " " + MetacatUI.appModel.get("portalTermPlural") +
                           " have been created in your " + MetacatUI.appModel.get("dataonePlusName") +
-                          " membership but we couldn't find them in a search.";
+                          " " + MetacatUI.appModel.get("dataonePlusGeneralName") + " but we couldn't find them in a search.";
 
           if( this.$("tbody .loading, tbody .message").length ){
             this.$("tbody .loading, tbody .message").remove();
@@ -262,8 +262,8 @@ define(["jquery",
               canCreatePortal = true,
               portalLimit     = 0;
 
-          if( this.membership ){
-            var portalQuotas = this.membership.getQuotas("portal");
+          if( this.order ){
+            var portalQuotas = this.order.getQuotas("portal");
 
             if( portalQuotas.length ){
               canCreatePortal = portalQuotas[0].hasRemainingUsage();
