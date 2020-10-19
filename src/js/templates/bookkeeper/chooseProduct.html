@@ -1,0 +1,12 @@
+<% if(collaborator){ %>
+<div class="product-card individual">
+  <hgroup class="product-card-title">
+    <h3><%=MetacatUI.appModel.get("dataonePlusName")%></h3>
+    <h4><%=collaborator.name%></h4>
+  </hgroup>
+  <p class="subtle product-card-description">
+    <%=collaborator.description%>
+  </p>
+  <button class="btn product-card-button choose-product" data-product-id="<%=collaborator.id%>">Start free trial</button>
+</div>
+<% } %>

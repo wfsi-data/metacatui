@@ -284,6 +284,7 @@ define(['jquery',
     * @property {boolean} [options.remove] If true, the user will be able to remove the alert with a "close" icon.
     * @property {boolean} [options.includeEmail] If true, the alert will include a link to the {@link AppConfig#emailContact}
     * @property {string} [options.emailBody] Specify an email body to use in the email link.
+    * @property {string} [options.advancedMessage] An extra message that will be initially hidden behind a "view more" link
     */
     showAlert: function() {
       if( arguments.length > 1 ){
@@ -329,7 +330,8 @@ define(['jquery',
 				msg: options.message,
 				classes: options.classes,
 				emailOptions: emailOptions,
-				remove: options.remove || false
+				remove: options.remove || false,
+        advancedMessage: options.advancedMessage || ""
 			}).trim());
 
 			if(options.delay){

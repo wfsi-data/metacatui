@@ -1082,7 +1082,9 @@ define(['jquery', 'underscore', 'backbone', 'jws', 'models/Search', "collections
           });
 
           //Fetch the Subscriptioin
-          orders.fetch();
+          orders.fetch({
+            requestor: thisUser.get("username")
+          });
 
         });
       }

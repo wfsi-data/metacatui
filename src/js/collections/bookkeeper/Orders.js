@@ -92,7 +92,7 @@ define(["jquery", "underscore", "backbone", "models/bookkeeper/Order", "collecti
     * @property {string} options.requestor  The subject of the user that is requesting the Orders list.
     *                                       This is usually the same as `subscriber`, but can be different to
     *                                       retrieve Orders at a lower authorization level.
-    * @property {string} options.subscriber  The user or group subject associated with these Orders
+    * @property {string} options.subject  The user or group subject associated with these Orders
     */
     fetch: function(options){
 

@@ -25,6 +25,8 @@ define(["jquery",
       */
       orders: null,
 
+      noOrdersTemplate: _.template('<h3>Join ' + MetacatUI.appModel.get("dataonePlusName") + '</h3>'),
+
       render: function(){
 
         try{
@@ -79,9 +81,8 @@ define(["jquery",
       * If the User has no DataONE Order, then display the ability to create one.
       */
       renderNoOrders: function(){
-        this.$el.html("<h2>You don't have a " + MetacatUI.appModel.get("dataonePlusName") + " " +
-                      MetacatUI.appModel.get("dataonePlusGeneralName") + " yet. Start your " +
-                      MetacatUI.appModel.get("dataonePlusTrialName") + ": </h2>");
+
+        this.$el.html(this.noOrdersTemplate());
 
         var thisView = this;
 

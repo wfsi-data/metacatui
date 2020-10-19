@@ -1444,6 +1444,14 @@ define(['jquery', 'underscore', 'backbone'],
       * @since 2.14.0
       */
       bookkeeperCustomersUrl: null,
+      /**
+      * The URL for the DataONE Bookkeeper Products API, e.g. listProducts(), getProduct(), createProduct(), etc.
+      * This full URL is contructed using {@link AppModel#bookkeeperBaseUrl} when the AppModel is initialized.
+      * @readonly
+      * @type {string}
+      * @since 2.14.0
+      */
+      bookkeeperProductsUrl: null,
 
       /**
       * The name of the DataONE Plus membership plan, which is used in messaging throughout the UI.
@@ -1485,6 +1493,13 @@ define(['jquery', 'underscore', 'backbone'],
       * with the DataONE Bookkeeper service, eventually.
       */
       dataoneHostedRepos: ["urn:node:KNB", "urn:node:ARCTIC", "urn:node:CA_OPC", "urn:node:TNC_DANGERMOND", "urn:node:ESS_DIVE"],
+
+      /**
+      * A collection of DataONE Plus Products
+      * @type {Products}
+      * @since 2.14.0
+      */
+      dataonePlusProducts: null,
 
       /**
       * The length of random portal label generated during preview/trial mode of DataONE Plus
@@ -1618,10 +1633,11 @@ define(['jquery', 'underscore', 'backbone'],
 
       //Construct the DataONE Bookkeeper service API URLs
       if( this.get("enableBookkeeperServices") ){
-        this.set("bookkeeperOrdersUrl",        this.get("bookkeeperBaseUrl")  + "/subscriptions");
-        this.set("bookkeeperCustomersUrl",     this.get("bookkeeperBaseUrl")  + "/customers");
-        this.set("bookkeeperQuotasUrl",        this.get("bookkeeperBaseUrl")  + "/quotas");
-        this.set("bookkeeperUsagesUrl",        this.get("bookkeeperBaseUrl")  + "/usages");
+        this.set("bookkeeperOrdersUrl",    this.get("bookkeeperBaseUrl")  + "/orders");
+        this.set("bookkeeperCustomersUrl", this.get("bookkeeperBaseUrl")  + "/customers");
+        this.set("bookkeeperQuotasUrl",    this.get("bookkeeperBaseUrl")  + "/quotas");
+        this.set("bookkeeperUsagesUrl",    this.get("bookkeeperBaseUrl")  + "/usages");
+        this.set("bookkeeperProductsUrl",  this.get("bookkeeperBaseUrl")  + "/products");
       }
 
       this.on("change:pid", this.changePid);

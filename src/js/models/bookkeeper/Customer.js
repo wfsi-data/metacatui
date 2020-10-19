@@ -69,6 +69,9 @@ define(["jquery",
         if( typeof this.get("id") == "string" && this.get("id").length > 0 ){
           return MetacatUI.appModel.get("bookkeeperCustomersUrl") + "/" + this.get("id");
         }
+        else if(this.get("subject")){
+          return MetacatUI.appModel.get("bookkeeperCustomersUrl") + "?subject=" + encodeURIComponent(this.get("subject"));
+        }
         else{
           return MetacatUI.appModel.get("bookkeeperCustomersUrl");
         }
@@ -77,18 +80,29 @@ define(["jquery",
 
       /**
       * Parses and returns the raw json returned from fetch()
-      * @param {JSON} customerJSON - The raw JSON returned from Customer.fetch()
+      * @param {JSON} customersJSON - The raw JSON returned from Customer.fetch()
       * @returns {JSON} The model data in JSON form
       */
-      parse: function(customerJSON){
+      parse: function(customersJSON){
 
-        //Store a reference to the
-        if( MetacatUI.appUserModel.get("username") == customerJSON.subject ){
-          customerJSON.userModel = MetacatUI.appUserModel;
+        var parsedJSON = {};
+
+        if( customersJSON && Array.isArray(customersJSON.customers) ){
+          if( customersJSON.customers.length == 1 ){
+            parsedJSON = customersJSON.customers[0];
+          }
+          else{
+            return parsedJSON;
+          }
+        }
+
+        //Store a reference to this Customer in the UserModel
+        if( MetacatUI.appUserModel.get("username") == parsedJSON.subject ){
+          parsedJSON.userModel = MetacatUI.appUserModel;
           MetacatUI.appUserModel.set("dataoneCustomer", this);
         }
 
-        return customerJSON;
+        return parsedJSON;
       },
 
       /**
@@ -139,8 +153,8 @@ define(["jquery",
               dataType: "json",
               error: function(customer, response){
                 if( response.status = 500 && response.responseText.indexOf("A customer exists with the given email") > -1 ){
-                  customer.set("errorMessage", "There is already a " + MetacatUI.appModel.get("dataonePlusName") + " " +
-                               MetacatUI.appModel.get("dataonePlusGeneralName") + " account with that email. Either sign up with a " +
+                  customer.set("errorMessage", "There is already a " + MetacatUI.appModel.get("dataonePlusName") +
+                               " account with that email. Either sign up with a " +
                                "different email or login to your other account to access your existing " + MetacatUI.appModel.get("dataonePlusGeneralName") + ".");
                   customer.trigger("error");
                 }

@@ -1,26 +1,37 @@
 <form autocomplete="on">
   <fieldset>
     <div class="control-group">
+      <label class="control-label" for="inputOrderName"><%=(orderGeneralName.charAt(0).toUpperCase() + orderGeneralName.slice(1))%> name <span class="subtle">This name will be visible to all team members. You can change it later.</span></label>
+      <div class="controls">
+        <input type="text" id="inputOrderName" placeholder="<%=orderName%>" value="<%=orderName%>" />
+        <span class="help-inline"></span>
+      </div>
+    </div>
+
+    <% if( !created ){ %>
+    <div class="control-group">
       <label class="control-label" for="inputFirstName">First name</label>
       <div class="controls">
-        <input type="text" id="inputFirstName" placeholder="First name" value="<%=givenName%>" autocomplete="given-name">
+        <input type="text" id="inputFirstName" placeholder="First name" value="<%=givenName%>" autocomplete="given-name" />
         <span class="help-inline"></span>
       </div>
     </div>
     <div class="control-group">
       <label class="control-label" for="inputLastName">Last name</label>
       <div class="controls">
-        <input type="text" id="inputLastName" placeholder="Last name" value="<%=surName%>" autocomplete="family-name">
+        <input type="text" id="inputLastName" placeholder="Last name" value="<%=surName%>" autocomplete="family-name" />
         <span class="help-inline"></span>
       </div>
     </div>
     <div class="control-group">
       <label class="control-label" for="inputEmail">Email</label>
       <div class="controls">
-        <input type="email" id="inputEmail" placeholder="Email" value="<%=email%>" autocomplete="email">
+        <input type="email" id="inputEmail" placeholder="Email" value="<%=email%>" autocomplete="email" />
         <span class="help-inline"></span>
       </div>
     </div>
+    <% } %>
+    
     <div class="control-group">
       <button class="save btn btn-primary" type="button">Submit</button>
     </div>
