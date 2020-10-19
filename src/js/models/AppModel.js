@@ -697,7 +697,7 @@ define(['jquery', 'underscore', 'backbone'],
       * @type {boolean}
       * @default true
       */
-     metricsForwardCollectionQuery: true,
+      metricsForwardCollectionQuery: true,
 
       /**
       * DataONE Citation reporting endpoint url
