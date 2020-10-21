@@ -74,7 +74,8 @@ define(['jquery', 'underscore', 'backbone', 'jws', 'models/Search', "collections
 				rawData: null,
         portalQuota: -1,
         isAuthorizedCreatePortal: null,
-        dataoneMemberships: null
+        dataoneOrders: null,
+        dataoneCustomer: null
 			}
 		},
 
@@ -96,8 +97,8 @@ define(['jquery', 'underscore', 'backbone', 'jws', 'models/Search', "collections
 			this.set("searchResults", searchResults);
 
       if( MetacatUI.appModel.get("enableBookkeeperServices") ){
-        //When the user is logged in, see if they have a DataONE membership
-        this.on("change:loggedIn", this.fetchMembership);
+        //When the user is logged in, see if they have a DataONE order
+        this.on("change:loggedIn", this.fetchOrder);
       }
 		},
 
@@ -932,7 +933,7 @@ define(['jquery', 'underscore', 'backbone', 'jws', 'models/Search', "collections
     /**
     * Checks if this user has the quota to perform the given action
     * @param {string} action - The action to be performed
-    * @param {string} customerGroup - The subject or identifier of the customer/membership group
+    * @param {string} customerGroup - The subject or identifier of the customer/order group
     * to use this quota against
     */
     checkQuota: function(action, customerGroup){
@@ -1007,11 +1008,11 @@ define(['jquery', 'underscore', 'backbone', 'jws', 'models/Search', "collections
         //If anyone is allowed to create a portal, check if they have the quota to create a portal
         else if( MetacatUI.appModel.get("enableBookkeeperServices") ){
 
-          //Get the Memberships for this user
-          var memberships = this.get("dataoneMemberships");
+          //Get the Orders for this user
+          var orders = this.get("dataoneOrders");
 
-          //If this user doesn't have a DataONE Membership, they cannot create a portal
-          if( !memberships || !memberships.length ){
+          //If this user doesn't have a DataONE Order, they cannot create a portal
+          if( !orders || !orders.length ){
             this.set("isAuthorizedCreatePortal", false);
             return;
           }
@@ -1019,16 +1020,16 @@ define(['jquery', 'underscore', 'backbone', 'jws', 'models/Search', "collections
             var isAuthorizedCreatePortal = false,
                 i = 0;
 
-            //Iterate over each Membership to check for one that has remaining portal Quota
-            while( !isAuthorizedCreatePortal &amp;&amp; i&lt;memberships.models.length){
-              //Get the Membership for this User
-              var quotas = memberships.models[i].getQuotas("portal");
+            //Iterate over each Order to check for one that has remaining portal Quota
+            while( !isAuthorizedCreatePortal &amp;&amp; i&lt;orders.models.length){
+              //Get the Order for this User
+              var quotas = orders.models[i].getQuotas("portal");
 
               if( quotas &amp;&amp; quotas.length){
 
                 //Check that there is at least one Quota where the totalUsage &lt; softLimit
                 var hasRemainingUsage = _.some(quotas, function(quota){
-                  return quota.get("totalUsage") &lt; quota.get("softLimit");
+                  return quota.hasRemainingUsage();
                 });
 
                 //If there is remaining usage left in at least one Quota, then the user can create a portal
@@ -1085,10 +1086,10 @@ define(['jquery', 'underscore', 'backbone', 'jws', 'models/Search', "collections
     },
 
     /**
-    * Retrieve all the info about this user's DataONE Membership
-    * @fires User#change:dataoneMemberships
+    * Retrieve all the info about this user's DataONE Order
+    * @fires User#change:dataoneOrders
     */
-    fetchMembership: function(){
+    fetchOrder: function(){
 
       //If Bookkeeper services are disabled, exit
       if( !MetacatUI.appModel.get("enableBookkeeperServices") ){
@@ -1097,56 +1098,27 @@ define(['jquery', 'underscore', 'backbone', 'jws', 'models/Search', "collections
 
       try{
         var thisUser = this;
-        require(["collections/bookkeeper/Quotas", "collections/bookkeeper/Memberships", "models/bookkeeper/Membership"],
-                function(Quotas, Memberships, Membership){
+        require(["collections/bookkeeper/Quotas", "collections/bookkeeper/Orders", "models/bookkeeper/Order"],
+                function(Quotas, Orders, Order){
 
-          //Create a Memberships collection
-          var memberships = new Memberships();
+          //Create a Orders collection
+          var orders = new Orders();
 
-          //Create a Membership model
-          var membership = new Membership();
+          thisUser.listenToOnce(orders, "sync notFound", function(){
 
-          //Add the Membership model to the Membership collection
-          memberships.add(membership);
+            //Save a reference to the Orders on this UserModel
+            thisUser.set("dataoneOrders", orders);
+          });
 
-          if( MetacatUI.appModel.get("dataonePlusPreviewMode") ){
-            //Create a Quotas collection
-            var quotas = new Quotas();
-
-            //Create Quota models for preview mode
-            quotas.add({
-              softLimit: MetacatUI.appModel.get("portalLimit"),
-              hardLimit: MetacatUI.appModel.get("portalLimit"),
-              quotaType: "portal",
-              unit: "portal",
-              subject: thisUser.get("username"),
-              membership: membership
-            });
-            //Save the Quotas collection to the Membership
-            membership.set("quotas", quotas);
-
-            //Default to all people being in trial mode
-            membership.set("status", "trialing");
-
-            //Save a reference to the Membership on this UserModel
-            thisUser.set("dataoneMemberships", memberships);
-
-          }
-          else{
-
-            thisUser.listenToOnce(memberships, "sync", function(){
-              //Save a reference to the Memberships on this UserModel
-              thisUser.set("dataoneMemberships", memberships);
-            });
-
-            //Fetch the Subscriptioin
-            memberships.fetch();
-          }
+          //Fetch the Subscriptioin
+          orders.fetch({
+            requestor: thisUser.get("username")
+          });
 
         });
       }
       catch(e){
-        console.error("Couldn't get DataONE Membership info. Proceeding as an unsubscribed user. ", e);
+        console.error("Couldn't get DataONE Order info. Proceeding as an unsubscribed user. ", e);
       }
 
     },
@@ -1169,13 +1141,13 @@ define(['jquery', 'underscore', 'backbone', 'jws', 'models/Search', "collections
 </div>
 
 <nav>
-    <h2><a href="index.html">Home</a></h2><h3>Namespaces</h3><ul><li><a href="AppConfig.html">AppConfig</a></li><li><a href="MetacatUI.html">MetacatUI</a></li></ul><h3>Classes</h3><ul><li><a href="AccessPolicy.html">AccessPolicy</a></li><li><a href="AccessPolicyView.html">AccessPolicyView</a></li><li><a href="AccessRule.html">AccessRule</a></li><li><a href="AppModel.html">AppModel</a></li><li><a href="AppView.html">AppView</a></li><li><a href="BooleanFilter.html">BooleanFilter</a></li><li><a href="ChoiceFilter.html">ChoiceFilter</a></li><li><a href="Citations.html">Citations</a></li><li><a href="CollectionModel.html">CollectionModel</a></li><li><a href="ColorPaletteView.html">ColorPaletteView</a></li><li><a href="DataCatalogView_drawTiles-TextOverlay.html">TextOverlay</a></li><li><a href="DataCatalogViewWithFilters.html">DataCatalogViewWithFilters</a></li><li><a href="DataItemView.html">DataItemView</a></li><li><a href="DataONEObject.html">DataONEObject</a></li><li><a href="DataPackage.html">DataPackage</a></li><li><a href="DateFilter.html">DateFilter</a></li><li><a href="DraftsView.html">DraftsView</a></li><li><a href="EditCollectionView.html">EditCollectionView</a></li><li><a href="EditorView.html">EditorView</a></li><li><a href="EML211.html">EML211</a></li><li><a href="EML211EditorView.html">EML211EditorView</a></li><li><a href="EMLEntity.html">EMLEntity</a></li><li><a href="EMLEntityView.html">EMLEntityView</a></li><li><a href="EMLGeoCoverage.html">EMLGeoCoverage</a></li><li><a href="EMlGeoCoverageView.html">EMlGeoCoverageView</a></li><li><a href="EMLNonNumericDomain.html">EMLNonNumericDomain</a></li><li><a href="EMLNumericDomain.html">EMLNumericDomain</a></li><li><a href="EMLPartyView.html">EMLPartyView</a></li><li><a href="EMLTemporalCoverage.html">EMLTemporalCoverage</a></li><li><a href="EMLView.html">EMLView</a></li><li><a href="Filter.html">Filter</a></li><li><a href="FilterGroup.html">FilterGroup</a></li><li><a href="FilterGroupsView.html">FilterGroupsView</a></li><li><a href="Filters.html">Filters</a></li><li><a href="ImageUploaderView.html">ImageUploaderView</a></li><li><a href="LookupModel.html">LookupModel</a></li><li><a href="MarkdownEditorView.html">MarkdownEditorView</a></li><li><a href="MarkdownView.html">MarkdownView</a></li><li><a href="Membership.html">Membership</a></li><li><a href="Memberships.html">Memberships</a></li><li><a href="MembershipsView.html">MembershipsView</a></li><li><a href="MembershipView.html">MembershipView</a></li><li><a href="MetadataView.html">MetadataView</a></li><li><a href="MetricModalView.html">MetricModalView</a></li><li><a href="NavbarView.html">NavbarView</a></li><li><a href="NumericFilter.html">NumericFilter</a></li><li><a href="ObjectFormats.html">ObjectFormats</a></li><li><a href="PortalDataView.html">PortalDataView</a></li><li><a href="PortalEditorView.html">PortalEditorView</a></li><li><a href="PortalListView.html">PortalListView</a></li><li><a href="PortalLogosView.html">PortalLogosView</a></li><li><a href="PortalMembersView.html">PortalMembersView</a></li><li><a href="PortalModel.html">PortalModel</a></li><li><a href="PortalSectionView.html">PortalSectionView</a></li><li><a href="PortalUsagesView.html">PortalUsagesView</a></li><li><a href="PortalView.html">PortalView</a></li><li><a href="PortEditorDataView.html">PortEditorDataView</a></li><li><a href="PortEditorImageView.html">PortEditorImageView</a></li><li><a href="PortEditorLogosView.html">PortEditorLogosView</a></li><li><a href="PortEditorMdSectionView.html">PortEditorMdSectionView</a></li><li><a href="PortEditorSectionsView.html">PortEditorSectionsView</a></li><li><a href="PortEditorSectionView.html">PortEditorSectionView</a></li><li><a href="PortEditorSettingsView.html">PortEditorSettingsView</a></li><li><a href="QualityReport.html">QualityReport</a></li><li><a href="Quota.html">Quota</a></li><li><a href="Quotas.html">Quotas</a></li><li><a href="RegisterCitationView.html">RegisterCitationView</a></li><li><a href="Search.html">Search</a></li><li><a href="SolrResultList.html">SolrResultList</a></li><li><a href="SpatialFilter.html">SpatialFilter</a></li><li><a href="Stats.html">Stats</a></li><li><a href="TableEditorView.html">TableEditorView</a></li><li><a href="ToggleFilter.html">ToggleFilter</a></li><li><a href="UIRouter.html">UIRouter</a></li><li><a href="Usage.html">Usage</a></li><li><a href="Usages.html">Usages</a></li><li><a href="User.html">User</a></li><li><a href="UserView.html">UserView</a></li></ul><h3>Global</h3><ul><li><a href="global.html#appConfigPath">appConfigPath</a></li><li><a href="global.html#className">className</a></li><li><a href="global.html#logos">logos</a></li><li><a href="global.html#onClose">onClose</a></li><li><a href="global.html#render">render</a></li><li><a href="global.html#tagName">tagName</a></li><li><a href="global.html#template">template</a></li><li><a href="global.html#type">type</a></li></ul>
+    <h2><a href="index.html">Home</a></h2><h3>Namespaces</h3><ul><li><a href="AppConfig.html">AppConfig</a></li><li><a href="MetacatUI.html">MetacatUI</a></li></ul><h3>Classes</h3><ul><li><a href="AccessPolicy.html">AccessPolicy</a></li><li><a href="AccessPolicyView.html">AccessPolicyView</a></li><li><a href="AccessRule.html">AccessRule</a></li><li><a href="AppModel.html">AppModel</a></li><li><a href="AppView.html">AppView</a></li><li><a href="BooleanFilter.html">BooleanFilter</a></li><li><a href="ChoiceFilter.html">ChoiceFilter</a></li><li><a href="Citations.html">Citations</a></li><li><a href="CollectionModel.html">CollectionModel</a></li><li><a href="ColorPaletteView.html">ColorPaletteView</a></li><li><a href="CreateOrderView.html">CreateOrderView</a></li><li><a href="Customer.html">Customer</a></li><li><a href="DataCatalogView_drawTiles-TextOverlay.html">TextOverlay</a></li><li><a href="DataCatalogViewWithFilters.html">DataCatalogViewWithFilters</a></li><li><a href="DataItemView.html">DataItemView</a></li><li><a href="DataONEObject.html">DataONEObject</a></li><li><a href="DataPackage.html">DataPackage</a></li><li><a href="DateFilter.html">DateFilter</a></li><li><a href="DraftsView.html">DraftsView</a></li><li><a href="EditCollectionView.html">EditCollectionView</a></li><li><a href="EditorView.html">EditorView</a></li><li><a href="EML211.html">EML211</a></li><li><a href="EML211EditorView.html">EML211EditorView</a></li><li><a href="EMLEntity.html">EMLEntity</a></li><li><a href="EMLEntityView.html">EMLEntityView</a></li><li><a href="EMLGeoCoverage.html">EMLGeoCoverage</a></li><li><a href="EMlGeoCoverageView.html">EMlGeoCoverageView</a></li><li><a href="EMLNonNumericDomain.html">EMLNonNumericDomain</a></li><li><a href="EMLNumericDomain.html">EMLNumericDomain</a></li><li><a href="EMLPartyView.html">EMLPartyView</a></li><li><a href="EMLTemporalCoverage.html">EMLTemporalCoverage</a></li><li><a href="EMLView.html">EMLView</a></li><li><a href="Filter.html">Filter</a></li><li><a href="FilterGroup.html">FilterGroup</a></li><li><a href="FilterGroupsView.html">FilterGroupsView</a></li><li><a href="Filters.html">Filters</a></li><li><a href="GroupListView.html">GroupListView</a></li><li><a href="ImageUploaderView.html">ImageUploaderView</a></li><li><a href="LookupModel.html">LookupModel</a></li><li><a href="MarkdownEditorView.html">MarkdownEditorView</a></li><li><a href="MarkdownView.html">MarkdownView</a></li><li><a href="MetadataView.html">MetadataView</a></li><li><a href="MetricModalView.html">MetricModalView</a></li><li><a href="NavbarView.html">NavbarView</a></li><li><a href="NumericFilter.html">NumericFilter</a></li><li><a href="ObjectFormats.html">ObjectFormats</a></li><li><a href="Order.html">Order</a></li><li><a href="Orders.html">Orders</a></li><li><a href="OrdersView.html">OrdersView</a></li><li><a href="OrderView.html">OrderView</a></li><li><a href="PortalDataView.html">PortalDataView</a></li><li><a href="PortalEditorView.html">PortalEditorView</a></li><li><a href="PortalListView.html">PortalListView</a></li><li><a href="PortalLogosView.html">PortalLogosView</a></li><li><a href="PortalMembersView.html">PortalMembersView</a></li><li><a href="PortalModel.html">PortalModel</a></li><li><a href="PortalSectionView.html">PortalSectionView</a></li><li><a href="PortalUsagesView.html">PortalUsagesView</a></li><li><a href="PortalView.html">PortalView</a></li><li><a href="PortEditorDataView.html">PortEditorDataView</a></li><li><a href="PortEditorImageView.html">PortEditorImageView</a></li><li><a href="PortEditorLogosView.html">PortEditorLogosView</a></li><li><a href="PortEditorMdSectionView.html">PortEditorMdSectionView</a></li><li><a href="PortEditorSectionsView.html">PortEditorSectionsView</a></li><li><a href="PortEditorSectionView.html">PortEditorSectionView</a></li><li><a href="PortEditorSettingsView.html">PortEditorSettingsView</a></li><li><a href="Product.html">Product</a></li><li><a href="Products.html">Products</a></li><li><a href="QualityReport.html">QualityReport</a></li><li><a href="Quota.html">Quota</a></li><li><a href="Quotas.html">Quotas</a></li><li><a href="RegisterCitationView.html">RegisterCitationView</a></li><li><a href="Search.html">Search</a></li><li><a href="SolrResultList.html">SolrResultList</a></li><li><a href="SpatialFilter.html">SpatialFilter</a></li><li><a href="Stats.html">Stats</a></li><li><a href="TableEditorView.html">TableEditorView</a></li><li><a href="ToggleFilter.html">ToggleFilter</a></li><li><a href="UIRouter.html">UIRouter</a></li><li><a href="Usage.html">Usage</a></li><li><a href="Usages.html">Usages</a></li><li><a href="User.html">User</a></li><li><a href="UserSettingsView.html">UserSettingsView</a></li><li><a href="UserView.html">UserView</a></li></ul><h3>Global</h3><ul><li><a href="global.html#appConfigPath">appConfigPath</a></li></ul>
 </nav>
 
 <br class="clear">
 
 <footer>
-    Documentation generated by <a href="https://github.com/jsdoc/jsdoc">JSDoc 3.6.3</a> on Wed Sep 16 2020 15:01:12 GMT-0400 (Eastern Daylight Time)
+    Documentation generated by <a href="https://github.com/jsdoc/jsdoc">JSDoc 3.6.3</a> on Tue Oct 20 2020 22:49:21 GMT-0500 (Central Daylight Time)
 </footer>
 
 <script> prettyPrint(); </script>

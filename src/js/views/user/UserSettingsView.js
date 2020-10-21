@@ -12,6 +12,7 @@ define(['jquery', 'underscore', 'backbone', 'clipboard',
   /**
    * @class UserSettingsView
    * @classdesc A major view that displays the settings for a User's repository/DataONE account.
+   * @screenshot views/UserSettingsView.png
    */
   var UserSettingsView = Backbone.View.extend(
     /** @lends UserSettingsView.prototype */{

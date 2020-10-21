@@ -11,7 +11,8 @@ define(["jquery",
      * @extends Backbone.View
      * @screenshot views/PortalLogosView.png
      */
-    var PortalLogosView = Backbone.View.extend({
+    var PortalLogosView = Backbone.View.extend(
+      /** @lends PortalLogosView.prototype */ {
 
         /**
          * The HTML element type for this view
