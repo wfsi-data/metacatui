@@ -2802,8 +2802,6 @@ img.inlineright {
    browsers support the CSS3 border-radius attribute, this
    should be switched.*/
 .group {
-    padding:                    0;
-    color:                      #003366;
     min-width:                  800px;
     voice-family:               "\"}\""; /* begin ie5win hack */
     voice-family:               inherit;

@@ -18,6 +18,7 @@ function ($, _, Backbone) {
 			'data(/mode=:mode)(/query=:query)(/page/:page)(/)' : 'renderData',    // data search page
 			'profile(/*username)(/s=:section)(/s=:subsection)(/)' : 'renderProfile',
 			'my-profile(/s=:section)(/s=:subsection)(/)' : 'renderMyProfile',
+      'my-settings(/:section)'            : 'renderMySettings',
 			'external(/*url)(/)'           : 'renderExternal', // renders the content of the given url in our UI
 			'signout(/)'					: 'logout',
 			'signin(/)'					: 'renderSignIn',
@@ -221,10 +222,19 @@ function ($, _, Backbone) {
 			}
 		},
 
-		renderProfile: function(username, section, subsection){
+    renderProfile: function(username, section, subsection){
 			this.closeLastView();
 
-			if(!username || !MetacatUI.appModel.get("enableUserProfiles")){
+			var viewChoice;
+
+      //If there is a username specified and user profiles are disabled,
+      // forward to the entire repo profile view.
+      if( username && !MetacatUI.appModel.get("enableUserProfiles") ){
+        this.navigate("profile", { trigger: true, replace: true });
+        return;
+      }
+
+			if(!username){
 				this.routeHistory.push("summary");
 
 				// flag indicating /profile view
@@ -243,6 +253,16 @@ function ($, _, Backbone) {
 				else
 					MetacatUI.appView.showView(MetacatUI.appView.statsView, viewOptions);
 			}
+      else if( section == "settings" ){
+
+        if( subsection ){
+          this.navigate("my-settings/" + subsection, { trigger: true, replace: true });
+        }
+        else{
+          this.navigate("my-settings", { trigger: true, replace: true });
+        }
+        return;
+      }
 			else{
 				this.routeHistory.push("profile");
 				MetacatUI.appModel.set("profileUsername", username);
@@ -279,6 +299,20 @@ function ($, _, Backbone) {
 				this.renderProfile(MetacatUI.appUserModel.get("username"), section, subsection);
 			}
 		},
+
+    renderMySettings: function(section){
+      if(!MetacatUI.appView.userSettingsView){
+
+        require(['views/user/UserSettingsView'], function(UserSettingsView){
+          MetacatUI.appView.userSettingsView = new UserSettingsView();
+
+          MetacatUI.appView.showView(MetacatUI.appView.userSettingsView, { section: section });
+        });
+      }
+      else{
+        MetacatUI.appView.showView(MetacatUI.appView.userSettingsView, { section: section });
+      }
+    },
 
 		/*
     * Renders the editor view given a root package identifier,
@@ -466,12 +500,12 @@ function ($, _, Backbone) {
 			}
 		},
 
-		/**		 
+		/**
 		 * renderPortal - Render the portal view based on the given name or id, as
-		 * well as optional section	 
-		 * 			
+		 * well as optional section
+		 *
 		 * @param  {string} label         The portal ID or name
-		 * @param  {string} portalSection A specific section within the portal 
+		 * @param  {string} portalSection A specific section within the portal
 		 */
      renderPortal: function(label, portalSection) {
 			 // Add the overall class immediately so the navbar is styled correctly right away

@@ -23,6 +23,7 @@ function ($, _, Backbone) {
 			'data/my-data(/)'                   : 'renderMyData',
 			'profile(/*username)(/s=:section)(/s=:subsection)(/)' : 'renderProfile',
 			'my-profile(/s=:section)(/s=:subsection)(/)' : 'renderMyProfile',
+      'my-settings(/:section)'            : 'renderMySettings',
 			'external(/*url)(/)'                : 'renderExternal', // renders the content of the given url in our UI
 			'logout(/)'                         : 'logout', // logout the user
 			'signout(/)'                        : 'logout', // logout the user
@@ -456,6 +457,16 @@ function ($, _, Backbone) {
 				else
 					MetacatUI.appView.showView(MetacatUI.appView.statsView, viewOptions);
 			}
+      else if( section == "settings" ){
+
+        if( subsection ){
+          this.navigate("my-settings/" + subsection, { trigger: true, replace: true });
+        }
+        else{
+          this.navigate("my-settings", { trigger: true, replace: true });
+        }
+        return;
+      }
 			else{
 				this.routeHistory.push("profile");
 				MetacatUI.appModel.set("profileUsername", username);
@@ -476,6 +487,20 @@ function ($, _, Backbone) {
 					MetacatUI.appView.showView(MetacatUI.appView.userView, viewOptions);
 			}
 		},
+
+    renderMySettings: function(section){
+      if(!MetacatUI.appView.userSettingsView){
+
+        require(['views/user/UserSettingsView'], function(UserSettingsView){
+          MetacatUI.appView.userSettingsView = new UserSettingsView();
+
+          MetacatUI.appView.showView(MetacatUI.appView.userSettingsView, { section: section });
+        });
+      }
+      else{
+        MetacatUI.appView.showView(MetacatUI.appView.userSettingsView, { section: section });
+      }
+    },
 
 		renderMyProfile: function(section, subsection){
 			if(MetacatUI.appUserModel.get("checked") && !MetacatUI.appUserModel.get("loggedIn"))

@@ -1,22 +1,20 @@
-<section id="user-settings" class="row-fluid section" data-section="settings">
-<% if(!MetacatUI.appModel.get("enableUserProfiles")){ %>
-	<h1>My Account</h1>
-<% } %>
-
 <% var welcomeName = firstName || fullName || ""; %>
 <h3>Welcome, <%=welcomeName%></h3>
 
+<section id="user-settings">
+
 	<% if(MetacatUI.appModel.get("enableUserProfiles")){ %>
-	<div class="panel panel-default span3">
+	<div class="panel panel-default menu">
 	  <div class="panel-heading">
-	  	Settings
+	  	My Settings
 	  </div>
 	 	<ul class="list-group">
-	    	<li class="list-group-item active subsection-link" data-section="account"><a href="#" class="subsection-link" data-section="account">My account</a></li>
+	    	<li class="list-group-item active section-link" data-section="account"><a href="#" class="section-link" data-section="account">Account</a></li>
+
         <% if( MetacatUI.appModel.get("showMyPortals") !== false ){ %>
-          <li class="list-group-item subsection-link" data-section="portals">
-            <a href="#" class="subsection-link" data-section="portals">
-              My <%= MetacatUI.appModel.get("portalTermPlural") || "portals" %>
+          <li class="list-group-item section-link" data-section="portals">
+            <a href="#" class="section-link" data-section="portals">
+              <%= portalsSectionLinkText %>
               <span class="new-icon">
                 <i class="icon icon-star icon-on-right"></i>
                 NEW
@@ -24,12 +22,19 @@
             </a>
           </li>
         <% } %>
-	    	<li class="list-group-item subsection-link" data-section="groups"><a href="#" class="subsection-link" data-section="groups">Groups</a></li>
-	    	<li class="list-group-item subsection-link" data-section="token"><a href="#" class="subsection-link" data-section="token">Authentication Token</a></li>
+
+        <% if( MetacatUI.appModel.get("enableDataonePlusSettings") ){ %>
+          <li class="list-group-item section-link" data-section="dataone-plus">
+            <a href="#" class="section-link" data-section="dataone-plus"><%=MetacatUI.appModel.get("dataonePlusName")%></a>
+          </li>
+        <% } %>
+
+	    	<li class="list-group-item section-link" data-section="groups"><a href="#" class="section-link" data-section="groups">Groups</a></li>
+	    	<li class="list-group-item section-link" data-section="token"><a href="#" class="section-link" data-section="token">Authentication Token</a></li>
 	  	</ul>
 	</div>
 
-	<div class="span8 subsection" data-section="account">
+	<div class="section" data-section="account">
 
 			<div id="registered-user-container" class="panel panel-default" data-subsection="edit-account">
 			  <div class="panel-heading">
@@ -39,7 +44,7 @@
 			  	<form>
 			  		<div class="form-group">
 			  			<label class="control-group span2">Username</label>
-			  			<span class="span10" id="mod-username"><%=usernameReadable%></span>
+			  			<span class="subtle" id="mod-username"><%=usernameReadable%></span>
 			  		</div>
 				  	<div class="form-group">
 				  		<label class="control-group span2" for="mod-givenName">First name</label>
@@ -104,20 +109,26 @@
 	</div>
 
   <% if( MetacatUI.appModel.get("showMyPortals") !== false ){ %>
-    <div class="span8 subsection" data-section="portals">
+    <div class="section" data-section="portals">
       <div class="panel panel-default">
         <div class="panel-heading">
-  		  
+          <h4 class="panel-title">My <%=MetacatUI.appModel.get("portalTermPlural")%></h4>
   		  </div>
         <div class="my-portals-container panel-body"></div>
       </div>
     </div>
   <% } %>
 
-	<div class="span8 subsection" data-section="groups">
+  <% if( MetacatUI.appModel.get("enableDataonePlusSettings") ){ %>
+    <div class="section panel panel-default" data-section="dataone-plus">
+      <div class="dataoneplus-container panel-body"></div>
+    </div>
+  <% } %>
+
+	<div class="section" data-section="groups">
 		<div class="panel panel-default">
 		  <div class="panel-heading">
-		  	<h4 class="panel-title">My Groups</h4>
+		  	<h4 class="panel-title">Groups</h4>
 		  </div>
 		  <div class="panel-body">
 		  		<p>Manage access and permissions to your data with groups.
@@ -125,36 +136,23 @@
 		  		archive your data by assigning permissions via the group (instead of assigning permissions individually).
 		  		For example, create a group and grant all members permission to access a private data set before publication.
 		  		Or create a group of your collaborators so that members can edit each other's data sets.</p>
-		  		<div id="group-list-container"></div>
-		  		<div class="panel panel-default" id="add-group-container">
-		  			<div class="panel-heading">
-		  				<a href="#" class="toggle-slide" data-slide-el="add-group-form-container"><i class="icon icon-plus"></i> Add a new group</a>
-		  			</div>
-		  			<div class="panel-body hidden" id="add-group-form-container">
-		  				<div id="add-group-alert-container"></div>
-		  			 	<form>
-		  			 		<div class="form-group">
-			  			 		<label for="name" class="control-group span3">Group Name</label>
-				  				<input type="text" name="name" id="add-group-name" maxlength="50" minlength="1" class="input-xlarge" />
-				  				<span class="subtle help-text">Choose wisely; you cannot change this name later.</span>
-				  				<div id="group-name-notification-container" class="form-feedback"></div>
-			  				</div>
 
-			  				<ul class="list-group member-list">
-			  				</ul>
+	  			<div class="panel-heading">
+	  				<a href="#" class="toggle-slide btn" data-slide-el="add-group-container"><i class="icon icon-plus"></i> Add a new group</a>
+	  			</div>
+	  			<div class="panel-body hidden" id="add-group-container"></div>
 
-			  				<input type="submit" value="Create Group" class="btn btn-primary" id="add-group-submit"/>
-			  			</form>
-		  			</div>
-			  	</div>
+          <div id="group-list-container"></div>
 		  </div>
 		</div>
 	</div>
-	<div class="span8 subsection active" data-section="token">
+
+
+	<div class="section active" data-section="token">
 	<% }
 	else {
 	%>
-	<div class="span12 subsection active" data-section="token">
+	<div class="span12 section active" data-section="token">
 	<% } %>
 		<div class="panel panel-default">
 		  <div class="panel-heading">
@@ -185,27 +183,13 @@
 	   	  		<p>To upload data in the DataONE network: choose a Member Node to host your data and an app that supports DataONE.</p>
 
    	  			<a href="https://www.dataone.org/current-member-nodes" target="_blank">See the list of DataONE Member Nodes <i class="icon icon-double-angle-right"></i></a>
-   	  			<!--  <div class="media">
-   	  				<div class="media-left">
-	   	  				<img src="<%= MetacatUI.root %>/img/morpho-image.png" class="media-object" width="100" />
-	   	  			</div>
-   	  				<div class="media-body">
-	   	  				<h5>Morpho <em class="badge">Coming soon </em></h5>
-	   	  				<p>Morpho is an open source metadata editor for Ecological Metadata Language (EML).
-	   	  				Morpho can currently be used to submit data and metadata to a Member Node which runs Metacat,
-	   	  				using the Metacat interfaces in Morpho.
-	   	  				<a href="https://knb.ecoinformatics.org/about/morpho">Learn more about Morpho and download <i class="icon icon-double-angle-right"></i></a>
-	   	  				</p>
-   	  				</div>
-   	  			</div>
-   	  			-->
    	  			<div class="media">
    	  				<div class="media-left">
 		   	  			<a href="https://github.com/DataONEorg/rdataone"><img src="<%= MetacatUI.root %>/img/rDataONE-logo-128px.png" class="media-object" width="100" /></a>
 		   	  		</div>
 	   	  			<div class="media-body">
 		   	  			<h5><a href="https://github.com/DataONEorg/rdataone">DataONE R</a></h5>
-		   	  			<p>The DataONE client for R supports DataONE authentication tokens in its latest 2.0 release.
+		   	  			<p>The DataONE client for R supports DataONE authentication tokens as of the 2.0 release.
 		   	  			<a href="https://github.com/DataONEorg/rdataone">Learn more about DataONE R <i class="icon icon-double-angle-right"></i></a></p>
 		   	  		</div>
 			   	 </div>

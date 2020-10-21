@@ -33,7 +33,7 @@ define(['jquery', 'underscore', 'backbone', 'models/UserModel'],
         //Set the groupId and make sure it's in a DN format
         if(options.groupId){
           this.groupId = options.groupId;
-          if( this.groupId.substring("DC=") == -1 ){
+          if( this.groupId.indexOf("DC=") == -1 ){
             this.groupId = "CN=" + this.groupId + ",DC=dataone,DC=org";
           }
         }
@@ -108,7 +108,6 @@ define(['jquery', 'underscore', 'backbone', 'models/UserModel'],
 
 			//This group name is not available/already taken
 			this.nameAvailable = false;
-			this.trigger("nameChecked", this);
 
 			var group = $(response).find("group subject:contains('" + this.groupId + "')").parent("group"),
 				people = $(response).find("person"),
@@ -123,6 +122,7 @@ define(['jquery', 'underscore', 'backbone', 'models/UserModel'],
 			if(existing.length) existing = _.invoke(existing, "toLowerCase");
 
 			this.name = $(group).children("groupName").text();
+      this.groupId = $(group).children("subject").text();
 
 			_.each(people, function(person){
 
@@ -242,18 +242,41 @@ define(['jquery', 'underscore', 'backbone', 'models/UserModel'],
 		 * For pending groups only (those in the creation stage)
 		 * Will check if the given name/id is available
 		 */
-		checkName: function(name){
-			//Only check the name for pending groups
-			if(!this.pending) return;
+		checkID: function(){
 
-			//Reset the name and ID
-			this.name = name || this.name;
-			this.groupId = null;
+			//Reset the name availability
 			this.nameAvailable = null;
 
+      var options = {}
+      options.silent = true;
+      options.dataType = "xml";
+      options.error = function(collection, response, options){
+        //If this group is not found, then the name is available
+        if((response.status == 404) && (response.responseText.indexOf("No Such Object") > -1)){
+          collection.nameAvailable = true;
+          collection.trigger("nameChecked", collection);
+        }
+      }
+      options.success = function(collection, response, options){
+        collection.nameAvailable = false;
+        collection.trigger("nameChecked");
+      }
+      options.url = MetacatUI.appModel.get("accountsUrl") + encodeURIComponent(this.groupId);
+
 			//Get group info/check name availablity
-			this.getGroup({ add: false });
+			this.fetch(options);
 		},
+
+    setGroupId: function(name){
+      if( !name || typeof name !== "string" ){
+        return;
+      }
+
+      if( name.indexOf("DC=") == -1 ){
+        this.groupId = "CN=" + name + ",DC=dataone,DC=org";
+      }
+
+    },
 
 		/*
 		 * Retrieves the UserModels that are rightsHolders of this group

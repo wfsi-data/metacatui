@@ -5201,6 +5201,9 @@ textarea.token{
 .list-group-item .reject-request-btn{
 	margin-right: 5px;
 }
+.list-group-header{
+  font-weight: bold;
+}
 .icon.is-owner{
 	color: #FFD700;
 }
@@ -5245,7 +5248,7 @@ textarea.token{
 	margin-bottom: 30px;
 }
 #identity-request-container label,
-.add-member label{
+.member-list label{
 	font-weight: bold;
 }
 #first-upload-year-container{
@@ -5293,6 +5296,16 @@ address.email-container:before{
 }
 .new-icon{
   color: #d2a908;
+}
+
+#user-settings > .menu{
+  position: fixed;
+  width: 250px;
+}
+#user-settings > .section{
+  width: calc(100% - 250px - 1em);
+  margin-left: calc(250px + 1em);
+  padding-top: 0px;
 }
 
 /******************************************
@@ -5605,6 +5618,49 @@ svg .no-activity,
 }
 .list-group-item.create-group a{
 	font-weight: normal;
+}
+.group-list-view .members-container{
+  margin-left: 0px;
+}
+#user-profile .group-list-view .num-members{
+  margin-left: 10px;
+}
+#add-group-container .panel-heading{
+  margin-bottom: 20px;
+  margin-top: 20px;
+}
+.list-group-subheader{
+  border-bottom: 0px;
+}
+.list-group-subheader + .list-group-item{
+  border-top: 0px;
+}
+.group-name-container .form-feedback{
+  display: inline-block;
+  margin-left: 10px;
+  min-height: 20px;
+}
+.update-group-name{
+  margin-left: 10px;
+}
+.group-profile .group-name{
+  max-width: 60%;
+min-width: 155px;
+}
+.btn.success{
+  border-color: green;
+color: green;
+font-weight: bold;
+}
+#add-group-container .save{
+  margin-top:20px;
+  margin-left: 20px;
+}
+#user-membership-container{
+  margin-top: 20px;
+}
+.group-profile .list-group-header {
+  display: none;
 }
 /******************************************
 ** Searching and Map ***

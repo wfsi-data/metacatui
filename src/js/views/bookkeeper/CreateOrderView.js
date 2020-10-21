@@ -289,8 +289,7 @@ define(["jquery",
 
         }
         catch(e){
-          MetacatUI.appModel.logError("Failed to create the Order model: " + e.message + " | " + MetacatUI.appUserModel.get("username") +
-                                      " | v." + MetacatUI.metacatUIVersion, true);
+          MetacatUI.appModel.logError("Failed to create the Order model: " + e.message, true);
           console.error("Caught exception while creating Order: ", e);
         }
 

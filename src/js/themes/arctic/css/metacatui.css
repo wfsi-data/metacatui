@@ -979,6 +979,17 @@ img[src*="gstatic.com/"], img[src*="googleapis.com/"]  {
 .user-view-section > section{
 	width: 100%;
 }
+.group-list-view .update-group-name{
+  height: 30px;
+  line-height: 10px;
+  margin-top: 0px;
+  vertical-align: top;
+}
+.group-list-view .add-member .submit{
+  padding: 4px 8px;
+border-top-right-radius: 3px;
+border-bottom-right-radius: 3px;
+}
 
 /* Stats styles
   -------------------------------------------------- */

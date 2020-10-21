@@ -159,8 +159,7 @@ define(["jquery",
                   customer.trigger("error");
                 }
                 else{
-                  MetacatUI.appModel.logError("Failed to save the Customer model: " + response.responseText + " | " + MetacatUI.appUserModel.get("username") +
-                                              " | v." + MetacatUI.metacatUIVersion, true);
+                  MetacatUI.appModel.logError("Failed to save the Customer model: " + response.responseText, true);
                   customer.trigger("error");
                 }
               }
@@ -174,9 +173,7 @@ define(["jquery",
         }
         catch(e){
           console.error("Could not save the Customer: ", e);
-          MetacatUI.appModel.logError("JS runtime error while trying to save the Customer model: " + e.message + " | " +
-                                      MetacatUI.appUserModel.get("username") +
-                                      " | v." + MetacatUI.metacatUIVersion, true);
+          MetacatUI.appModel.logError("JS runtime error while trying to save the Customer model: " + e.message, true);
           this.trigger("error");
         }
 

@@ -140,8 +140,7 @@ define(["jquery",
             dataType: "json",
             error: function(order, response){
 
-              MetacatUI.appModel.logError("Failed to save the Order model: " + response.responseText + " | " + MetacatUI.appUserModel.get("username") +
-                                          " | v." + MetacatUI.metacatUIVersion, true);
+              MetacatUI.appModel.logError("Failed to save the Order model: " + response.responseText, true);
               order.set("errorMessage", response.responseText);
               order.trigger("error");
             }
@@ -155,8 +154,7 @@ define(["jquery",
           return Backbone.Model.prototype.save.call(this, saveOptions.attrs, saveOptions);
         }
         catch(e){
-          MetacatUI.appModel.logError("Caught exception when saving the Order model: " + e.message + " | " + MetacatUI.appUserModel.get("username") +
-                                      " | v." + MetacatUI.metacatUIVersion, true);
+          MetacatUI.appModel.logError("Caught exception when saving the Order model: " + e.message, true);
         }
       },
 
@@ -274,8 +272,7 @@ define(["jquery",
           }
           catch(e){
             console.error("Caught exception while creating the Order UserGroup: ", e);
-            MetacatUI.appModel.logError("Caught exception while creating the Order UserGroup: " + e.message + " | " + MetacatUI.appUserModel.get("username") +
-                                        " | v." + MetacatUI.metacatUIVersion, true);
+            MetacatUI.appModel.logError("Caught exception while creating the Order UserGroup: " + e.message, true);
             this.trigger("error", e.message);
 
           }

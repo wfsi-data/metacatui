@@ -3,19 +3,36 @@ define(['jquery', 'underscore', 'backbone', 'collections/UserGroup', 'models/Use
 	function($, _, Backbone, UserGroup, UserModel, PagerView) {
 	'use strict';
 
-	/*
-	 * GroupListView
-	 * Displays a list of UserModels of a UserGroup collection and allows owners to add/remove members from the group
+	/**
+	 * @class GroupListView
+	 * @classdesc Displays a list of UserModels of a UserGroup collection and allows owners to add/remove members from the group
+   * @extends Backbone.View
 	 */
-	var GroupListView = Backbone.View.extend({
+	var GroupListView = Backbone.View.extend(
+    /** @lends GroupListView.prototype */ {
 
 		type: "GroupListView",
 
 		tagName: "ul",
 
-		className: "list-group member-list",
+		className: "list-group member-list group-list-view",
+
+    /**
+    * The UserGroup collection that is represented in this view
+    * @type UserGroup
+    */
+    collection: null,
+
+    membersContainer: ".members-container",
 
 		memberEls: [],
+
+    /**
+    * Indicates whether the UserGroup collection has been fetched yet
+    * @type {boolean}
+    * @default false
+    */
+    groupFetched: false,
 
 		/*
 		 * New instances of this view should pass a UserGroup collection in the options object
@@ -37,7 +54,10 @@ define(['jquery', 'underscore', 'backbone', 'collections/UserGroup', 'models/Use
 			"click .remove-member"		  : "removeFromCollection",
 			"click .add-owner"            : "addOwnerToCollection",
 			"click .remove-owner"         : "removeOwnership",
-			"keypress input"              : "checkForReturn"
+			"keypress input"              : "checkForReturn",
+      "keyup .group-name.check" : "checkGroupID",
+      "click .update-group-name" : "updateGroupName",
+      "click .save" : "createGroup"
 		},
 
 		/*
@@ -47,6 +67,16 @@ define(['jquery', 'underscore', 'backbone', 'collections/UserGroup', 'models/Use
 		 */
 		render: function(){
 
+      //Fetch the collection
+      if( this.groupFetched == false && !this.collection.pending ){
+        this.listenToOnce(this.collection, "sync", function(){
+          this.groupFetched = true;
+          this.render();
+        });
+        this.collection.getGroup();
+        return;
+      }
+
 			var group = this.collection,
 				view  = this;
 
@@ -54,11 +84,14 @@ define(['jquery', 'underscore', 'backbone', 'collections/UserGroup', 'models/Use
 			this.$el.empty();
 
 			//Create the header/first-level of the list
-			var listItem   = $(document.createElement("li")).addClass("list-group-header list-group-item group"),
-				//icon       = $(document.createElement("i")).addClass("icon icon-caret-down tooltip-this group"),
+			var listItem = $(document.createElement("li")).addClass("list-group-header list-group-item group"),
+				icon       = $(document.createElement("i")).addClass("icon icon-group tooltip-this group"),
 				numMembers = $(document.createElement("span")).addClass("num-members").text(group.length),
 				numMembersLabel = $(document.createElement("span")).text(" members"),
-				numMembersContainer = $(document.createElement("span")).append(numMembers, numMembersLabel);
+				numMembersContainer = $(document.createElement("span")).append(numMembers, numMembersLabel),
+        memberContainer = $(document.createElement("ul")).addClass("members-container"),
+        memberListItem = $(document.createElement("li")).append(memberContainer),
+        memberHeader = $(document.createElement("li")).addClass("list-group-item list-group-subheader").html("<b>Members</b>");
 
 			if(this.showGroupName){
 				if(!this.collection.pending){
@@ -67,16 +100,22 @@ define(['jquery', 'underscore', 'backbone', 'collections/UserGroup', 'models/Use
 				}
 				else{
 					var link       = $(document.createElement("a")).attr("href", "#"),
-						groupName  = $(document.createElement("span")).text("");
+						  groupName  = $(document.createElement("span")).text("New group");
 				}
 
 				//Put it all together
-				$(listItem).append($(link).prepend(/*icon, */groupName));
+				$(listItem).append($(link).prepend(icon, groupName));
 				numMembersContainer.prepend(" (").append(")");
+
+        this.listenTo(this.collection, "sync", this.updateHeader);
 			}
 
+      //Add the member header to the member container
+      memberContainer.append(memberHeader);
+      memberHeader.append(numMembersContainer);
+
 			//Add the member count
-			this.$el.append(listItem.append(numMembersContainer));
+			this.$el.append(listItem, memberListItem);
 
 			//Save some elements for later use
 			this.$header = $(listItem);
@@ -121,14 +160,14 @@ define(['jquery', 'underscore', 'backbone', 'collections/UserGroup', 'models/Use
 
 			//If this is the currently-logged-in user, display "Me"
 			if(username == MetacatUI.appUserModel.get("username"))
-				name = name + " (Me)";
+				name = name + " (You)";
 
 			//Create a list item for this member
 			var memberListItem = $(document.createElement("li")).addClass("list-group-item member").attr("data-username", username),
 				memberNameContainer = $(document.createElement("div")).addClass("name-container"),
 				memberIcon     = $(document.createElement("i")).addClass("icon icon-user icon-on-right"),
 				memberLink     = $(document.createElement("a")).attr("href", MetacatUI.root + "/profile/" + username).attr("data-username", username).prepend(memberIcon, name),
-				memberName     = $(document.createElement("span")).addClass("details ellipsis").attr("data-username", username).text(member.get("usernameReadable"));
+				memberName     = $(document.createElement("span")).addClass("details ellipsis").attr("data-username", username).text(member.get("username"));
 
 			memberIcon.tooltip({
 				placement: "top",
@@ -142,12 +181,8 @@ define(['jquery', 'underscore', 'backbone', 'collections/UserGroup', 'models/Use
 			//Store this element in the view
 			this.memberEls[member.cid] = memberEl;
 
-			//Append after the last member listed
-			if(this.$(".member").length)
-				this.$(".member").last().after(memberEl);
-			//If no members are listed yet, append to the main el
-			else
-				this.$el.append(memberEl);
+      //Add this member element to the page
+      this.$(this.membersContainer).append(memberEl);
 
 			//Add an owner icon for owners of the group or to assign owners to the group
 			if(this.collection.isOwner(member) || this.collection.isOwner(MetacatUI.appUserModel)){
@@ -364,7 +399,7 @@ define(['jquery', 'underscore', 'backbone', 'collections/UserGroup', 'models/Use
 			member.trigger("change:isOwnerOf");
 
 			//Save
-			var success = function(){ view.refreshOwner(member); }
+			var success = function(){ view.Owner(member); }
 			this.collection.save(success);
 		},
 
@@ -406,7 +441,8 @@ define(['jquery', 'underscore', 'backbone', 'collections/UserGroup', 'models/Use
 		},
 
 		addControls: function(){
-			if(!MetacatUI.appUserModel.get("loggedIn") || (!this.collection.isOwner(MetacatUI.appUserModel)) || this.$addMember) return;
+			if(!MetacatUI.appUserModel.get("loggedIn") || (!this.collection.isOwner(MetacatUI.appUserModel)) || this.$addMember)
+        return;
 
 			//Add a form for adding a new member
 			var addMemberInput    = $(document.createElement("input"))
@@ -425,19 +461,135 @@ define(['jquery', 'underscore', 'backbone', 'collections/UserGroup', 'models/Use
 				addMemberMsg      = $(document.createElement("div")).addClass("notification")
 									.append($(document.createElement("i")).addClass("icon"),
 											$(document.createElement("span")).addClass("msg")),
+        changeNameInput   = $(document.createElement("input"))
+                              .attr("type", "text")
+                              .attr("name", "group-name")
+                              .val(this.collection.name)
+                              .addClass("group-name")
+                              .addClass( this.collection.pending? "check" : "")
+                              .attr("placeholder", "Choose a unique group name"),
+        changeNameContainer = $(document.createElement("li")).addClass("list-group-item group-name-container").append('<label>Group name <span class="group-name-notification-container form-feedback"></span></label>', changeNameInput),
 				addMemberForm     = $(document.createElement("form")).append(addMemberLabel, addMemberInput, addMemberName, addMemberSubmit, addMemberMsg),
 				addMemberListItem = $(document.createElement("li")).addClass("list-group-item add-member input-append").append(addMemberForm);
+
+      if( !this.collection.pending ){
+        changeNameInput.after( $(document.createElement("button")).addClass("btn update-group-name").text("Save") );
+      }
+
+      this.$(".list-group-header").after(changeNameContainer);
 
 			this.$addMember = $(addMemberForm);
 			this.$addMemberMsg = $(addMemberMsg);
 
 			this.$el.append(addMemberListItem);
 
+      //Add a Save button for new groups
+      if( this.collection.pending ){
+        this.$el.append('<button value="Create Group" class="btn btn-primary save">Create Group</button>');
+        this.$el.prepend($(document.createElement("div")).addClass("notification-container"));
+      }
+
 			this.setUpAutocomplete();
 
 		},
 
-		/*
+    /**
+     * Gets the group name the user has entered and attempts to get this group from the server
+     * If no group is found, then the group name is marked as available. Otherwise an error msg is displayed
+     */
+    checkGroupID: function(e){
+      if(!e || !e.target) return;
+
+      var view = this,
+        $notification = this.$(".group-name-notification-container"),
+        $input = $(e.target);
+
+      //Clear the last message
+      $notification.empty();
+
+      //Get the name typed in by the user
+      var name = $input.val().trim();
+      if(!name) return;
+
+      //Update the group ID and name
+      this.collection.name = name;
+      this.collection.setGroupId(name);
+
+      //Show a loading icon
+      $notification.html("<span class='subtle'><i class='icon icon-spinner icon-spin icon-on-left'></i>Checking availability...</span>");
+
+      this.listenToOnce(this.collection, "nameChecked", function(){
+        //If the group name/id is available, then display so
+        if( this.collection.nameAvailable ){
+          var icon = $(document.createElement("i")).addClass("icon icon-ok"),
+            message = "The name " + this.collection.name + " is available",
+            container = $(document.createElement("div")).addClass("notification success");
+
+          $notification.html($(container).append(icon, message));
+          $input.removeClass("has-error");
+        }
+        else{
+          var icon = $(document.createElement("i")).addClass("icon icon-remove"),
+            message = "The name " + this.collection.name + " is already taken",
+            container = $(document.createElement("div")).addClass("notification error");
+
+          $notification.html($(container).append(icon, message));
+          $input.addClass("has-error");
+        }
+
+      });
+
+      this.collection.checkID();
+    },
+
+    updateGroupName: function(){
+
+      try{
+        var newName = this.$(".group-name").val();
+
+        if( !newName ){
+          return;
+        }
+
+        this.collection.name = newName;
+
+        this.$(".update-group-name").text("Saving...").attr("disabled", "disabled").addClass("disabled");
+        this.listenToOnce(this.collection, "sync",  this.showUpdatedGroupName);
+        this.listenToOnce(this.collection, "error", this.showFailedGroupName);
+
+        this.collection.save();
+      }
+      catch(e){
+        console.error("Failed to updatet group name: ", e);
+      }
+
+    },
+
+    showUpdatedGroupName: function(){
+      var button = this.$(".update-group-name");
+
+      button.text("Saved").removeAttr("disabled").removeClass("disabled").addClass("success").prepend('<i class="icon icon-check icon-on-left"></i>');
+
+      setTimeout(function(){
+        button.text("Save").removeClass("success");
+      }, 2000);
+
+      this.stopListening(this.collection, "error", this.showFailedGroupName);
+    },
+
+    showFailedGroupName: function(){
+      var button = this.$(".update-group-name");
+
+      button.text("Failed to save").removeAttr("disabled").removeClass("disabled").addClass("error");
+
+      setTimeout(function(){
+        button.removeClass("error").text("Save");
+      }, 2000);
+
+      this.stopListening(this.collection, "sync", this.showUpdatedGroupName);
+    },
+
+		/**
 		 * Display a notification in the "add member" form space
 		 * Pass an options object with a msg (message string) and status ('success' or 'error')
 		 */
@@ -459,15 +611,107 @@ define(['jquery', 'underscore', 'backbone', 'collections/UserGroup', 'models/Use
 			this.$addMemberMsg.show().delay(3000).fadeOut();
 		},
 
-		/*
+		/**
 		 * Update the header of this group list, which includes the number of members and the group name
 		 */
 		updateHeader: function(){
 			if(this.$numMembers)
 				this.$numMembers.text(this.collection.length);
-			if(this.$groupName)
-				this.$groupName.text(this.collection.name);
+
+			if(this.$groupName){
+        if( this.collection.pending ){
+          this.$groupName.text("New group");
+        }
+        else{
+          this.$groupName.text(this.collection.name);
+        }
+      }
 		},
+
+    /**
+     * Saves the UserGroup collection to the server
+     * @param {Event} [e] The DOM Event that brought the user here
+     */
+    createGroup: function(e){
+      try{
+
+        if(e){
+          e.preventDefault();
+        }
+
+        //If there is no name specified, give warning
+        if( !this.collection.groupId || this.collection.nameAvailable == false ){
+
+          var $notification = this.$(".group-name-notification-container"),
+              $input = this.$(".group-name");
+
+          var icon = $(document.createElement("i")).addClass("icon icon-exclamation"),
+              container = $(document.createElement("div")).addClass("notification error");
+
+          //Create a validation message
+          if( !this.collection.groupId ){
+            var message = "You must choose a group name";
+          }
+          else{
+            var message = "That group name is already taken.";
+          }
+
+          $notification.html($(container).append(icon, message));
+          $input.addClass("has-error");
+
+          return;
+        }
+
+        var view = this,
+            group = this.collection;
+
+        var success = function(data){
+          MetacatUI.appView.showAlert({
+            message: "Success! Your group has been created.",
+            classes: "alert-success",
+            container: view.$(".notification-container")
+          });
+
+          //Empty the notification about the group name
+          view.$(".group-name-notification-container").empty();
+
+          //Remove the Create Group button
+          view.$("button.save").remove();
+
+          //Remove the check class from the group name so the name isn't checked for availablity anymore
+          view.$("input.group-name").removeClass("check");
+
+          view.collection.pending = false;
+        }
+
+        var error = function(xhr){
+
+          var response = xhr? $.parseHTML(xhr.responseText) : null,
+            description = "";
+          if(response && response.length)
+            description = $(response).find("description").text();
+
+          if(description) description = "(" + description + ").";
+          else description = "";
+
+          MetacatUI.appView.showAlert({
+            message: "Your group could not be created. " + description + " Please try again.",
+            classes: "alert-error",
+            container: view.$(".notification-container")
+          });
+
+          MetacatUI.appModel.logError("Failed to save UserGroup: " + description, true);
+        }
+
+        //Create it!
+        if( !this.collection.save(success, error) )
+          error();
+      }
+      catch(e){
+        console.error("Failed to save UserGroup: ", e);
+        MetacatUI.appModel.logError("Failed to save UserGroup: ", e.message, true);
+      }
+    },
 
 		//----------- Form utilities -------------//
 		setUpAutocomplete: function() {

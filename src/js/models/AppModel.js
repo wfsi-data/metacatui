@@ -1502,6 +1502,15 @@ define(['jquery', 'underscore', 'backbone'],
       dataonePlusProducts: null,
 
       /**
+      * Enable or disable the view(s) that allows users to edit their DataONE Plus memberships.
+      * If this is set to `true`, {@link AppConfig#enableBookkeeperServices} must also be set to `true`. 
+      * @type {boolean}
+      * @default false
+      * @since 2.14.0
+      */
+      enableDataonePlusSettings: false,
+
+      /**
       * The length of random portal label generated during preview/trial mode of DataONE Plus
       * @readonly
       * @type {number}
@@ -1786,6 +1795,10 @@ define(['jquery', 'underscore', 'backbone'],
     logError: function(errorMessage, isFatal){
       //Send this exception to Google Analytics
       if( this.get("googleAnalyticsKey") && (typeof ga !== "undefined") ){
+
+        errorMessage += " | " + MetacatUI.appUserModel.get("username");
+        errorMessage += " | v." + MetacatUI.metacatUIVersion;
+
         ga("send", "exception", {
           "exDescription": errorMessage,
           "exFatal": isFatal
