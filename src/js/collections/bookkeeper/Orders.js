@@ -134,7 +134,7 @@ define(["jquery", "underscore", "backbone", "models/bookkeeper/Order", "collecti
       //Mark that this Collection is done being fetched
       this.fetching = false;
 
-      return response.subscriptions;
+      return response.orders;
     },
 
     /**
@@ -151,14 +151,23 @@ define(["jquery", "underscore", "backbone", "models/bookkeeper/Order", "collecti
       }
       else{
 
+        //Iterate over each Usage in this Order
         this.usagesCollection.each(function(usage){
 
+          //Iterate over each Order in this collection
           this.each(function(order){
-            var matchingQuota = order.get("quotas").findWhere({ id: usage.get("quotaId") });
 
-            if( matchingQuota && matchingQuota.type == "Quota" ){
-              //Add the Usage to the Quota
-              matchingQuota.addUsage(usage);
+            //Get all of the Quotas for this Order
+            var matchingQuotas = order.get("quotas");
+
+            if( matchingQuotas ){
+              //Find the Quota for this Usage
+              var matchingQuota = matchingQuotas.findWhere({ id: usage.get("quotaId") });
+
+              if( matchingQuota && matchingQuota.type == "Quota" ){
+                //Add the Usage to the Quota
+                matchingQuota.addUsage(usage);
+              }
             }
 
           });
