@@ -1,0 +1,116 @@
+<div class="order-view-header">
+  <div class="dataone-plus-icon-container"></div>
+  <div class="order-view-description">
+    <div class="order-view-description-container"></div>
+    <div class="order-view-role-container"></div>
+  </div>
+  <div class="order-view-name-container"><%=name%></div>
+</div>
+
+<div class="order-view-notification-container"></div>
+
+<div class="order-view-nav">
+  <ul class="nav nav-pills">
+    <li class="tab"><a href="#<%=MetacatUI.appModel.get('dataonePlusGeneralName')%>-<%=id%>-portals" data-toggle="pill"><%=MetacatUI.appModel.get("portalTermPlural")%></a></li>
+    <li class="tab"><a href="#<%=MetacatUI.appModel.get('dataonePlusGeneralName')%>-<%=id%>-people" data-toggle="pill">People</a></li>
+    <li class="tab"><a href="#<%=MetacatUI.appModel.get('dataonePlusGeneralName')%>-<%=id%>-orders" data-toggle="pill">Orders</a></li>
+    <li class="tab"><a href="#<%=MetacatUI.appModel.get('dataonePlusGeneralName')%>-<%=id%>-settings" data-toggle="pill">Settings</a></li>
+    <li class="tab"><a href="#<%=MetacatUI.appModel.get('dataonePlusGeneralName')%>-<%=id%>-help" data-toggle="pill">Help</a></li>
+  </ul>
+</div>
+
+<div class="order-view-tab-content tab-content">
+  <div class="tab-pane portals" id="<%=MetacatUI.appModel.get('dataonePlusGeneralName')%>-<%=id%>-portals">
+    <p class="order-view-portals-description">
+      Only <%=MetacatUI.appModel.get("portalTermPlural")%> created under the <%=name%>
+      <%=MetacatUI.appModel.get("dataonePlusGeneralName")%> are shown here. To see all
+      <%=MetacatUI.appModel.get("portalTermPlural")%> that you have created or can edit, see
+      the list of <%=MetacatUI.appModel.get("portalTermPlural")%> in the
+      <a href="<%=MetacatUI.root%>/my-settings/<%=MetacatUI.appModel.get('portalTermPlural')%>">
+      My <%=MetacatUI.appModel.get("portalTermPlural")%></a> section.
+    </p>
+    <div class="order-view-portals-quota-progress">
+      <p>
+        <span class="portal-usage-count-container"></span> of <span class="portal-quota-count-container"></span>
+        available <%=MetacatUI.appModel.get("portalTermPlural")%> created
+      </p>
+      <div class="progress progress-info">
+        <div class="bar"></div>
+      </div>
+    </div>
+    <a class="btn btn-primary" href="<%=MetacatUI.root%>/edit/<%=MetacatUI.appModel.get('portalTermPlural')%>">
+      <i class="icon icon-plus icon-on-left"></i>
+      New <%=MetacatUI.appModel.get("portalTermSingular")%>
+    </a>
+    <div class="order-view-portal-usages-container">
+    </div>
+  </div>
+
+  <div class="tab-pane people" id="<%=MetacatUI.appModel.get('dataonePlusGeneralName')%>-<%=id%>-people">
+    <p class="order-view-people-description">
+      Anyone who has access to this <%=MetacatUI.appModel.get('dataonePlusGeneralName')%>
+      will be able to create <%=MetacatUI.appModel.get('portalTermPlural')%>, but will <b>not</b>
+      be able to see your order histtory, change setttings, or access this list of people.
+    </p>
+    <div class="order-view-people-progress">
+      <p>
+        <span class="order-view-people-usage-count-container"></span> of <span class="order-view-people-quota-count-container"></span>
+        spots filled in this <%=MetacatUI.appModel.get('dataonePlusGeneralName')%>
+      </p>
+      <div class="progress progress-info">
+        <div class="bar"></div>
+      </div>
+    </div>
+    <div class="order-view-people-group-container"></div>
+  </div>
+
+  <div class="tab-pane orders" id="<%=MetacatUI.appModel.get('dataonePlusGeneralName')%>-<%=id%>-orders"></div>
+
+  <div class="tab-pane settings" id="<%=MetacatUI.appModel.get('dataonePlusGeneralName')%>-<%=id%>-settings">
+    <p class="order-view-settings-description"></p>
+
+    <div class="control-group">
+      <label class="control-label" for="inputOrderName">
+        <%
+        (MetacatUI.appModel.get('dataonePlusGeneralName').charAt(0).toUpperCase() + MetacatUI.appModel.get('dataonePlusGeneralName').slice(1))
+        %> Name
+        <span class="subtle">This name will be visible to all team members.</span>
+      </label>
+      <div class="controls">
+        <input type="text" id="inputOrderName" placeholder="<%=name%>" value="<%=name%>" />
+        <span class="help-inline"></span>
+      </div>
+    </div>
+
+    <div class="control-group">
+      <label class="control-label">
+        <%
+        (MetacatUI.appModel.get('dataonePlusGeneralName').charAt(0).toUpperCase() + MetacatUI.appModel.get('dataonePlusGeneralName').slice(1))
+        %> Level
+        <span class="subtle">Upgrade your <%=MetacatUI.appModel.get('dataonePlusGeneralName')%> to create more
+        <%=MetacatUI.appModel.get('portalTermPlural')%> and add more team members
+        </span>
+      </label>
+      <span class="order-view-order-level">
+        <%=name%>
+      </span>
+      <a class="btn order-view-upgrade-membership">Change</a>
+    </div>
+
+    <div class="control-group">
+      <label class="control-label">
+        Expiry Date
+        <span class="subtle">
+          Add more time to your <%=MetacatUI.appModel.get('dataonePlusGeneralName')%>
+        </span>
+      </label>
+      <span class="order-view-order-expiry">
+        <%=expiry%> (<%=daysLeft%> days left)
+      </span>
+      <a class="btn order-view-extend-membership">Extend access</a>
+    </div>
+
+  </div>
+
+  <div class="tab-pane help" id="<%=MetacatUI.appModel.get('dataonePlusGeneralName')%>-<%=id%>-help"></div>
+</div>
