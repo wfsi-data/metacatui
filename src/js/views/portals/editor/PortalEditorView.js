@@ -20,6 +20,7 @@ function(_, $, Backbone, Portal, PortalImage, Filters, EditorView, SignInView,
   /**
   * @class PortalEditorView
   * @classdesc A view of a form for creating and editing DataONE Portal documents
+  * @classcategory Views/Portals/Editor
   * @name PortalEditorView
   * @extends EditorView
   * @constructs
@@ -346,6 +347,9 @@ function(_, $, Backbone, Portal, PortalImage, Filters, EditorView, SignInView,
       //Render the editor controls
       this.renderEditorControls();
 
+      //Hide the Save controls
+      this.hideControls();
+
       //Remove the rendering class from the body element
       $("body").removeClass("rendering");
 
@@ -581,6 +585,8 @@ function(_, $, Backbone, Portal, PortalImage, Filters, EditorView, SignInView,
         this.$(this.portEditLogoContainer).append(this.logoEdit.el);
         this.logoEdit.render();
         this.logoEdit.editorView = this;
+
+        this.listenTo(this.model.get("logo"), "change", this.showControls);
 
       } catch (e) {
         console.error("Logo editor view could not be rendered. Error message: " + e);

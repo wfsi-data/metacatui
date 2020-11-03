@@ -10,6 +10,8 @@ function(_, $, Backbone, DataONEObject, ObjectFormats, Dropzone, Template, corej
 
   /**
   * @class ImageUploaderView
+  * @classdesc A view that allows a person to upload an image to the repository
+  * @classcategory Views
   */
   var ImageUploaderView = Backbone.View.extend(
     /** @lends ImageUploaderView.prototype */{

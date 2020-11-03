@@ -8,7 +8,9 @@ define(["jquery",
 
       /**
        * @class PortalImage
-       * A Portal Image model represents a single image used in a Portal
+       * @classdesc A Portal Image model represents a single image used in a Portal
+       * @classcategory Models/Portals
+       * @extends Backbone.Model
        */
       var PortalImageModel = DataONEObject.extend(
         /** @lends PortalImage.prototype */{
@@ -23,21 +25,21 @@ define(["jquery",
             portalModel: null
           });
         },
-        
+
         initialize: function(attrs){
-        
+
           // Call the super class initialize function
           DataONEObject.prototype.initialize.call(this, attrs);
-        
+
           // If the image model is initialized with an identifier but no image URL,
           // create the full image URL
           if(this.get("identifier") && !this.get("imageURL")){
-          
+
             var baseURL = this.getBaseURL(),
                 imageURL = baseURL + this.get("identifier");
                 this.set("imageURL", imageURL);
           }
-        
+
         },
 
         /**
@@ -81,7 +83,7 @@ define(["jquery",
 
               var baseURL = this.getBaseURL();
               modelJSON.imageURL = baseURL + modelJSON.identifier;
-              
+
             }
             else{
               modelJSON.imageURL = modelJSON.identifier;
@@ -91,44 +93,44 @@ define(["jquery",
           return modelJSON;
 
         },
-        
-        /**        
+
+        /**
          * imageExists - Check if an image exists with the given
          * url, or if no url provided, with the baseURL + identifier
-         *          
+         *
          * @param  {string} imageURL  The image URL to check
          * @return {boolean}          Returns true if an HTTP request returns anything but 404
-         */         
+         */
         imageExists: function (imageURL){
-          
+
           if(!imageURL){
             this.get("imageURL")
           }
-          
+
           if(!imageURL && this.get("identifier")){
             var baseURL = this.getBaseURL(),
                 imageURL = baseURL + this.get("identifier");
           }
-          
+
           if(!imageURL){
             return false
           }
-          
+
           var http = new XMLHttpRequest();
           http.open('HEAD', imageURL, false);
           http.send();
-          
+
           return http.status != 404;
-          
+
         },
 
-        /**        
+        /**
          * getBaseURL - Get the base URL to use with an image identifier
-         *          
+         *
          * @return {string}  The image base URL, or an empty string if not found
-         */         
+         */
         getBaseURL: function(){
-          
+
           var url = "",
               portalModel = this.get("portalModel"),
               // datasource = portalModel ? portalModel.get("datasource") : false;
@@ -150,7 +152,7 @@ define(["jquery",
               url = sourceRepo.objectServiceUrl;
             }
           }
-          
+
           if(!url && datasource){
             var imageMN = _.findWhere(MetacatUI.appModel.get("alternateRepositories"), { identifier: datasource });
             if(imageMN){

@@ -22,13 +22,15 @@ define(["jquery",
     function($, _, Backbone, gmaps, uuid, Filters, SolrResults, FilterModel, PortalSectionModel, PortalImage,
         EMLParty, EMLText, CollectionModel, SearchModel, FilterGroup, MapModel) {
         /**
-         * A PortalModel is a specialized collection that represents a portal,
+         * @classdesc A PortalModel is a specialized collection that represents a portal,
          * including the associated data, people, portal descriptions, results and
          * visualizations.  It also includes settings for customized filtering of the
          * associated data, and properties used to customized the map display and the
          * overall branding of the portal.
          *
          * @class PortalModel
+         * @classcategory Models/Portals
+         * @extends CollectionModel
          * @module models/PortalModel
          * @name PortalModel
          * @constructor

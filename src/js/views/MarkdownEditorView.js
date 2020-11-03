@@ -11,6 +11,7 @@ function(_, $, Backbone, Woofmark, ImageUploader, MarkdownView, TableEditor, Tem
   /**
   * @class MarkdownEditorView
   * @classdesc A view of an HTML textarea with markdown editor UI and preview tab
+  * @classcategory Views
   * @extends Backbone.View
   * @constructor
   */
@@ -111,14 +112,14 @@ function(_, $, Backbone, Woofmark, ImageUploader, MarkdownView, TableEditor, Tem
           previewPlaceholder: this.previewPlaceholder || "",
           cid: this.cid
         })).data("view", this);
-        
+
         // The textarea element that the markdown editor buttons & functions will edit
         var textarea = this.$el.find(this.textarea);
-        
+
         if(textarea && textarea.length){
           textarea = textarea[0]
         }
-        
+
         if(!textarea){
           console.log("error: the markdown editor view was not rendered because no textarea element was found.");
           return
@@ -246,13 +247,13 @@ function(_, $, Backbone, Woofmark, ImageUploader, MarkdownView, TableEditor, Tem
           var options = buttonOptions[key],
               title = options.title || key.charAt(0).toUpperCase() + key.slice(1),
               presetShortcut = "";
-              
+
               if(Woofmark.strings.titles[key] && Woofmark.strings.titles[key].match(/Ctrl\+.*$/) ){
                 presetShortcut = Woofmark.strings.titles[key].match(/Ctrl\+.*$/)[0];
               }
-              
+
               var shortcut = options.shortcut || presetShortcut;
-              
+
           if(title){
             Woofmark.strings.titles[key] = [title, shortcut].join(" ")
           }
@@ -607,7 +608,7 @@ function(_, $, Backbone, Woofmark, ImageUploader, MarkdownView, TableEditor, Tem
         $(mdImageUploader.el).insertAfter(imageDialogDescription);
         // Hide the input box for now, to keep the uploader simple
         imageDialogInput.hide();
-        
+
       } catch (e) {
         console.log("Failed to load the UI for adding markdown images. Error: " + e);
       }

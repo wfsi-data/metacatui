@@ -1,15 +1,17 @@
 /*global define */
-define(['jquery', 'underscore', 'backbone', 'models/SolrHeader', 'models/SolrResult', 'models/LogsSearch'],
-	function($, _, Backbone, SolrHeader, SolrResult, LogsSearch) {
+define(['jquery', 'underscore', 'backbone', 'models/SolrHeader', 'models/SolrResult'],
+	function($, _, Backbone, SolrHeader, SolrResult) {
 	'use strict';
 
   /**
-   @class SolrResultList
+   @class SolrResults
    @classdesc A collection of SolrResult models that represent a list of search results from the DataONE query service.
    @extends Backbone.Collection
+   @classcategory Collections
    @constructor
   */
-	var SolrResultList = Backbone.Collection.extend({
+	var SolrResults = Backbone.Collection.extend(
+    /** @lends SolrResults.prototype */{
 		// Reference to this collection's model.
 		model: SolrResult,
 
@@ -252,5 +254,5 @@ define(['jquery', 'underscore', 'backbone', 'models/SolrHeader', 'models/SolrRes
 		}
 	});
 
-	return SolrResultList;
+	return SolrResults;
 });

@@ -10,9 +10,10 @@ define(["jquery",
      * associated with each portal will be displayed.
      * @extends Backbone.View
      * @screenshot views/PortalLogosView.png
+     * @classcategory Views/Portals
      */
     var PortalLogosView = Backbone.View.extend(
-      /** @lends PortalLogosView.prototype */ {
+      /** @lends PortalLogosView.prototype */{
 
         /**
          * The HTML element type for this view

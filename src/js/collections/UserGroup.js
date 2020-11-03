@@ -3,11 +3,13 @@ define(['jquery', 'underscore', 'backbone', 'models/UserModel'],
 	function($, _, Backbone, UserModel) {
 	'use strict';
 
-	/*
-	 * UserGroup Collection
-	 * The collection of Users that represent a DataONE group
+	/**
+	 * @class UserGroup
+	 * @classdesc The collection of Users that represent a DataONE group
+   * @classcategory Collections
 	 */
-	var UserGroup = Backbone.Collection.extend({
+	var UserGroup = Backbone.Collection.extend(
+    /** @lends UserGroup.prototype */{
 		// Reference to this collection's model.
 		model: UserModel,
 

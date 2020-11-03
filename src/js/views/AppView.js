@@ -21,6 +21,7 @@ define(['jquery',
 	/**
   * @class AppView
   * @classdesc The top-level view of the UI that contains and coordinates all other views of the UI
+  * @classcategory Views
   */
 	var AppView = Backbone.View.extend(
     /** @lends AppView.prototype */{
@@ -598,7 +599,7 @@ define(['jquery',
           $(container).prepend( _.template(alertTemplate)({
             classes: classes,
             msg: MetacatUI.appModel.get("temporaryMessage"),
-            includeEmail: true,
+            includeEmail: MetacatUI.appModel.get("temporaryMessageIncludeEmail"),
             remove: true
           }) );
 

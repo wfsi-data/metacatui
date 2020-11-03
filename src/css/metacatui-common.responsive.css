@@ -832,16 +832,28 @@
 	.row-fluid .span6.pagination-left {
   		width: 100%;
 	}
+
+  /** Metrics **/
+  #metric-modal .modal-body {
+    grid-template-columns: 100fr;
+    row-gap: 40px;
+    column-gap: 0px;
+  }
+  #metric-modal .empty-citation-list{
+    width: 90%;
+  }
 }
 
 /* Smartphones (portrait) ----------- */
 @media only screen and (max-width : 420px) {
 
   .modal,
-  .access-policy-view-container.modal{
+  .access-policy-view-container.modal,
+  #metric-modal{
     top: 5%;
     width: 90%;
     left: 5%;
+    margin-left: 0px;
   }
   .access-policy-view thead{
     display: none;

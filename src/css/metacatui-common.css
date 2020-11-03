@@ -1474,6 +1474,13 @@ text-shadow: none;
 .sign-in.modal .close {
     font-size: 2em;
 }
+.sign-in-btns .notification,
+.login .notification{
+  margin-top: 20px;
+}
+#Navbar .sign-in-btns .notification{
+  display: none;
+}
 /** The ORCID Sign In button **/
 .orcid-btn{
 	border: 1px solid #aacf14;
@@ -1925,16 +1932,16 @@ i.icon.metric-icon.icon-spinner.icon-spin {
 #metric-modal {
     z-index: 1050;
     top: 15%;
-    width: 930px;
+    width: 90%;
     height: 500px;
-    left: 40%;
+    left: 5%;
+    margin-left: 0px;
 }
 #metric-modal .modal-content {
     width: auto;
 }
 
 #metric-modal .modal-header {
-    width: 900px;
     height: 25px;
 }
 
@@ -1942,11 +1949,19 @@ i.icon.metric-icon.icon-spinner.icon-spin {
     width: 100%;
     height: 400px;
     max-height: 400px;
-    padding: 0px;
+    padding: 1em;
+    padding-bottom: 100px;
+    background-color: #FFFFFF;
+    box-sizing: border-box;
+    display: grid;
+    grid-template-columns: 80fr 20fr;
+    column-gap: 40px;
+}
+#metrics-modal #metrics-chart{
+  width: 100%;
 }
 
 #metric-modal .modal-footer {
-    width: 900px;
     height: 25px;
 	padding-top: 18px;
 }
@@ -1966,56 +1981,23 @@ i.icon.metric-icon.icon-spinner.icon-spin {
 	width: 10%;
 }
 
-#metric-modal .modal-body .modal-description {
-	float: left;
-	width: 236px;
-	padding-left: 30px;
-	padding-top: 33px;
-}
 
 #metric-modal .modal-body .modal-description p {
 	margin: 0 0 25px;
 }
 
-#metric-modal .modal-body .modal-description p#slider-instructions {
-	margin-top: 109px;
-	margin-bottom: 0;
-}
 
-#metric-modal .modal-body .metric-chart {
-	float: right;
-	width: 600px;
-	padding-right: 18px;
-	padding-top: 22px;
-}
-.empty-citation-list-text {
-	font-size: 16px;
-    font-weight: 100;
-    color: #555555;
-    text-align: center;
-    margin-left: 10px;
-    position: absolute;
-    top: 50%;
-    -ms-transform: translateY(-50%);
-}
 .empty-citation-list {
-    width: 80%;
-    top: 22%;
-    left: 10%;
-    display: flex;
-    position: relative;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    height: 50%;
-    border-radius: 2px;
-    background-color: #f5f5f5;
-    box-shadow: 0 0 black;
-}
-
-.empty-citation-list > .register-citation {
-	top: 30%;
-    position: absolute;
+  grid-template-rows: 3em 100fr;
+  grid-template-columns: 100fr;
+  justify-items: center;
+  align-items: start;
+  justify-content: stretch;
+  padding: 1em;
+  grid-row-gap: 20px;
+  display: grid;
+  background-color: #f5f5f5;
+  width: calc(120% + 40px); /*Stretch across both columns in grid*/
 }
 
 .register-citation-modal-header{
@@ -2034,16 +2016,13 @@ i.icon.metric-icon.icon-spinner.icon-spin {
 	margin-top: 3px;
 }
 
-.register-citation-element > .register-citation {
-	position: fixed;
-    display: block;
-    margin-top: 60px;
-}
-
 .register-citation-element {
-	display: flex;
+	display: grid;
     align-items: center;
     justify-content: center;
+}
+.register-citation-element .btn{
+  justify-self: center;
 }
 
 /******************************************
@@ -2351,10 +2330,10 @@ i.catalog-metric-icon {
     width: 100%;
 }
 .metric-table.table.table-striped.table-condensed td {
-    padding: 5px 15px 5px 85px;
+    padding: 1em 1em 1em 2em;
 }
 .metric-table.table.table-striped.table-condensed td > .citation {
-    margin-left: -70px;
+    margin-left: -1em;
 }
 button.modal-btn.btn.btn-default {
     all: unset;
@@ -7735,6 +7714,14 @@ Pager View
 }
 .list-group-item.pager{
 	margin-top: 0px;
+}
+/*******************************************
+D3 old style charts
+*******************************************/
+.line-chart-label.text {
+    color: white;
+    stroke: white;
+    fill: white;
 }
 /*******************************************
 Documentation and Help Pages

@@ -9,6 +9,7 @@ define(['jquery', 'underscore', 'backbone', 'jws', 'models/Search', "collections
   * @classdesc The User model contains information about the person currently using the MetacatUI application.
   * @extends Backbone.Model
   * @constructor
+  * @classcategory Models
   */
 	var UserModel = Backbone.Model.extend(
     /** @lends User.prototype */{

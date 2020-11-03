@@ -12,6 +12,7 @@ function(_, $, Backbone, PortalSectionModel, Template, SectionOptionTemplate, Fr
   * @class PortEditorSectionView
   * @classdesc A view of a single section of the PortalEditorView.
   * This default section view displays a choice of which PortalSection to add to the Portal.
+  * @classcategory Views/Portals/Editor
   * @extends Backbone.View
   * @constructor
   */
@@ -48,6 +49,12 @@ function(_, $, Backbone, PortalSectionModel, Template, SectionOptionTemplate, Fr
     * @type {PortalSection}
     */
     model: undefined,
+
+    /**
+    * A reference to the PortalEditorView
+    * @type {PortalEditorView}
+    */
+    editorView: null,
 
     /**
     * References to templates for this view. HTML files are converted to Underscore.js templates
@@ -157,6 +164,7 @@ function(_, $, Backbone, PortalSectionModel, Template, SectionOptionTemplate, Fr
 
         //Save a reference to this view
         this.$el.data("view", this);
+
       }
       catch(e){
         console.log("Section view cannot be rendered, error message: " + e);

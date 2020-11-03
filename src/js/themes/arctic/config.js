@@ -8,6 +8,7 @@ MetacatUI.AppConfig = Object.assign({
   bioportalAPIKey: "",
   repositoryName: "Arctic Data Center",
   emailContact: "support@arcticdata.io",
+  nodeId: "urn:node:ARCTIC",
 
   //Metadata quality
   mdqSuiteIds: ["arctic.data.center.suite.1"],
@@ -56,14 +57,21 @@ MetacatUI.AppConfig = Object.assign({
   //Searching
   enableSolrJoins: true,
   mapKey: "AIzaSyCYoTkUEpMAiOoWx5M61ButwgNGX8fIHUs",
+  searchMapTileHue: "231",
   defaultSearchFilters: ["all", "attribute", "annotation", "creator", "dataYear", "pubYear", "id", "taxon", "spatial"],
 
   //Temp message
-  temporaryMessage: "The Arctic Data Center will be unavailable between 11 p.m. PT on Monday, June 15 and 6:30 a.m. PT on Tuesday, June 16 due to upgrades. We apologize for the inconvenience.",
+  temporaryMessage: "",
   temporaryMessageStartTime: null,
   temporaryMessageEndTime: new Date("2020-06-16T13:30:00"),
   temporaryMessageClasses: "warning",
   temporaryMessageContainer: "#Navbar",
+
+  //MetadataView
+  datasetMapFillColor: "",
+
+  //Google Analytics
+  googleAnalyticsKey: "UA-75482301-1"
 
 }, (MetacatUI.AppConfig || {}));
 
@@ -87,20 +95,3 @@ MetacatUI.themeMap =
 		'routers/router' : MetacatUI.root + '/js/themes/' + MetacatUI.theme + '/routers/router.js'
 		}
 };
-
-MetacatUI.customMapModelOptions = {
-	tileHue: "231"
-}
-
-MetacatUI.customAppConfig = function(){
-	//Gmaps key: AIzaSyCYoTkUEpMAiOoWx5M61ButwgNGX8fIHUs
-
-	if(MetacatUI.appModel.get("baseUrl").indexOf("arcticdata.io") > -1 &&
-	   MetacatUI.appModel.get("baseUrl").indexOf("test") == -1 &&
-	   MetacatUI.appModel.get("baseUrl").indexOf("demo") == -1){
-
-		MetacatUI.appModel.set("nodeId", "urn:node:ARCTIC");
-		MetacatUI.appModel.set("googleAnalyticsKey", "UA-75482301-1");
-
-	}
-}

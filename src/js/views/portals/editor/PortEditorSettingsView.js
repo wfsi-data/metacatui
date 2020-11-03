@@ -10,6 +10,7 @@ function(_, $, Backbone, PortalSection, PortEditorSectionView, PortEditorLogosVi
 
   /**
   * @class PortEditorSettingsView
+  * @classcategory Views/Portals/Editor
   */
   var PortEditorSettingsView = PortEditorSectionView.extend(
     /** @lends PortEditorSettingsView.prototype */{
@@ -118,6 +119,7 @@ function(_, $, Backbone, PortalSection, PortEditorSectionView, PortEditorLogosVi
         if (this.model.get("isNew")) {
           this.changeLabel();
         }
+
       } catch (e) {
         console.log("Error rendering the portal editor settings view. Error message: "+ e);
       }

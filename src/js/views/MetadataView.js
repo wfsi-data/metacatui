@@ -47,6 +47,7 @@ define(['jquery',
  /**
  * @class MetadataView
  * @classdesc A human-readable view of a science metadata file
+ * @classcategory Views
  * @extends Backbone.View
  * @constructor
  */
@@ -925,16 +926,7 @@ define(['jquery',
         var url = "https://maps.google.com/?ll=" + latLngCEN.lat() + "," + latLngCEN.lng() +
               "&spn=0.003833,0.010568" +
               "&t=m" +
-              "&z=10";
-
-        //Get the dataset map zoom level
-        var zoomLevel = MetacatUI.appModel.get("datasetMapZoomLevel");
-        if(typeof zoomLevel !== "number"){
-          zoomLevel = parseInt(zoomLevel);
-        }
-        if( !zoomLevel > 0){
-          zoomLevel = 6;
-        }
+              "&z=5";
 
         //Get the map path color
         var pathColor = MetacatUI.appModel.get("datasetMapPathColor");
@@ -963,7 +955,6 @@ define(['jquery',
                 "&markers=size:mid|color:0xDA4D3Aff|"+latLngCEN.lat()+","+latLngCEN.lng() +
                 "&path=" + fillColor + pathColor + "weight:3|"+latLngSW.lat()+","+latLngSW.lng()+"|"+latLngNW.lat()+","+latLngNW.lng()+"|"+latLngNE.lat()+","+latLngNE.lng()+"|"+latLngSE.lat()+","+latLngSE.lng()+"|"+latLngSW.lat()+","+latLngSW.lng()+
                 "&visible=" + latLngSW.lat()+","+latLngSW.lng()+"|"+latLngNW.lat()+","+latLngNW.lng()+"|"+latLngNE.lat()+","+latLngNE.lng()+"|"+latLngSE.lat()+","+latLngSE.lng()+"|"+latLngSW.lat()+","+latLngSW.lng()+
-                "&zoom=" + zoomLevel +
                 "&sensor=false" +
                 "&key=" + MetacatUI.mapKey + "'/>";
 
@@ -1091,18 +1082,23 @@ define(['jquery',
         if(!model.get("isAuthorized") || model.get("archived"))
           return false;
 
-        //Insert an Edit button
-        if( _.contains(MetacatUI.appModel.get("editableFormats"), this.model.get("formatId")) ){
-          container.append(
-            this.editMetadataTemplate({
-              identifier: pid,
-              supported: true
+        //Insert an Edit button if the Edit button is enabled
+        if(  MetacatUI.appModel.get("displayDatasetEditButton") ){
+          //Check that this is an editable metadata format
+          if( _.contains(MetacatUI.appModel.get("editableFormats"), this.model.get("formatId")) ){
+            //Insert the Edit Metadata template
+            container.append(
+              this.editMetadataTemplate({
+                identifier: pid,
+                supported: true
+              }));
+          }
+          //If this format is not editable, insert an unspported Edit Metadata template
+          else{
+            container.append(this.editMetadataTemplate({
+              supported: false
             }));
-        }
-        else{
-          container.append(this.editMetadataTemplate({
-            supported: false
-          }));
+          }
         }
 
         try{
@@ -1229,7 +1225,7 @@ define(['jquery',
 
       //Get template
       var controlsContainer = this.controlsTemplate({
-          citation: $(this.citationContainer).text(),
+          citationTarget: this.citationContainer,
           url: window.location,
           displayQualtyReport: MetacatUI.appModel.get("mdqBaseUrl") && formatFound && MetacatUI.appModel.get("displayDatasetQualityMetric"),
           showWholetale: MetacatUI.appModel.get("showWholeTaleFeatures"),
@@ -1350,16 +1346,19 @@ define(['jquery',
         if (MetacatUI.appModel.get("displayDatasetCitationMetric")) {
           var citationsMetricView = new MetricView({metricName: 'Citations', model: metricsModel, pid: this.pid});
           buttonToolbar.append(citationsMetricView.render().el);
+          this.subviews.push(citationsMetricView);
         }
 
         if (MetacatUI.appModel.get("displayDatasetDownloadMetric")) {
           var downloadsMetricView = new MetricView({metricName: 'Downloads', model: metricsModel, pid: this.pid});
           buttonToolbar.append(downloadsMetricView.render().el);
+          this.subviews.push(downloadsMetricView);
         }
 
         if (MetacatUI.appModel.get("displayDatasetViewMetric")) {
           var viewsMetricView = new MetricView({metricName: 'Views', model: metricsModel, pid: this.pid});
           buttonToolbar.append(viewsMetricView.render().el);
+          this.subviews.push(viewsMetricView);
         }
 
       }
@@ -2001,7 +2000,6 @@ define(['jquery',
 
         var dataDisplay = "",
           images = [],
-          pdfs = [],
           other = [],
           packageMembers = packageModel.get("members");
 
@@ -2018,12 +2016,10 @@ define(['jquery',
           if(objID == viewRef.pid)
             return;
 
-          //Is this a visual object (image or PDF)?
+          //Is this a visual object (image)?
           var type = solrResult.type == "SolrResult" ? solrResult.getType() : "Data set";
           if(type == "image")
             images.push(solrResult);
-          else if(type == "PDF")
-            pdfs.push(solrResult);
 
           //Find the part of the HTML Metadata view that describes this data object
           var anchor         = $(document.createElement("a")).attr("id", objID.replace(/[^A-Za-z0-9]/g, "-")),
@@ -2035,8 +2031,8 @@ define(['jquery',
           //Insert the data display HTML and the anchor tag to mark this spot on the page
           if(container){
 
-            //Only show data displays for images and PDFs hosted on the same origin
-            if((type == "image") || ((type == "PDF") && solrResult.get("url").indexOf(window.location.host) > -1) ){
+            //Only show data displays for images hosted on the same origin
+            if(type == "image" && solrResult.get("url").indexOf(window.location.host) > -1){
 
               //Create the data display HTML
               var dataDisplay = $.parseHTML(viewRef.dataDisplayTemplate({
@@ -2051,28 +2047,16 @@ define(['jquery',
               else
                 $(container).prepend(dataDisplay);
 
-              //If this image or PDF is private, we need to load it via an XHR request
+              //If this image is private, we need to load it via an XHR request
               if( !solrResult.get("isPublic") ){
                 //Create an XHR
                 var xhr = new XMLHttpRequest();
                 xhr.withCredentials = true;
 
-                if(type == "PDF"){
-                  //When the XHR is ready, create a link with the raw data (Blob) and click the link to download
-                  xhr.onload = function(){
-                      var iframe = $(dataDisplay).find("iframe");
-                      iframe.attr("src", window.URL.createObjectURL(xhr.response)); // xhr.response is a blob
-                      var a = $(dataDisplay).find("a.zoom-in").remove();
-                      //TODO: Allow fancybox previews of private PDFs
+                xhr.onload = function(){
 
-                  }
-                }
-                else if(type == "image"){
-                  xhr.onload = function(){
-
-                    if(xhr.response)
-                      $(dataDisplay).find("img").attr("src", window.URL.createObjectURL(xhr.response));
-                  }
+                  if(xhr.response)
+                    $(dataDisplay).find("img").attr("src", window.URL.createObjectURL(xhr.response));
                 }
 
                 //Open and send the request with the user's auth token
@@ -2097,8 +2081,7 @@ define(['jquery',
         //==== Initialize the fancybox images =====
         // We will be checking every half-second if all the HTML has been loaded into the DOM - once they are all loaded, we can initialize the lightbox functionality.
         var numImages  = images.length,
-          numPDFS     = pdfs.length,
-          //The shared lightbox options for both images and PDFs
+          //The shared lightbox options for both images
           lightboxOptions = {
               prevEffect  : 'elastic',
               nextEffect  : 'elastic',
@@ -2116,43 +2099,6 @@ define(['jquery',
                   }
               }
           };
-
-        if(numPDFS > 0){
-          var numPDFChecks  = 0,
-            lightboxPDFSelector = "a[class^='fancybox'][data-fancybox-iframe]";
-
-          //Add additional options for PDFs
-          var pdfLightboxOptions = lightboxOptions;
-          pdfLightboxOptions.type = "iframe";
-          pdfLightboxOptions.iframe = { preload: false };
-          pdfLightboxOptions.height = "98%";
-
-          var initializePDFLightboxes = function(){
-            numPDFChecks++;
-
-            //Initialize what images have loaded so far after 5 seconds
-            if(numPDFChecks == 10){
-              $(lightboxPDFSelector).fancybox(pdfLightboxOptions);
-            }
-            //When 15 seconds have passed, stop checking so we don't blow up the browser
-            else if(numPDFChecks > 30){
-              window.clearInterval(pdfIntervalID);
-              return;
-            }
-
-            //Are all of our pdfs loaded yet?
-            if(viewRef.$(lightboxPDFSelector).length < numPDFS) return;
-            else{
-              //Initialize our lightboxes
-              $(lightboxPDFSelector).fancybox(pdfLightboxOptions);
-
-              //We're done - clear the interval
-              window.clearInterval(pdfIntervalID);
-            }
-          }
-
-          var pdfIntervalID = window.setInterval(initializePDFLightboxes, 500);
-        }
 
         if(numImages > 0){
           var numImgChecks  = 0, //Keep track of how many interval checks we have so we don't wait forever for images to load
@@ -2191,91 +2137,6 @@ define(['jquery',
           var imgIntervalID = window.setInterval(initializeImgLightboxes, 500);
         }
       });
-    },
-
-    /*
-     * Inserts new image elements into the DOM via the image template. Use for displaying images that are part of this metadata's resource map.
-     * param pdfs - an array of objects that represent the data objects returned from the index. Each should be a PDF
-     */
-    insertPDFs: function(pdfs){
-      var html = "",
-       viewRef = this;
-
-      //Loop over each image object and create a dataDisplay template for it to attach to the DOM
-      for(var i=0; i<pdfs.length; i++){
-        //Find the part of the HTML Metadata view that describes this data object
-        var container = this.$el.find("td:contains('" + pdfs[i].id + "')").parents(".controls-well");
-
-        //Harvest the Object Name for an image caption
-        if(container !== undefined) var title = container.find("label:contains('Object Name')").next().text();
-        else{
-          var title = "";
-          container = viewRef.el;
-        }
-        //Create an element using the dataDisplay template
-        html = this.dataDisplayTemplate({
-           type : "pdf",
-            src : (MetacatUI.appModel.get('objectServiceUrl') || MetacatUI.appModel.get('resolveServiceUrl')) + pdfs[i].id,
-          title : title
-        });
-
-        // Insert the element into the DOM
-        $(container).append(html);
-      }
-
-      //==== Initialize the fancybox images =====
-      // We will be checking every half-second if all the images have been loaded into the DOM - once they are all loaded, we can initialize the lightbox functionality.
-      var numPDFs  = pdfs.length,
-        numChecks  = 0, //Keep track of how many interval checks we have so we don't wait forever for images to load
-        lightboxSelector = "a[class^='fancybox'][data-fancybox-iframe]",
-        intervalID = window.setInterval(initializeLightboxes, 500);
-
-      //Set up our lightbox options
-      var lightboxOptions = {
-          prevEffect  : 'elastic',
-          nextEffect  : 'elastic',
-          closeEffect : 'elastic',
-          openEffect  : 'elastic',
-          type     : "iframe",
-          aspectRatio : true,
-          helpers      : {
-                title : {
-                    type : 'outside'
-                }
-          },
-           iframe    : {
-                 preload : false
-           },
-           closeClick : true,
-           afterLoad  : function(){
-             //Create a custom HTML caption based on data stored in the DOM element
-             this.title = this.title + " <a href='" + this.href + "' class='btn' target='_blank'>Download</a> ";
-           }
-      }
-
-      function initializeLightboxes(){
-        numChecks++;
-
-        //Initialize what images have loaded so far after 5 seconds
-        if(numChecks == 10){
-          $(lightboxSelector).fancybox(lightboxOptions);
-        }
-        //When 15 seconds have passed, stop checking so we don't blow up the browser
-        else if(numChecks > 30){
-          window.clearInterval(intervalID);
-          return;
-        }
-
-        //Are all of our pdfs loaded yet?
-        if(viewRef.$(lightboxSelector).length < numPDFs) return;
-        else{
-          //Initialize our lightboxes
-          $(lightboxSelector).fancybox(lightboxOptions);
-
-          //We're done - clear the interval
-          window.clearInterval(intervalID);
-        }
-      }
     },
 
     replaceEcoGridLinks: function(){

@@ -9,6 +9,7 @@ define(['jquery', 'underscore', 'backbone'],
   * @name AppModel
   * @extends Backbone.Model
   * @constructor
+  * @classcategory Models
   */
   var AppModel = Backbone.Model.extend(
     /** @lends AppModel.prototype */ {
@@ -173,6 +174,15 @@ define(['jquery', 'underscore', 'backbone'],
       * @since 2.11.4
       */
       temporaryMessageContainer: "#Navbar",
+
+      /**
+      * If true, the temporary message will include a "Need help? Email us at..." email link
+      * at the end of the message. The email address will be set to {@link AppConfig#emailContact}
+      * @type {boolean}
+      * @default true
+      * @since 2.13.3
+      */
+      temporaryMessageIncludeEmail: true,
 
       /**
       * Show or hide the source repository logo in the search result rows
@@ -355,6 +365,13 @@ define(['jquery', 'underscore', 'backbone'],
       */
       editorSaveErrorMsgWithDraft: "Not all of your changes could be submitted, but a draft " +
         "has been saved which can be accessed by our support team. Please contact us.",
+      /**
+      * The text of the Save button in the dataset editor.
+      * @type {string}
+      * @default "Save dataset"
+      * @since 2.13.3
+      */
+      editorSaveButtonText: "Save dataset",
 
       /**
       * A list of keyword thesauri options for the user to choose from in the EML Editor.
@@ -565,6 +582,13 @@ define(['jquery', 'underscore', 'backbone'],
       */
       monitorStatusUrl: "",
 
+      /**
+      * If true, users will see a page with sign-in troubleshooting tips
+      * @type {boolean}
+      * @default true
+      * @since 2.13.3
+      */
+      showSignInHelp: true,
       /**
       * If true, users can sign in using CILogon as the identity provider.
       * ORCID is the only recommended identity provider. CILogon may be deprecated
@@ -834,17 +858,6 @@ define(['jquery', 'underscore', 'backbone'],
       hideMetricsWhen: null,
 
       /**
-      * The zoom level to use in the Google Static Map images on the dataset landing pages.
-      * The higher the zoom level, the more zoomed in the map will be. Set to 0 to show
-      * the entire world in the map, and 15+ to show fine details. The highest zoom level
-      * is about 20. For more information, see the Google Statis Maps API docs: https://developers.google.com/maps/documentation/maps-static/start#Zoomlevels
-      * @type {number}
-      * @default 6
-      * @since 2.13.0
-      */
-      datasetMapZoomLevel: 6,
-
-      /**
       * The bounding box path color to use in the Google Static Map images on the dataset landing pages.
       * Specify the color either as a 24-bit (example: color=0xFFFFCC) or 32-bit hexadecimal value
       * (example: color=0xFFFFCCFF), or from the set: black, brown, green, purple, yellow, blue, gray, orange, red, white.
@@ -866,6 +879,16 @@ define(['jquery', 'underscore', 'backbone'],
       * @since 2.13.0
       */
       datasetMapFillColor: "0xFFFF0033",
+
+      /**
+      * The hue/color of the tiles drawn on the map when searching for data.
+      * This should be a three-digit hue degree between 0 and 360. (Try https://hslpicker.com)
+      * This is set on the {@link Map} model when it is initialized.
+      * @type {string}
+      * @default "192" (blue)
+      * @since 2.13.3
+      */
+      searchMapTileHue: "192",
 
       /**
       * If true, the dataset landing pages will generate Schema.org-compliant JSONLD
