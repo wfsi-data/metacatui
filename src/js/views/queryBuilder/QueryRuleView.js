@@ -2,24 +2,27 @@ define([
     "jquery",
     "underscore",
     "backbone",
+    // Views that create UIs for value selection
     "views/selectUI/SearchableSelectView",
     "views/selectUI/QueryFieldSelectView",
     "views/selectUI/NodeSelectView",
+    "views/selectUI/FormatIdSelectView",
     "views/filters/NumericFilterView",
     "views/filters/DateFilterView",
     "views/selectUI/AnnotationFilterView",
-    "collections/queryFields/QueryFields",
+    // Filter models
     "models/filters/Filter",
     "models/filters/BooleanFilter",
     "models/filters/NumericFilter",
     "models/filters/DateFilter",
-    "collections/ObjectFormats"
   ],
   function(
-    $, _, Backbone, SearchableSelect, QueryFieldSelect, NodeSelect,
-    NumericFilterView, DateFilterView, AnnotationFilter, QueryFields, Filter, BooleanFilter,
-    NumericFilter,
-    DateFilter, ObjectFormats
+    $, _, Backbone,
+    // Views that create UIs for value selection
+    SearchableSelect, QueryFieldSelect, NodeSelect, FormatIdSelect,
+    NumericFilterView, DateFilterView, AnnotationFilter,
+    // Filter models
+    Filter, BooleanFilter, NumericFilter, DateFilter, 
   ) {
 
     /**
@@ -310,27 +313,7 @@ define([
           {
             queryFields: ["formatId"],
             uiFunction: function(){
-              var formatIds = MetacatUI.objectFormats.toJSON();
-              var options = _.chain(formatIds)
-                // Since the query rules automatically include a rule for
-                // formatType = "METADATA", only allow filtering datasets
-                // by specific metadata type.
-                .where({formatType: "METADATA"})
-                .map(
-                  function(format){
-                    return {
-                      label: format.formatName,
-                      value: format.formatId,
-                      description: format.formatId
-                    }
-                  }
-                )
-                .value();
-              return new SearchableSelect({
-                options: options,
-                allowMulti: true,
-                allowAdditions: false,
-                inputLabel: "Select one or more metadata type",
+              return new FormatIdSelect({
                 selected: this.model.get("values")
               })
             }
@@ -411,13 +394,6 @@ define([
             if (!this.model || !this.model.collection) {
               console.log("error: A Filter model that's part of a Filters collection is required to initialize a Query Rule view.")
               return
-            }
-            
-            // Ensure the object formats are cached, for the special data format
-            // filter ID.
-            if(!MetacatUI.objectFormats){
-              MetacatUI.objectFormats = new ObjectFormats();
-              MetacatUI.objectFormats.fetch();
             }
             
             // The model may be removed during the save process if it's empty.
@@ -992,7 +968,7 @@ define([
                 fields      =   this.model.get("fields"),
                 filterType  =   this.getRequiredFilterType(fields),
                 category    =   this.getCategory(fields),
-                uis  =   this.valueSelectUImap,
+                uis         =   this.valueSelectUImap,
                 label       =   "";
             
             // To help guide users to create valid queries, the type of value

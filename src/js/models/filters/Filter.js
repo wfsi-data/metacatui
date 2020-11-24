@@ -433,6 +433,7 @@ define(['jquery', 'underscore', 'backbone'],
     * @return {string} - The search term or phrase, after special characters are escaped
     */
     escapeSpecialChar: function(term) {
+
         term = term.replace(/%7B/g, "\\%7B");
         term = term.replace(/%7D/g, "\\%7D");
         term = term.replace(/%3A/g, "\\%3A");
@@ -443,6 +444,7 @@ define(['jquery', 'underscore', 'backbone'],
         term = term.replace(/%3F/g, "\\%3F");
         term = term.replace(/\"/g, '\\"');
         term = term.replace(/\'/g, "\\'");
+        term = term.replace(/^-/, "\\%2D");
 
         return term;
     },
