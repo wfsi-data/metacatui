@@ -1370,9 +1370,16 @@ function(_, $, Backbone, Sortable, Portal, PortalSection,
             sectionModel  =   sectionLink.data("model"),
             sectionView   =   sectionLink.data("view"),
             // Clean up the typed in name so it's valid for XML
-            oldLabel      =   sectionModel.get("label"),
             newLabel      =   this.model.cleanXMLText(targetLink.text().trim()),
+            // Also remove commas, as this will break page ordering
+            newLabel      =   newLabel.replace(/,/g, " "),
             pageOrder     =   this.model.get("pageOrder");
+
+        // Ensure that the label displayed to the user is the same
+        // as the label we are saving on the model. It could change
+        // in the case that characters that are not allowed, like commas,
+        // are removed.
+        targetLink.text(newLabel);
 
         // Remove the content editable attribute
         targetLink.attr("contenteditable", false);
