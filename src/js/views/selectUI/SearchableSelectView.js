@@ -76,7 +76,7 @@ define([
          *  accordion: initially show only a list of category titles, and expand
          *            the list of items below each category when a user clicks
          *            on the category title, much like an "accordion" element.
-         * @type {string} set to "list", "popout", or "accordion"
+         * @type {string}
          */         
         submenuStyle: "list",
         

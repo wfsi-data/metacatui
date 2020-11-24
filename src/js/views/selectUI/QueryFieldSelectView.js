@@ -56,7 +56,7 @@ define([
          */         
         allowAdditions: false,
         
-        /**        
+        /**
          * When items are grouped within categories, how to display the items
          * within each category? Select one of the following options:
          *  list: display the items in a traditional, non-interactive list below
@@ -68,8 +68,8 @@ define([
          *  accordion: initially show only a list of category titles, and expand
          *            the list of items below each category when a user clicks
          *            on the category title, much like an "accordion" element.
-         * @type {string} set to "list", "popout", or "accordion"
-         */         
+         * @type {string}
+         */
         submenuStyle: "accordion",
         
         /**        

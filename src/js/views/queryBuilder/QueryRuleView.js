@@ -24,7 +24,7 @@ define([
 
     /**
      * @class QueryRule
-     * @classdesc A view that provides an interface for a user to construct a single filter that is part of a complex query
+     * @classdesc A view that provides an UI for a user to construct a single filter that is part of a complex query
      * @extends Backbone.View
      * @constructor
      */
@@ -271,17 +271,17 @@ define([
          * The third input in each query rule is where the user enters a value,
          * minimum, or maximum for the filter model. Different types of values
          * are appropriate for different solr query fields, and so we display
-         * different interfaces depending on the type and category of the
-         * selected query fields. This object defines which type of interface
-         * to show depending on type and category. The list of interface requirements
+         * different UIs depending on the type and category of the
+         * selected query fields. This object defines which type of UI
+         * to show depending on type and category. The list of UI requirements
          * is ordered from *most* specific to *least*, since the first match will be
          * selected. The query (metadata) fields must match both the filterTypes
          * AND the categoes for a UI to be selected.
          * @type {object[]}        
-         * @property {string[]} filterTypes - An array of one or more filter types that are allowed for this interface.  If none are provided then any filter type is allowed.
-         * @property {string[]} categories - An array of one or more categories that are allowed for this interface. These strings must exactly match the categories provided in QueryField.categoriesMap(). If none are provided then any category is allowed.
-         * @property {string[]} queryFields - Specific names of fields that are allowed in this interface. If none are provided, then any query fields are allowed that match the other properties.
-         * @property {string} label - If the interface does not include a label (e.g. number filter), include a string to display here.
+         * @property {string[]} filterTypes - An array of one or more filter types that are allowed for this UI.  If none are provided then any filter type is allowed.
+         * @property {string[]} categories - An array of one or more categories that are allowed for this UI. These strings must exactly match the categories provided in QueryField.categoriesMap(). If none are provided then any category is allowed.
+         * @property {string[]} queryFields - Specific names of fields that are allowed in this UI. If none are provided, then any query fields are allowed that match the other properties.
+         * @property {string} label - If the UI does not include a label (e.g. number filter), include a string to display here.
          * @property {function} uiFunction - A function that returns the UI view to use with all appropriate options set. The function will be called with this view as the context.
          */         
         valueSelectUImap: [
@@ -992,7 +992,7 @@ define([
                 fields      =   this.model.get("fields"),
                 filterType  =   this.getRequiredFilterType(fields),
                 category    =   this.getCategory(fields),
-                interfaces  =   this.valueSelectUImap,
+                uis  =   this.valueSelectUImap,
                 label       =   "";
             
             // To help guide users to create valid queries, the type of value
@@ -1014,31 +1014,31 @@ define([
             // Find the first match in the valueSelectUImap according to
             // the filter type and the categories associated with the metadata
             // field.
-            var interfaceProperties = _.find(interfaces, function(interface){
+            var uiProperties = _.find(uis, function(ui){
               var typesMatch = true,
                   categoriesMatch = true,
                   namesMatch = true;
-              if(interface.queryFields && interface.queryFields.length){
+              if(ui.queryFields && ui.queryFields.length){
                 fields.forEach((field, i) => {
-                  if(interface.queryFields.includes(field) === false){
+                  if(ui.queryFields.includes(field) === false){
                     namesMatch = false;
                   }
                 });
               }
-              if(interface.filterTypes && interface.filterTypes.length){
-                typesMatch = interface.filterTypes.includes(filterType)
+              if(ui.filterTypes && ui.filterTypes.length){
+                typesMatch = ui.filterTypes.includes(filterType)
               }
-              if(interface.categories && interface.categories.length){
-                categoriesMatch = interface.categories.includes(category)
+              if(ui.categories && ui.categories.length){
+                categoriesMatch = ui.categories.includes(category)
               }
               return typesMatch && categoriesMatch && namesMatch
             });
             
-            this.valueSelect = interfaceProperties.uiFunction.call(this);
-            if(interfaceProperties.label && interfaceProperties.label.length){
+            this.valueSelect = uiProperties.uiFunction.call(this);
+            if(uiProperties.label && uiProperties.label.length){
               label = $(
                 "<p class='subtle searchable-select-label'>" +
-                interfaceProperties.label + "</p>"
+                uiProperties.label + "</p>"
               );
             }
             
