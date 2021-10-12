@@ -11,6 +11,7 @@ define(["jquery",
         "common/Utilities",
         "views/SearchResultView",
         "views/searchSelect/AnnotationFilterView",
+        "views/searchSelect/TabbedAnnotationFilterView",
         "text!templates/search.html",
         "text!templates/statCounts.html",
         "text!templates/pager.html",
@@ -22,7 +23,7 @@ define(["jquery",
     ],
     function(
       $, $ui, _, Backbone, Bioportal, SearchResults, SearchModel, StatsModel,
-      MetricsModel, Utilities, SearchResultView, AnnotationFilter, CatalogTemplate,
+      MetricsModel, Utilities, SearchResultView, AnnotationFilter, TabbedAnnotationFilter, CatalogTemplate,
       CountTemplate, PagerTemplate, MainContentTemplate, CurrentFilterTemplate,
       LoadingTemplate, gmaps, nGeohash
     ) {
@@ -363,7 +364,7 @@ define(["jquery",
                 if(!this.$el.find(popoverTriggerSelector)){
                   return
                 }
-                var annotationFilter = new AnnotationFilter({
+                var annotationFilter = new TabbedAnnotationFilter({
                   popoverTriggerSelector: popoverTriggerSelector
                 });
                 this.$el

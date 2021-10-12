@@ -64,6 +64,13 @@
       defaultRoot:       ROOT_ID
     };
 
+    // Reject null options. Makes this widget easier and safer to work with
+    Object.keys(opt).forEach(function (key) {
+      if (opt[key] === null) {
+        delete opt[key];
+      }
+    });
+
     OPTIONS = $.extend(OPTIONS, opt);
 
     // Required options

@@ -1,0 +1,19 @@
+<ul class="nav nav-pills">
+  <% _.each(ontologies, function (ontology, i) { %>
+    <% if (i == 0) { %>
+      <li class="active"><a class="active" href="#<%= ontology.name %>" data-name="<%= ontology.name %>" data-toggle="pill"><%= ontology.name %></a></li>
+    <% } else { %>
+      <li><a href="#<%= ontology.name %>" data-name="<%= ontology.name %>" data-toggle="pill"><%= ontology.name %></a></li>
+    <% } %>
+  <% }); %>
+</ul>
+
+<div class="tab-content">
+  <% _.each(ontologies, function (ontology, i) { %>
+    <% if (i == 0) { %>
+      <div class="tab-pane active" id="<%= ontology.name %>" data-name="<%= ontology.name %>"></div>
+    <% } else { %>
+      <div class="tab-pane" id="<%= ontology.name %>" data-name="<%= ontology.name %>"></div>
+    <% } %>
+  <% }); %>
+</div>
