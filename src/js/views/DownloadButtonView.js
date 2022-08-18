@@ -10,7 +10,8 @@ define(['jquery', 'underscore', 'backbone', 'models/SolrResult'],
 
 		initialize: function(options){
 			if(!options) var options = {}
-
+			this.preview = options.preview || false
+            this.buttonText = this.preview ? "Preview": "Download"
 			this.model = options.model || new SolrResult();
 		},
 
@@ -29,13 +30,16 @@ define(['jquery', 'underscore', 'backbone', 'models/SolrResult'],
 			//Add the href and id attributes
 			this.$el.attr("href", this.model.get("url"))
 					.attr("data-id", this.model.get("id"))
-          .attr("download", fileName);
 
-      //Check for CORS downloads. For CORS, the 'download' attribute may not work,
-      // so open in a new tab.
-      if( this.model.get("url").indexOf(window.location.origin) == -1 ){
-        this.$el.attr("target", "_blank");
-      }
+            if (!this.preview) {
+                this.$el.attr("download", fileName);
+                //Check for CORS downloads. For CORS, the 'download' attribute may not work,
+                // so open in a new tab.
+                if (this.model.get("url").indexOf(window.location.origin) == -1) {
+                    this.$el.attr("target", "_blank");
+                }
+            } else
+                this.$el.attr("target", "_blank");
 
 			//For packages
 			if(this.model.type == "Package"){
@@ -58,11 +62,13 @@ define(['jquery', 'underscore', 'backbone', 'models/SolrResult'],
 			}
 			//For individual DataONEObjects
 			else{
-				this.$el.text("Download");
+				this.$el.text(this.buttonText);
 			}
 
 			//Add a download icon
-			this.$el.append( $(document.createElement("i")).addClass("icon icon-cloud-download") );
+            var buttonClasses = "icon"
+            buttonClasses += this.preview ? "": " icon-cloud-download"
+			this.$el.append( $(document.createElement("i")).addClass(buttonClasses) );
 
 			//If this is a Download All button for a package but it's too large, then disable the button with a message
 			if(this.model.type == "Package" && this.model.getTotalSize() > MetacatUI.appModel.get("maxDownloadSize")){
@@ -131,10 +137,10 @@ define(['jquery', 'underscore', 'backbone', 'models/SolrResult'],
       //Show that the download has started
       this.$el.addClass("in-progress");
       var buttonHTML = this.$el.html();
-      this.$el.html("Downloading... <i class='icon icon-on-right icon-spinner icon-spin'></i>");
+      this.$el.html(this.buttonText+"ing... <i class='icon icon-on-right icon-spinner icon-spin'></i>");
 
       //Fire the download event via the SolrResult model
-      this.model.downloadWithCredentials();
+      this.model.downloadWithCredentials(this.preview);
 
       this.listenToOnce(this.model, "downloadComplete", function(){
 

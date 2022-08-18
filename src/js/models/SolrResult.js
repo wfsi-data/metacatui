@@ -278,7 +278,7 @@ define(['jquery', 'underscore', 'backbone'],
 		/*
 		 * This method will download this object while sending the user's auth token in the request.
 		 */
-		downloadWithCredentials: function(){
+		downloadWithCredentials: function(preview=false){
 			//if(this.get("isPublic")) return;
 
 			//Get info about this object
@@ -323,8 +323,9 @@ define(['jquery', 'underscore', 'backbone'],
 				    var a = document.createElement('a');
 				    a.href = window.URL.createObjectURL(xhr.response); // xhr.response is a blob
 
-				    // Set the file name.
-				    a.download = filename
+				    // Set the file name it there is no preview.
+				    if (!preview) a.download = filename
+				    else a.target = "_blank"
 
 				    a.style.display = 'none';
 				    document.body.appendChild(a);

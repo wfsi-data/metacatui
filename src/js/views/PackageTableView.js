@@ -143,6 +143,7 @@ define(['jquery', 'underscore', 'backbone',
 				var downloadBtn = new DownloadButtonView({ model: this.model });
 				downloadBtn.render();
 				this.$(".download-container").append(downloadBtn.el);
+
 			}
 
 			//Add the table body and footer
@@ -368,6 +369,13 @@ define(['jquery', 'underscore', 'backbone',
         }
       }
 
+      		var previewBtnCell = $(document.createElement("td"));
+			var previewButton = new DownloadButtonView({ model: memberModel, preview: true });
+			previewButton.render();
+
+			$(previewBtnCell).append(previewButton.el);
+			$(tr).append(previewBtnCell);
+
 			//Download button cell
 			var downloadBtnCell = $(document.createElement("td")).addClass("download-btn btn-container");
 
@@ -376,6 +384,7 @@ define(['jquery', 'underscore', 'backbone',
 
 			$(downloadBtnCell).append(downloadButton.el);
 			$(tr).append(downloadBtnCell);
+
 
 			if(collapsable)
 				tr.addClass("collapse");

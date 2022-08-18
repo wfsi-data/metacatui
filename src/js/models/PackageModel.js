@@ -1230,7 +1230,7 @@ define(['jquery', 'underscore', 'backbone', 'uuid', 'md5', 'rdflib', 'models/Sol
 
 		},
 
-		downloadWithCredentials: function(){
+		downloadWithCredentials: function(preview=false){
 			//Get info about this object
 			var	url = this.get("url"),
 				  model = this;
@@ -1262,7 +1262,9 @@ define(['jquery', 'underscore', 'backbone', 'uuid', 'md5', 'rdflib', 'models/Sol
 			   else{
 					var a = document.createElement('a');
 					a.href = window.URL.createObjectURL(xhr.response); // xhr.response is a blob
-					a.download = filename; // Set the file name.
+				    // Set the file name it there is no preview.
+				    if (!preview) a.download = filename
+				    else a.target = "_blank"
 					a.style.display = 'none';
 					document.body.appendChild(a);
 					a.click();
