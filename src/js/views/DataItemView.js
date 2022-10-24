@@ -394,7 +394,7 @@ define(['underscore', 'jquery', 'backbone', 'models/DataONEObject',
                 // this object, then disable the share button
                 if (this.canShare) {
                   shareButton.removeClass("disabled");
-                  sharebuttonTitle = "Share this item with others";
+                  sharebuttonTitle = "Share with others";
                 } else {
                   shareButton.addClass("disabled");
                   sharebuttonTitle = "You are not authorized to share this item."
