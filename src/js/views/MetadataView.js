@@ -976,9 +976,10 @@ define(['jquery',
             }
 
             var url = "https://maps.google.com/?ll=" + latLngCEN.lat() + "," + latLngCEN.lng() +
-              "&spn=0.003833,0.010568" +
-              "&t=m" +
-              "&z=5";
+              "&q=" + latLngCEN.lat() + "," + latLngCEN.lng() +
+              // Pad 3 decimal degrees around the latlon center
+              "&spn=3,3" +
+              "&t=m";
 
             //Get the map path color
             var pathColor = MetacatUI.appModel.get("datasetMapPathColor");
