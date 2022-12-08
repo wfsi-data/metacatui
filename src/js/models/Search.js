@@ -35,6 +35,7 @@ define(["jquery", "underscore", "backbone", "models/SolrResult", "collections/Fi
                     yearMax: new Date().getUTCFullYear(), //The user-selected maximum year
                     pubYear: false,
                     dataYear: false,
+                    keywordsText: [],
                     sortOrder: 'dateUploaded+desc',
                     sortByReads: false, // True if we can sort by reads/popularity
                     east: null,
@@ -102,6 +103,7 @@ define(["jquery", "underscore", "backbone", "models/SolrResult", "collections/Fi
                 isPrivate: "Private datasets",
                 all: "",
                 projectText: "Project",
+                keywordsText: "Keyword"
             },
 
             //Map the filter names to their index field names
@@ -123,7 +125,8 @@ define(["jquery", "underscore", "backbone", "models/SolrResult", "collections/Fi
                 username: ["rightsHolder", "writePermission", "changePermission"],
                 taxon: ["kingdom", "phylum", "class", "order", "family", "genus", "species"],
                 isPrivate: "isPublic",
-                projectText: "projectText"
+                projectText: "projectText",
+                keywordsText: "keywordsText"
             },
 
             facetNameMap: {
@@ -134,7 +137,8 @@ define(["jquery", "underscore", "backbone", "models/SolrResult", "collections/Fi
                 "taxon": ["kingdom", "phylum", "class", "order", "family", "genus", "species"],
                 "isPublic": "isPublic",
                 "all": "keywords",
-                "projectText": "project"
+                "projectText": "project",
+                "keywordsText": "keywords"
             },
 
             getCurrentFilters: function() {
@@ -229,7 +233,7 @@ define(["jquery", "underscore", "backbone", "models/SolrResult", "collections/Fi
             },
 
             /**
-             * 
+             *
              * @param {Filters|Filter[]} filters The collection of filters to add to this model OR an array of Filter models
              */
             addFilters: function(filters){
@@ -251,7 +255,7 @@ define(["jquery", "underscore", "backbone", "models/SolrResult", "collections/Fi
                 }
                 else if( !currentFilters )
                   this.set("filters", new Filters(filters));
-                
+
               }
               catch(e){
                 console.error("Couldn't add Filters to the Search model: ", e);
@@ -527,10 +531,10 @@ define(["jquery", "underscore", "backbone", "models/SolrResult", "collections/Fi
                             " AND endDate:[* TO " + yearMax + "-12-31T00:00:00Z]";
                     }
                 }
-                
+
                 //----- public/private ------
                 if (this.filterIsAvailable("isPrivate") && ((filter == "isPrivate") || getAll)) {
-                    
+
                     var isPrivate = this.get('isPrivate');
                     if (isPrivate !== null && isPrivate !== 'undefined') {
 
@@ -843,7 +847,7 @@ define(["jquery", "underscore", "backbone", "models/SolrResult", "collections/Fi
                       }
                     }
                 }
-                
+
                 // Add project filter
                 if (this.filterIsAvailable("projectText") && ((filter == "projectText") || getAll)) {
 
@@ -854,6 +858,22 @@ define(["jquery", "underscore", "backbone", "models/SolrResult", "collections/Fi
                             query += " AND ";
                         }
                         query += 'projectText:"' + project[0].value + '"';
+                    }
+                }
+
+
+                // Add keywords filter
+                if (this.filterIsAvailable("keywordsText") && ((filter == "keywordsText") || getAll)) {
+
+                    var keywords = this.get('keywordsText');
+                    if (keywords && keywords.length > 0) {
+                        var view = this;
+                        _.each(keywords, function(keyword){
+                            if( query.length ){
+                                query += "+AND+";
+                            }
+                            query += view.fieldNameMap["keywordsText"] + ':"' + view.escapeSpecialChar(encodeURIComponent(keyword.value.trim()))+'"';
+                        })
                     }
                 }
 

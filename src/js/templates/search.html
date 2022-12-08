@@ -10,6 +10,7 @@
 		    <div class="current-filters-container">
 		    	<h5>My Search</h5>
 		    	<ul id="current-all-filters" class="current-filters" data-category="all"></ul>
+                <ul id="current-keywordsText-filters" class="current-filters" data-category="keywordsText"></ul>
 				<ul id="current-projectText-filters" class="current-filters" data-category="projectText"></ul>
 		    	<ul id="current-attribute-filters" class="current-filters" data-category="attribute"></ul>
 		    	<ul id="current-annotation-filters" class="current-filters" data-category="annotation"></ul>
@@ -37,6 +38,24 @@
 		    </div>
     		<div class="filter-container collapsable">
 				<h5 id="filters-header">Filter by:</h5>
+
+                <% if(searchModelRef.filterIsAvailable("keywordsText")){ %>
+                <div class="filter-contain collapsable no-border" data-category="keywordsText">
+					<label class="expand-collapse-control">
+						<i class="icon icon-caret-right expand"></i>
+						<i class="icon icon-caret-down collapse"></i>
+						<i class="icon icon-tags"></i>
+						<span class="tooltip-this" data-trigger="hover" data-title="Keyword" data-placement="top">
+							Keyword
+						</span>
+					</label>
+					<div class="filter-input-contain input-append">
+						<input class="filter" type="text" placeholder="Keywords" id="keywordsText_input" data-category="keywordsText">
+						<button class="filter btn" id="keywordsText_btn" data-category="keywordsText"><i class="icon-search"></i></button>
+					</div>
+					<div class="clear"></div>
+				</div>
+                <% } %>
 
 				<% if(searchModelRef.filterIsAvailable("projectText")){ %>
 				<div class="filter-contain collapsable" data-category="projectText">
